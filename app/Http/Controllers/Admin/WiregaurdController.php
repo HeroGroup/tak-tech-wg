@@ -66,7 +66,7 @@ class WiregaurdController extends Controller
         if ($existingPeer > 0) {
             return [
                 'id' => 0,
-                'message' => "Peer $caddress already exists!\r\n"
+                'message' => "Peer $caddress already exists."
             ];
         }
 
