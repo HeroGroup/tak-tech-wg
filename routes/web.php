@@ -61,6 +61,7 @@ Route::prefix('admin')->group(function () {
       Route::delete('/settings/delete', [SettingController::class, 'deleteSetting'])->name('settings.delete');
       
       Route::get('/servers/list', [SettingController::class, 'serversList'])->name('settings.servers.list');
+      Route::get('/servers/report', [SettingController::class, 'serversReport'])->name('settings.servers.report');
       Route::post('/servers/new', [SettingController::class, 'addServer'])->name('settings.servers.add');
       Route::get('/servers/{id}/info', [SettingController::class, 'info'])->name('settings.servers.info');
       Route::put('/servers/update', [SettingController::class, 'updateServer'])->name('settings.servers.update');

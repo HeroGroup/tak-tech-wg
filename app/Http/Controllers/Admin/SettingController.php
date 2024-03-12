@@ -98,7 +98,7 @@ class SettingController extends Controller
         $remoteRoutes = curl_general('GET', $sAddress . '/rest/ip/route');
         $remoteCounts['routes'] = is_array($remoteRoutes) ? count($remoteRoutes) : '-';
 
-        return view('admin.serverInfo', compact('server', 'remoteCounts', 'localInterfacesCount', 'localPeersCount', 'localEnabledPeersCount', 'localDisabledPeersCount'));
+        return view('admin.servers.info', compact('server', 'remoteCounts', 'localInterfacesCount', 'localPeersCount', 'localEnabledPeersCount', 'localDisabledPeersCount'));
     }
     
     public function deleteSetting(Request $request)
@@ -122,18 +122,37 @@ class SettingController extends Controller
                 $sAddress = $server->server_address;
                 $infos[$sId]['address'] = $sAddress;
                 $infos[$sId]['router_os_version'] = $server->router_os_version;
-                
-                // $remoteInterfaces = curl_general('GET', $sAddress . '/rest/interface/wireguard');
-                // $infos[$sId]['interfaces'] = is_array($remoteInterfaces) ? count($remoteInterfaces) : '-';
-                
-                // $remoteEnabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=no');
-                // $infos[$sId]['enabledPeers'] = is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : '-';
-                
-                // $remoteDisabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=yes');
-                // $infos[$sId]['disabledPeers'] = is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : '-';
             }
         
-            return view('admin.serversList', compact('infos'));
+            return view('admin.servers.list', compact('infos'));
+        } catch (\Exception $exception) {
+            return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
+    }
+
+    public function serversReport()
+    {
+        try {
+            $servers = DB::table('servers')->get();
+
+            $infos = [];
+            foreach ($servers as $server) {
+                $sId = $server->id;
+                $sAddress = $server->server_address;
+                $infos[$sId]['address'] = $sAddress;
+                $infos[$sId]['router_os_version'] = $server->router_os_version;
+                
+                $remoteInterfaces = curl_general('GET', $sAddress . '/rest/interface/wireguard');
+                $infos[$sId]['interfaces'] = is_array($remoteInterfaces) ? count($remoteInterfaces) : '-';
+                
+                $remoteEnabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=no');
+                $infos[$sId]['enabledPeers'] = is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : '-';
+                
+                $remoteDisabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=yes');
+                $infos[$sId]['disabledPeers'] = is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : '-';
+            }
+        
+            return view('admin.servers.list', compact('infos'));
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage())->with('type', 'danger');
         }

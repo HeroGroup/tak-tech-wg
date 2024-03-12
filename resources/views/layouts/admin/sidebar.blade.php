@@ -63,6 +63,13 @@
         </a>
     </li>
 
+    <li class="nav-item" id="servers_report">
+        <a class="nav-link" href="{{route('admin.settings.servers.report')}}">
+            <i class="fas fa-fw fa-report"></i>
+            <span>Servers Report</span>
+        </a>
+    </li>
+
     <li class="nav-item" id="settings">
         <a class="nav-link" href="{{route('admin.settings')}}">
             <i class="fas fa-fw fa-cog"></i>
