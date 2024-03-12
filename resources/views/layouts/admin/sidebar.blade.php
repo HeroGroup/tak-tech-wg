@@ -65,7 +65,7 @@
 
     <li class="nav-item" id="servers_report">
         <a class="nav-link" href="{{route('admin.settings.servers.report')}}">
-            <i class="fas fa-fw fa-report"></i>
+            <i class="fas fa-fw fa-file-contract"></i>
             <span>Servers Report</span>
         </a>
     </li>

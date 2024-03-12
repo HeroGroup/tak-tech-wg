@@ -152,7 +152,7 @@ class SettingController extends Controller
                 $infos[$sId]['disabledPeers'] = is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : '-';
             }
         
-            return view('admin.servers.list', compact('infos'));
+            return view('admin.servers.report', compact('infos'));
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage())->with('type', 'danger');
         }
