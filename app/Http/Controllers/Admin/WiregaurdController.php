@@ -491,7 +491,7 @@ class WiregaurdController extends Controller
     {
         $peer = DB::table('peers')->find($id);
         $comment = $peer->comment;
-        $filename =  public_path("confs/$comment.zip");
+        $filename =  resources_path("confs/$comment.zip");
         zipPeer($peer, $filename);
 
         return response()->download($filename);
