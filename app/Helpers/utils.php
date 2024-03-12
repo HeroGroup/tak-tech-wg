@@ -64,7 +64,7 @@ function createZip($directory, $time)
   if (is_dir($directory)) {
     $folder = realpath($directory);
     $zipArchive = new ZipArchive();
-    $zipFile =  "$time.zip";
+    $zipFile =  $directory . "$time.zip";
     if ($zipArchive->open($zipFile, ZipArchive::CREATE) !== TRUE) {
       return ['status' => -1, 'message' => "Unable to open file."];
     }
