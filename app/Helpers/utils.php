@@ -6,20 +6,29 @@ use phpseclib3\Crypt\RSA;
 
 require_once app_path('Helpers/phpqrcode/qrlib.php');
 // import shz-peers-1402-12-21.rsc
-function createKeys($bytes)
+function createKeys()
 {
-  $privateKey = RSA::createKey($bytes);
+  $algorithms = ['PKCS1', 'PKCS8']; // 64 BYTES, 16 BYTES
+  $bytes = [64, 16];
+  $i = array_rand($algorithms);
+  $algorithm = $algorithms[$i];
+
+  $privateKey = RSA::createKey($bytes[$i]);
   $publicKey = $privateKey->getPublicKey();
 
-  $privateKeyString = $privateKey->toString('PKCS8'); // PKCS1, SSH, 
-  $publicKeyString = $publicKey->toString('PKCS8');
+  $privateKeyString = $privateKey->toString($algorithm);
+  $publicKeyString = $publicKey->toString($algorithm);
 
   $privateKeyString = str_replace("-----BEGIN PRIVATE KEY-----", "", $privateKeyString);
   $privateKeyString = str_replace("-----END PRIVATE KEY-----", "", $privateKeyString);
+  $privateKeyString = str_replace("-----BEGIN RSA PRIVATE KEY-----", "", $privateKeyString);
+  $privateKeyString = str_replace("-----END RSA PRIVATE KEY-----", "", $privateKeyString);
   $privateKeyString = str_replace("\r\n", "", $privateKeyString);
 
   $publicKeyString = str_replace("-----BEGIN PUBLIC KEY-----", "", $publicKeyString);
   $publicKeyString = str_replace("-----END PUBLIC KEY-----", "", $publicKeyString);
+  $publicKeyString = str_replace("-----BEGIN RSA PUBLIC KEY-----", "", $publicKeyString);
+  $publicKeyString = str_replace("-----END RSA PUBLIC KEY-----", "", $publicKeyString);
   $publicKeyString = str_replace("\r\n", "", $publicKeyString);
 
   return [
@@ -61,37 +70,53 @@ function createQRcode($content, $output)
 
 function createZip($directory, $time)
 {
-  if (is_dir($directory)) {
-    $folder = realpath($directory);
-    $zipArchive = new ZipArchive();
-    $zipFile =  $directory . "$time.zip";
-    if ($zipArchive->open($zipFile, ZipArchive::CREATE) !== TRUE) {
-      return ['status' => -1, 'message' => "Unable to open file."];
-    }
+  $zipArchive = new ZipArchive();
 
+  $zipFile = "$directory/$time.zip";
+  if ($zipArchive->open($zipFile, ZipArchive::CREATE) !== TRUE) {
+    return ['status' => -1, 'message' => "Unable to open file."];
+  }
+
+  $folder = "$directory/";
+  if (is_dir($folder)) {
     if ($f = opendir($folder)) {
-      while (($file = readdir($f)) !== false) {
-        if (is_file($file)) {
-          if ($file != '' && $file != '.' && $file != '..') {
-              $zipArchive->addFile($file, basename($file));
-          }
-        } else {
-          if (is_dir($folder . $file)) {
-            if ($file != '' && $file != '.' && $file != '..') {
-                $zipArchive->addEmptyDir($folder . $file);
-                $folder = $folder . $file . '/';
-                createZip($zipArchive, $folder);
+        while (($file = readdir($f)) !== false) {
+            if (is_file($folder . $file)) {
+                if ($file != '' && $file != '.' && $file != '..') {
+                    $zipArchive->addFile($folder . $file, $file);
+                }
+            } else {
+                if (is_dir($folder . $file)) {
+                    if ($file != '' && $file != '.' && $file != '..') {
+                        $zipArchive->addEmptyDir($folder . $file);
+                        $folder = $folder . $file . '/';
+                        createZip($zipArchive, $folder);
+                    }
+                }
             }
-          }
         }
-      }
-      closedir($f);
+        closedir($f);
     } else {
       return ['status' => -1, 'message' => "Unable to open directory $folder"];
     }
-    $zipArchive->close();
-    return ['status' => 1, 'file' => $zipFile];
   } else {
     return ['status' => -1, 'message' => "$folder is not a directory."];
   }
+  $zipArchive->close();
+  return ['status' => 1, 'file' => $zipFile];
+}
+
+function zipPeer($peer, $filename)
+{
+  $zip = new ZipArchive();
+  $comment = $peer->comment;
+
+  if ($zip->open($filename, ZipArchive::CREATE)!==TRUE) {
+      exit("cannot open <$filename>\n");
+  }
+  $zip->addFile($peer->conf_file, "$comment.conf");
+  $zip->addFile($peer->qrcode_file, "$comment.png");
+  $zip->close();
+
+  return $zip;
 }

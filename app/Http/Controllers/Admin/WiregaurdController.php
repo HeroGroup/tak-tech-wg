@@ -70,7 +70,7 @@ class WiregaurdController extends Controller
             ];
         }
 
-        $keys = createKeys(16);
+        $keys = createKeys();
         $privateKey = $keys['private_key'];
         $publicKey = $keys['public_key'];
         
@@ -209,12 +209,12 @@ class WiregaurdController extends Controller
             }
 
             if ($numberOfCreatedPeers > 0) {
-                $today = date('Y-m-d', time());
-                $x = createZip(resource_path("confs/$today/$time/"), $time);
+                $today = date('Y-m-d', $time);
+                $zipResult = createZip(resource_path("confs/$today/$time/"), $time);
                 
-                if ($x['status'] == 1) {
-                    // return response()->download($x['file']);
-                    return back()->with('message', 'Your download is ready! <a href="google.com">Google</a>')->with('type', 'success');
+                if ($zipResult['status'] == 1) {
+                    // $zipResult['file'];
+                    return view('admin.download', compact('today', 'time'));
                 } else {
                     return back()->with('message', $x['message'])->with('type', 'success');
                 }
@@ -261,7 +261,7 @@ class WiregaurdController extends Controller
     }
 
     // Actions
-    public function regenerate($id, $time)
+    protected function regenerate($id, $time)
     {
         try {
             $message = '';
@@ -308,7 +308,16 @@ class WiregaurdController extends Controller
             $this->regenerate($id, $time);
         }
 
-        return $this->success('Selected items regenerated successfully.');
+        $today = date('Y-m-d', $time);
+        $zipResult = createZip(resource_path("confs/$today/$time/"), $time);
+                
+        if ($zipResult['status'] == 1) {
+            return view('admin.download', compact('today', 'time'));
+        } else {
+            return $this->fail($x['message']);
+        }
+
+        // return $this->success('Selected items regenerated successfully.');
     }
 
     private function toggleEnable($id, $status)
@@ -471,5 +480,20 @@ class WiregaurdController extends Controller
         } catch (\Exception $exception) {
             return $this->fail($exception->getMessage());
         }
+    }
+
+    public function downloadZip($date, $file)
+    {
+        return response()->download(resource_path("confs/$date/$file/$file.zip"));
+    }
+
+    public function downloadPeer($id)
+    {
+        $peer = DB::table('peers')->find($id);
+        $comment = $peer->comment;
+        $filename =  public_path("confs/$comment.zip");
+        zipPeer($peer, $filename);
+
+        return response()->download($filename);
     }
 }

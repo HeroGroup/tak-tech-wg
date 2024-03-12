@@ -69,8 +69,6 @@
       <th>Comment</th>
       <th>Interface</th>
       <th>Peer</th>
-      <th>DNS</th>
-      <th>Endpoint</th>
       <th>Enabled</th>
       <th>Actions</th>
     </thead>
@@ -85,8 +83,6 @@
         <td>{{$peer->comment}}</td>
         <td>{{\Illuminate\Support\Facades\DB::table('interfaces')->find($peer->interface_id)->name}}</td>
         <td>{{$peer->client_address}}</td>
-        <td>{{$peer->dns}}</td>
-        <td>{{$peer->endpoint_address}}</td>
         <td>
             <!-- <span> Disable </span> -->
             <label class="switch">
@@ -96,6 +92,12 @@
             <!-- <span> Enable </span> -->
         </td>
         <td>
+          @if($peer->conf_file && $peer->qrcode_file)
+          <a href="{{route('wiregaurd.peers.download',$peer->id)}}" class="btn btn-sm btn-success btn-circle">
+            <i class="fa fa-fw fa-download"></i>
+          </a>
+          &nbsp;
+          @endif
           <a href="#" class="btn btn-sm btn-info btn-circle" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="edit">
             <i class="fa fa-fw fa-pen"></i>
           </a>
