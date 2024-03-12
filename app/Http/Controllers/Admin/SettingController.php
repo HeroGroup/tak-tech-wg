@@ -145,10 +145,10 @@ class SettingController extends Controller
                 $remoteInterfaces = curl_general('GET', $sAddress . '/rest/interface/wireguard');
                 $infos[$sId]['interfaces'] = is_array($remoteInterfaces) ? count($remoteInterfaces) : '-';
                 
-                $remoteEnabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=no');
+                $remoteEnabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=no', '', false, 30);
                 $infos[$sId]['enabledPeers'] = is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : '-';
                 
-                $remoteDisabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=yes');
+                $remoteDisabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=yes', '', false, 30);
                 $infos[$sId]['disabledPeers'] = is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : '-';
 
                 $infos[$sId]['totalPeers'] = (is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : 0) + (is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : 0);
