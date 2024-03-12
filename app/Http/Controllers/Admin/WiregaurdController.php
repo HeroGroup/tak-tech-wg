@@ -297,7 +297,7 @@ class WiregaurdController extends Controller
     public function regenerateSingle(Request $request)
     {
         $time = time();
-        return $this->regenerate($request->id, $tim);
+        return $this->regenerate($request->id, $time);
     }
 
     public function regenerateMass(Request $request)
