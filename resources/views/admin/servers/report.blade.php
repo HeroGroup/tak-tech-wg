@@ -18,7 +18,7 @@
         <td>{{$server['address']}}</td>
         <td>{{$server['router_os_version']}}</td>
         <td>{{$server['interfaces']}}</td>
-        <td>{{$server['enabledPeers'] + $server['disabledPeers']}}</td>
+        <td>{{$server['totalPeers']}}</td>
         <td>{{$server['enabledPeers']}}</td>
         <td>{{$server['disabledPeers']}}</td>
       </tr>

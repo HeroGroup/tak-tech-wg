@@ -150,6 +150,8 @@ class SettingController extends Controller
                 
                 $remoteDisabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=yes');
                 $infos[$sId]['disabledPeers'] = is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : '-';
+
+                $infos[$sId]['totalPeers'] = (is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : 0) + (is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : 0);
             }
         
             return view('admin.servers.report', compact('infos'));
