@@ -234,9 +234,9 @@ class WiregaurdController extends Controller
         $data = [
 			'interface' => $interfaceName,
 			'allowed-address' => $caddress.'/32',
-            'endpoint-address' => $wgserveraddress,
-            'client-dns' => $cdns,
-			'private-key' => $privateKey,
+            // 'endpoint-address' => $wgserveraddress,
+            // 'client-dns' => $cdns,
+			// 'private-key' => $privateKey,
             'public-key' => $publicKey,
 			'comment' => $commentApply,
         ];
