@@ -13,6 +13,7 @@ class WiregaurdController extends Controller
 {
     public function create()
     {
+        dd(createKeys());
         $interfaces = DB::table('user_interfaces')
             ->where('user_id', auth()->user()->id)
             ->join('interfaces', 'interfaces.id', '=', 'user_interfaces.interface_id')

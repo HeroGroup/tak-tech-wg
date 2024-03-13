@@ -6,7 +6,7 @@ use phpseclib3\Crypt\RSA;
 
 require_once app_path('Helpers/phpqrcode/qrlib.php');
 // import shz-peers-1402-12-21.rsc
-function createKeys()
+function createKeysOld()
 {
   $algorithms = ['PKCS1', 'PKCS8']; // 64 BYTES, 16 BYTES
   $bytes = [64, 16];
@@ -35,6 +35,22 @@ function createKeys()
       'public_key' => $publicKeyString, 
       'private_key' => $privateKeyString
   ];
+}
+
+function createKeys()
+{
+  $keyGeneratorPath = app_path('Js_Helpers/keyGenerator.js');
+  exec("node $keyGeneratorPath", $output); 
+  $privateKey = $output[1];
+  $publicKey = $output[2];
+  $privateKey = str_replace("'", "", $output[1]);
+  $privateKey = str_replace(",", "", $privateKey);
+  $publicKey = str_replace("'", "", $output[2]);
+
+  return [
+    'public_key' => ltrim($publicKey), 
+    'private_key' => ltrim($privateKey)
+];
 }
 
 function curl_general($method, $url, $data=null, $withHeader=false, $timeout=3)
