@@ -213,8 +213,7 @@ class WiregaurdController extends Controller
                 $zipResult = createZip(resource_path("confs/$today/$time/"), $time);
                 
                 if ($zipResult['status'] == 1) {
-                    // $zipResult['file'];
-                    return view('admin.download', compact('today', 'time'));
+                    return getDownloadLink($today, $time);
                 } else {
                     return back()->with('message', $x['message'])->with('type', 'success');
                 }
@@ -282,8 +281,10 @@ class WiregaurdController extends Controller
             $cdns = $request->dns ?? $interface->dns;
             $wgserveraddress = $peer->endpoint_address;
             $commentApply = $peer->comment;
+            $removeResult = $this->removeLocal($id);
+
+            $message .= $removeResult ? "Local removed successfully\r\n" : "Unable to remove local peer $commentApply. \r\n";
             
-            $message .= ('Local: ' . $this->removeLocal($id) ? "success\r\n" : "fail\r\n");
 
             $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $range, $cdns, $wgserveraddress, $commentApply, $time);
             $message .= $result['message'];
@@ -312,12 +313,12 @@ class WiregaurdController extends Controller
         $zipResult = createZip(resource_path("confs/$today/$time/"), $time);
                 
         if ($zipResult['status'] == 1) {
-            return view('admin.download', compact('today', 'time'));
+            return $this->success('Selected items regenerated successfully.', [
+                'route' => route('wiregaurd.peers.getDownloadLink', ['date' => $today, 'file' => $time])
+            ]);
         } else {
-            return $this->fail($x['message']);
+            return $this->fail($zipResult['message']);
         }
-
-        // return $this->success('Selected items regenerated successfully.');
     }
 
     private function toggleEnable($id, $status)
@@ -399,10 +400,10 @@ class WiregaurdController extends Controller
             
             // delete associated conf and qr file
             $peer = DB::table('peers')->find($id);
-            if ($peer->conf_file) {
+            if ($peer->conf_file && file_exists($peer->conf_file)) {
                 unlink($peer->conf_file);
             }
-            if ($peer->qrcode_file) {
+            if ($peer->qrcode_file && file_exists($peer->qrcode_file)) {
                 unlink($peer->qrcode_file);
             }
 
@@ -485,6 +486,10 @@ class WiregaurdController extends Controller
     public function downloadZip($date, $file)
     {
         return response()->download(resource_path("confs/$date/$file/$file.zip"));
+    }
+
+    public function getDownloadLink($today, $time) {
+        return view('admin.download', compact('today', 'time'));
     }
 
     public function downloadPeer($id)

@@ -32,6 +32,7 @@ Route::middleware(['auth', 'active'])->group(function() {
     Route::post('/wiregaurd/peers/regenerateMass', [WiregaurdController::class, 'regenerateMass'])->name('regenerate.mass');
     Route::put('/wiregaurd/peers/updateMass', [WiregaurdController::class, 'updatePeersMass'])->name('update.mass');
 
+    Route::get('/getDownloadLink/{date}/{file}', [WiregaurdController::class, 'getDownloadLink'])->name('getDownloadLink');
     Route::get('/wiregaurd/peers/download/{id}', [WiregaurdController::class, 'downloadPeer'])->name('download');
     Route::get('/wiregaurd/peers/downloadZip/{date}/{file}', [WiregaurdController::class, 'downloadZip'])->name('downloadZip');
   });

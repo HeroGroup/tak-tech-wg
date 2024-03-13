@@ -21,3 +21,4 @@ yarn-error.log
 /public
 /app/Helpers/phpqrcode/
 .env
+/resources/confs

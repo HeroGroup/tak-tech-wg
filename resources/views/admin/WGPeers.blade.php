@@ -340,7 +340,7 @@
       method: 'POST',
       route: "{{route('wiregaurd.peers.regenerate.mass')}}",
       formData,
-      successCallback: reloadWithTimeout,
+      // successCallback: reloadWithTimeout,
       failCallback: turnOffLoader,
 
     };
