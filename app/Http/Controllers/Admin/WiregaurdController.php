@@ -58,7 +58,7 @@ class WiregaurdController extends Controller
         $messageDuration = 10000;
         return view('admin.WGPeers', compact('peers', 'interface', 'comment', 'interfaces', 'messageDuration'));
     }
-    public function addLocalPeer($caddress, $interfaceId, $cdns, $wgserveraddress, $commentApply, $time)
+    public function addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $commentApply, $time)
     {
         // check not repetetive
         $caddress32 = "$caddress/32";
@@ -94,9 +94,9 @@ class WiregaurdController extends Controller
         $content .= "Address = $caddress32\n";
         $content .= "DNS = $cdns\n\n";
         $content .= "[Peer]\n";
-        $content .= "PublicKey = $publicKey\n";
+        $content .= "PublicKey = $interfacePublicKey\n"; // Interface's public key
         $content .= "AllowedIPs = 0.0.0.0/0, ::/0\n";
-        $content .= "Endpoint = $wgserveraddress\n";
+        $content .= "Endpoint = $wgserveraddress:$interfaceListenPort\n";
 
         fwrite($confFile, $content);
         fclose($confFile);
@@ -177,6 +177,8 @@ class WiregaurdController extends Controller
             
             $interfaceId = $interface->id;
             $interfaceName = $interface->name;
+            $interfacePublicKey = $interface->public_key;
+            $interfaceListenPort = $interface->listen_port;
             $cdns = $request->dns ?? $interface->dns;
             $wgserveraddress = $request->endpoint ?? $interface->default_endpoint_address;
             $range = $request->range ?? $interface->ip_range;
@@ -189,7 +191,7 @@ class WiregaurdController extends Controller
                 {
                     $caddress = $range . ($i + 1);
                     $commentApply = $comment . '-' . $i;
-                    $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $range, $cdns, $wgserveraddress, $commentApply, $time);
+                    $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $commentApply, $time);
                     $message .= $result['message'];
                     if ($result['status'] == 1) {
                         $numberOfCreatedPeers++;
@@ -200,7 +202,7 @@ class WiregaurdController extends Controller
                 {
                     $caddress = $range . ($i + 1);
                     $commentApply = $comment . '-' . $i;
-                    $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $range, $cdns, $wgserveraddress, $commentApply, $time);
+                    $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $commentApply, $time);
                     $message .= $result['message'];
                     if ($result['status'] == 1) {
                         $numberOfCreatedPeers++;
@@ -227,9 +229,9 @@ class WiregaurdController extends Controller
         }
     }
 
-    private function performOnAllServers($caddress, $interfaceId, $interfaceName, $range, $cdns, $wgserveraddress, $comment, $time)
+    private function performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $comment, $time)
     {
-        $newLocalPeer = $this->addLocalPeer($caddress, $interfaceId, $cdns, $wgserveraddress, $comment, $time);
+        $newLocalPeer = $this->addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $comment, $time);
         
         if ($newLocalPeer['id'] > 0) { // local successfull
             $message = "Local inserted successfully.\r\n";
@@ -277,16 +279,18 @@ class WiregaurdController extends Controller
             $interface = DB::table('interfaces')->find($peer->interface_id);
             $interfaceId = $peer->interface_id;
             $interfaceName = $interface->name;
+            $interfacePublicKey = $interface->public_key;
+            $interfaceListenPort = $interface->listen_port;
             $range = $interface->ip_range;
             $cdns = $request->dns ?? $interface->dns;
-            $wgserveraddress = $peer->endpoint_address;
+            $wgserveraddress = $peer->endpoint_address ?? $interface->default_endpoint_address;
             $commentApply = $peer->comment;
             $removeResult = $this->removeLocal($id);
 
             $message .= $removeResult ? "Local removed successfully\r\n" : "Unable to remove local peer $commentApply. \r\n";
             
 
-            $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $range, $cdns, $wgserveraddress, $commentApply, $time);
+            $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $commentApply, $time);
             $message .= $result['message'];
             
             return $this->success($message);
