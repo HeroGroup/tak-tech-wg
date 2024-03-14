@@ -214,7 +214,7 @@ class WiregaurdController extends Controller
                 $zipResult = createZip(resource_path("confs/$today/$time/"), $time);
                 
                 if ($zipResult['status'] == 1) {
-                    return getDownloadLink($today, $time);
+                    return $this->getDownloadLink($today, $time);
                 } else {
                     return back()->with('message', $x['message'])->with('type', 'success');
                 }
