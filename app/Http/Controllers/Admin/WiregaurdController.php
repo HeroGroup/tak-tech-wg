@@ -84,7 +84,7 @@ class WiregaurdController extends Controller
         }
         
         $confFilePath = resource_path("confs/$today/$time/$commentApply.conf");
-        $qrcodeFilePath = resource_path("confs/$today/$time/$commentApply.png");
+        $qrcodeFilePath = resource_path("confs/$today/$time/$commentApply.jpg");
 
         // create .conf file
         $confFile = fopen($confFilePath, 'w');

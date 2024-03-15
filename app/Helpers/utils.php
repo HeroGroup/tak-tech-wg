@@ -81,7 +81,7 @@ function curl_general($method, $url, $data=null, $withHeader=false, $timeout=3)
 
 function createQRcode($content, $output)
 {
-  QRcode::png(urlencode($content), $output, 'L', 10, 10);
+  QRcode::png($content, $output, 'L', 10, 10);
 }
 
 function createZip($directory, $time)
