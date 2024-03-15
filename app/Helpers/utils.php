@@ -1,41 +1,6 @@
 <?php
 
-use phpseclib3\Math\BigInteger;
-use phpseclib3\Crypt\PublicKeyLoader;
-use phpseclib3\Crypt\RSA;
-
 require_once app_path('Helpers/phpqrcode/qrlib.php');
-// import shz-peers-1402-12-21.rsc
-function createKeysOld()
-{
-  $algorithms = ['PKCS1', 'PKCS8']; // 64 BYTES, 16 BYTES
-  $bytes = [64, 16];
-  $i = array_rand($algorithms);
-  $algorithm = $algorithms[$i];
-
-  $privateKey = RSA::createKey($bytes[$i]);
-  $publicKey = $privateKey->getPublicKey();
-
-  $privateKeyString = $privateKey->toString($algorithm);
-  $publicKeyString = $publicKey->toString($algorithm);
-
-  $privateKeyString = str_replace("-----BEGIN PRIVATE KEY-----", "", $privateKeyString);
-  $privateKeyString = str_replace("-----END PRIVATE KEY-----", "", $privateKeyString);
-  $privateKeyString = str_replace("-----BEGIN RSA PRIVATE KEY-----", "", $privateKeyString);
-  $privateKeyString = str_replace("-----END RSA PRIVATE KEY-----", "", $privateKeyString);
-  $privateKeyString = str_replace("\r\n", "", $privateKeyString);
-
-  $publicKeyString = str_replace("-----BEGIN PUBLIC KEY-----", "", $publicKeyString);
-  $publicKeyString = str_replace("-----END PUBLIC KEY-----", "", $publicKeyString);
-  $publicKeyString = str_replace("-----BEGIN RSA PUBLIC KEY-----", "", $publicKeyString);
-  $publicKeyString = str_replace("-----END RSA PUBLIC KEY-----", "", $publicKeyString);
-  $publicKeyString = str_replace("\r\n", "", $publicKeyString);
-
-  return [
-      'public_key' => $publicKeyString, 
-      'private_key' => $privateKeyString
-  ];
-}
 
 function createKeys()
 {

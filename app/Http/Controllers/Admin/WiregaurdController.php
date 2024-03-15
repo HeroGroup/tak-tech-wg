@@ -48,7 +48,7 @@ class WiregaurdController extends Controller
                         });
         }
 
-        $peers = $peers->get();
+        $peers = $peers->orderBy('comment', 'asc')->paginate(100);
         
         $interfaces = DB::table('user_interfaces')
             ->where('user_id', auth()->user()->id)
@@ -84,7 +84,7 @@ class WiregaurdController extends Controller
         }
         
         $confFilePath = resource_path("confs/$today/$time/$commentApply.conf");
-        $qrcodeFilePath = resource_path("confs/$today/$time/$commentApply.jpg");
+        $qrcodeFilePath = resource_path("confs/$today/$time/$commentApply.png");
 
         // create .conf file
         $confFile = fopen($confFilePath, 'w');
