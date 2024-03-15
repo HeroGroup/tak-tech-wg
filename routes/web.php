@@ -22,7 +22,7 @@ Route::middleware(['auth', 'active'])->group(function() {
     Route::get('/wiregaurd/peers', [WiregaurdController::class, 'peers'])->name('index');
     Route::get('/wiregaurd/peers/create', [WiregaurdController::class, 'create'])->name('create');
     Route::post('/wiregaurd/peers', [WiregaurdController::class, 'createWG'])->name('post.create');
-    Route::put('/wiregaurd/peers', [WiregaurdController::class, 'updatePeer'])->name('update');
+    Route::put('/wiregaurd/peers', [WiregaurdController::class, 'updatePeerSingle'])->name('update');
     
     Route::put('/wiregaurd/peers/toggleEnable', [WiregaurdController::class, 'toggleEnableSingle'])->name('toggleEnable');
     Route::post('/wiregaurd/peers/regenerate', [WiregaurdController::class, 'regenerateSingle'])->name('regenerate');

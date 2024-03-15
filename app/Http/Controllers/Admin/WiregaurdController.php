@@ -30,7 +30,7 @@ class WiregaurdController extends Controller
             ->where('user_interfaces.user_id', auth()->user()->id);
         
         $interface = $request->query('wiregaurd');
-        if ($interface && $peers && $peers->count() > 0) {
+        if ($interface && $interface != 'all' && $peers && $peers->count() > 0) {
             // $peers = array_filter($peers, function ($element) use ($interface) {
             //     return ($element->interface_id == $interface);
             // });
@@ -44,11 +44,25 @@ class WiregaurdController extends Controller
             // });
             $peers = $peers->where(function (Builder $query) use ($comment) {
                                     $query->where('comment', 'like', '%'.$comment.'%')
-                                        ->orWhere('client_address', 'like', '%'.$comment.'%');
+                                        ->orWhere('client_address', 'like', '%'.$comment.'%')
+                                        ->orWhere('note', 'like', '%'.$comment.'%');
                         });
         }
 
-        $peers = $peers->orderBy('comment', 'asc')->paginate(100);
+        $enabled = $request->query('enabled');
+        if (in_array($enabled, ['0', '1']) && $peers && $peers->count() > 0) {
+            $peers = $peers->where('is_enabled', (int)$enabled);
+        }
+        
+        $sortBy = $request->query('sortBy');
+        if ($sortBy && $peers && $peers->count() > 0) {
+            $by = substr($sortBy, 0, strrpos($sortBy, '_'));
+            $type = substr($sortBy, strrpos($sortBy, '_')+1);
+
+            $peers = $peers->orderBy($by, $type);
+        }
+
+        $peers = $peers->get();
         
         $interfaces = DB::table('user_interfaces')
             ->where('user_id', auth()->user()->id)
@@ -56,7 +70,7 @@ class WiregaurdController extends Controller
             ->pluck('name', 'interface_id')->toArray();
         
         $messageDuration = 10000;
-        return view('admin.WGPeers', compact('peers', 'interface', 'comment', 'interfaces', 'messageDuration'));
+        return view('admin.WGPeers', compact('peers', 'interface', 'comment', 'enabled', 'sortBy', 'interfaces', 'messageDuration'));
     }
     public function addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $commentApply, $time)
     {
@@ -74,34 +88,14 @@ class WiregaurdController extends Controller
         $privateKey = $keys['private_key'];
         $publicKey = $keys['public_key'];
         
-        $today = date('Y-m-d', time());
-        if (! is_dir(resource_path("confs/$today"))) { 
-            mkdir(resource_path("confs/$today")); 
-        }
+        $today = date('Y-m-d', $time);
 
-        if (! is_dir(resource_path("confs/$today/$time"))) {
-            mkdir(resource_path("confs/$today/$time"));
-        }
-        
+        // creat conf file
         $confFilePath = resource_path("confs/$today/$time/$commentApply.conf");
-        $qrcodeFilePath = resource_path("confs/$today/$time/$commentApply.png");
-
-        // create .conf file
-        $confFile = fopen($confFilePath, 'w');
+        $content = createConfFile($today, $time, $confFilePath, $privateKey, $caddress32, $cdns, $interfacePublicKey, $wgserveraddress, $interfaceListenPort);
         
-        $content = "[Interface]\n";
-        $content .= "PrivateKey = $privateKey\n";
-        $content .= "Address = $caddress32\n";
-        $content .= "DNS = $cdns\n\n";
-        $content .= "[Peer]\n";
-        $content .= "PublicKey = $interfacePublicKey\n"; // Interface's public key
-        $content .= "AllowedIPs = 0.0.0.0/0, ::/0\n";
-        $content .= "Endpoint = $wgserveraddress:$interfaceListenPort\n";
-
-        fwrite($confFile, $content);
-        fclose($confFile);
-
         // creat QR image
+        $qrcodeFilePath = resource_path("confs/$today/$time/$commentApply.png");
         createQRcode($content, $qrcodeFilePath);
 
         $newLocalPeerId = DB::table('peers')->insertGetId([
@@ -456,32 +450,78 @@ class WiregaurdController extends Controller
         return $this->success('Selected items removed successfully.');
     }
 
-    public function updatePeer(Request $request)
+    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $today, $time)
     {
-        // update dns and endpoint_address
         try {
-            DB::table('peers')->where('id', $request->id)->update([
-                'dns' => $request->dns,
-                'endpoint_address' => $request->endpoint_address
-            ]);
             
-            return back()->with('message', 'Peer updated successully')->with('type', 'success');
+            $peer = DB::table('peers')->find($id);
+            $interface = DB::table('interfaces')->find($peer->interface_id);
+            if ($peer->dns != $dns || $peer->endpoint_address != $endpoint_address) {
+                $cdns = $dns ?? $interface->dns;
+                $wgserveraddress = $endpoint_address ?? $interface->default_endpoint_address;
+                $commentApply = $peer->comment;
+
+                // remove config and qr files
+                if ($peer->conf_file && file_exists($peer->conf_file)) {
+                    unlink($peer->conf_file);
+                }
+                if ($peer->qrcode_file && file_exists($peer->qrcode_file)) {
+                    unlink($peer->qrcode_file);
+                }
+
+                $time = time();
+                $today = date('Y-m-d', $time);
+
+                // regenerate config file
+                $confFilePath = resource_path("confs/$today/$time/$commentApply.conf");
+                $content = createConfFile($today, $time, $confFilePath, $peer->private_key, $peer->client_address, $cdns, $interface->public_key, $wgserveraddress, $interface->listen_port);
+                
+                // creat QR image
+                $qrcodeFilePath = resource_path("confs/$today/$time/$commentApply.png");
+                createQRcode($content, $qrcodeFilePath);
+
+                // update record with new values
+                DB::table('peers')->where('id', $id)->update([
+                    'dns' => $dns,
+                    'endpoint_address' => $endpoint_address,
+                    'conf_file' => $confFilePath,
+                    'qrcode_file' => $qrcodeFilePath,
+                ]);
+            } else if ($note || $expire_days) {
+                DB::table('peers')->where('id', $id)->update([
+                    'note' => $note,
+                    'expire_days' => $expire_days
+                ]);
+            }
+            
+            return ['status' => 1, 'message' => 'Peer updated successully'];
         } catch (\Exception $exception) {
-            return back()->with('message', $exception->getMessage())->with('type', 'danger');
+            return ['status' => -1, 'message' => $exception->getMessage()];
         }
+    }
+
+    public function updatePeerSingle(Request $request)
+    {
+        $time = time();
+        $today = date('Y-m-d', $time);
+        $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $today, $time);
+
+        return back()->with('message', $result['message'])->with('type', $result['status'] == 1 ? 'success' : 'danger');
     }
     
     public function updatePeersMass(Request $request)
     {
-        // update dns and endpoint_address
+        $time = time();
+        $today = date('Y-m-d', $time);
+        $message = '';
         try {
             $ids = json_decode($request->ids);
-            DB::table('peers')->whereIn('id', $ids)->update([
-                'dns' => $request->dns,
-                'endpoint_address' => $request->endpoint_address
-            ]);
+            foreach($ids as $id) {
+                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, null, $today, $time);
+                $message .= $result['message'] . "\r\n";
+            }
             
-            return $this->success('Peers updated successully');
+            return $this->success($message);
         } catch (\Exception $exception) {
             return $this->fail($exception->getMessage());
         }

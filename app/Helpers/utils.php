@@ -44,6 +44,32 @@ function curl_general($method, $url, $data=null, $withHeader=false, $timeout=3)
   return json_decode($out, true);
 }
 
+function createConfFile($today, $time, $confFilePath, $privateKey, $caddress32, $cdns, $interfacePublicKey, $wgserveraddress, $interfaceListenPort) {
+  if (! is_dir(resource_path("confs/$today"))) { 
+      mkdir(resource_path("confs/$today")); 
+  }
+
+  if (! is_dir(resource_path("confs/$today/$time"))) {
+      mkdir(resource_path("confs/$today/$time"));
+  }
+
+  $confFile = fopen($confFilePath, 'w');
+        
+  $content = "[Interface]\n";
+  $content .= "PrivateKey = $privateKey\n";
+  $content .= "Address = $caddress32\n";
+  $content .= "DNS = $cdns\n\n";
+  $content .= "[Peer]\n";
+  $content .= "PublicKey = $interfacePublicKey\n"; // Interface's public key
+  $content .= "AllowedIPs = 0.0.0.0/0, ::/0\n";
+  $content .= "Endpoint = $wgserveraddress:$interfaceListenPort\n";
+
+  fwrite($confFile, $content);
+  fclose($confFile);
+
+  return $content;
+}
+
 function createQRcode($content, $output)
 {
   QRcode::png($content, $output, 'L', 10, 10);
