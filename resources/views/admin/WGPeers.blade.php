@@ -153,8 +153,9 @@
     @endforeach
     </tbody>
   </table>
+  {{ $peers->links() }}
 </div>
-{{ $peers->links() }}
+
 
 <!-- Edit peers Mass Modal -->
 <div class="modal fade" id="edit-peers-mass-modal" tabindex="-1" role="dialog" aria-labelledby="editPeersMassModalLabel" aria-hidden="true">
