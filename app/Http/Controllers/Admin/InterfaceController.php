@@ -44,7 +44,7 @@ class InterfaceController extends Controller
                 'updated_at' => $now
             ]);
 
-            $message = "Local: OK!\r\n";
+            $message = `Local: OK!\r\n`;
 
             // give access to all superadmins
             $superAdmins = DB::table('users')->where('user_type', UserType::SUPERADMIN->value)->get();
@@ -72,9 +72,9 @@ class InterfaceController extends Controller
                     ]),
                     true
                 );
-dump($res);
+
                 if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
-                    $message .= "$sAddress: OK!\r\n";
+                    $message .= `$sAddress: OK!\r\n`;
                     $newRemoteInterface = $res[0]['ret'];
                     // add remote ip address
                     curl_general('POST', 
@@ -92,7 +92,7 @@ dump($res);
                         'server_interface_id' => $newRemoteInterface
                     ]);
                 } else {
-                    $message .= "$sAddress: failed!\r\n";
+                    $message .= `$sAddress: failed! ($res) \r\n`;
                 }
             }
             return back()->with('message', $message)->with('type', 'success');
