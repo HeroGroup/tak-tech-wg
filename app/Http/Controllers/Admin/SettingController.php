@@ -153,8 +153,12 @@ class SettingController extends Controller
 
                 $infos[$sId]['totalPeers'] = (is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : 0) + (is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : 0);
             }
+
+            $localInterfaces = DB::table('interfaces')->count();
+            $localEnabledPeers = DB::table('peers')->where('is_enabled', 1)->count();
+            $localDisabledPeers = DB::table('peers')->where('is_enabled', 0)->count();
         
-            return view('admin.servers.report', compact('infos'));
+            return view('admin.servers.report', compact('infos', 'localInterfaces', 'localEnabledPeers', 'localDisabledPeers'));
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage())->with('type', 'danger');
         }

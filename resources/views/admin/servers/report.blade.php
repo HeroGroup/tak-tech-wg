@@ -23,6 +23,14 @@
         <td>{{$server['disabledPeers']}}</td>
       </tr>
       @endforeach
+      <tr>
+        <td>Local</td>
+        <td>-</td>
+        <td>{{$localInterfaces}}</td>
+        <td>{{$localEnabledPeers+$localDisabledPeers}}</td>
+        <td>{{$localEnabledPeers}}</td>
+        <td>{{$localDisabledPeers}}</td>
+      </tr>
     </tbody>
   </table>
 </div>
