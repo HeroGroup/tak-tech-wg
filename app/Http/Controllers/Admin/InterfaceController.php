@@ -72,7 +72,7 @@ class InterfaceController extends Controller
                     ]),
                     true
                 );
-dum($res);
+dump($res);
                 if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
                     $message .= "$sAddress: OK!\r\n";
                     $newRemoteInterface = $res[0]['ret'];
