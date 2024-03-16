@@ -51,7 +51,8 @@ class UserController extends Controller
             $userId = $request->id;
             $update = [
                 'name' => $request->name,
-                'email' => $request->email
+                'email' => $request->email,
+                'user_type' => $request->user_type,
             ];
 
             if ($request->password) {
