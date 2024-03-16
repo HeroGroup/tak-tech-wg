@@ -73,7 +73,7 @@ class InterfaceController extends Controller
                     true
                 );
 
-                if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
+                // if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
                     $message .= `$sAddress: OK!\r\n`;
                     $newRemoteInterface = $res[0]['ret'];
                     // add remote ip address
@@ -91,9 +91,9 @@ class InterfaceController extends Controller
                         'interface_id' => $newInterfaceId,
                         'server_interface_id' => $newRemoteInterface
                     ]);
-                } else {
-                    $message .= `$sAddress: failed! ($res) \r\n`;
-                }
+                // } else {
+                    // $message .= `$sAddress: failed! \r\n`;
+                // }
             }
             return back()->with('message', $message)->with('type', 'success');
         } catch (\Exception $exception) {

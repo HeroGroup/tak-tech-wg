@@ -179,14 +179,11 @@
 <script src="/assets/js/sb-admin-2.min.js"></script>
 <script src="/assets/js/sweetalert2.min.js"></script>
 <script src="/assets/js/selectize.min.js"></script>
-<script src="/assets/js/wireguard.js"></script>
 <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
 <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
 <script>
     $(document).ready(function() {
-        // var keys = wireguard.generateKeypair();
-        // console.log(keys.privateKey, keys.publicKey);
         document.getElementById("current-year").innerHTML = getYear();
 
         if("{{\Illuminate\Support\Facades\Session::has('message')}}" === "1") {
