@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,107 +25,76 @@ class InterfaceController extends Controller
                 ->where('router_os_version', '>=', '7.12.1')
                 ->where('router_os_version', 'not like', '%beta%')
                 ->get();
-            // insert on first remote servers
-            $server = $servers[0];
-            $sAddress = $server->server_address;
-            $sId = $server->id;
+            
+            $keys = createKeys();
+            $privateKey = $keys['private_key'];
+            $publicKey = $keys['public_key'];
 
-            curl_general('POST', 
-                $sAddress . '/rest/interface/wireguard/add',
-                json_encode([
-                    'name' => $request->name,
-                    'mtu' => $request->mtu,
-                    'listen-port' => $request->listen_port
-                ]),
-                true);
+            // insert on local DB
+            $newInterfaceId = DB::table('interfaces')->insertGetId([
+                'name' => $request->name,
+                'default_endpoint_address' => $request->default_endpoint_address,
+                'dns' => $request->dns,
+                'ip_range' => $request->ip_range,
+                'mtu' => $request->mtu,
+                'listen_port' => $request->listen_port,
+                'public_key' => $publicKey,
+                'private_key' => $privateKey
+            ]);
 
-            // fetch public and private key
-            $newRemoteInterface = curl_general('GET', $sAddress . '/rest/interface/wireguard?name='.$request->name);
+            $message .= "Local: OK!\r\n";
 
-            // ip/address/add address=10.20.130.1/24 interface=WG-OM
-            curl_general('POST', 
-                $sAddress . '/rest/ip/address/add',
-                json_encode([
-                    'address' => $request->ip_range.'1/24',
-                    'interface' => $request->name,
-                ]),
-                true);
-
-            if (is_array($newRemoteInterface) && count($newRemoteInterface) > 0) {
-                // $newRemoteInterface = $addInterfaceResponse['ret'];
-                $message .= $sAddress . ': OK!\n\r';
-                $public_key = $newRemoteInterface[0]['public-key'];
-                $private_key = $newRemoteInterface[0]['private-key'];
-                // insert on local DB
-                $newInterfaceId = DB::table('interfaces')->insertGetId([
-                    'name' => $request->name,
-                    'default_endpoint_address' => $request->default_endpoint_address,
-                    'dns' => $request->dns,
-                    'ip_range' => $request->ip_range,
-                    'mtu' => $request->mtu,
-                    'listen_port' => $request->listen_port,
-                    'public_key' => $public_key,
-                    'private_key' => $private_key
-                ]);
-
-                // give access to all superadmins
-                $superAdmins = DB::table('users')->where('user_type', \App\Enums\UserType::SUPERADMIN->value)->get();
-                foreach ($superAdmins as $superAdmin) {
-                    DB::table('user_interfaces')->insert([
-                        'user_id' => $superAdmin->id,
-                        'interface_id' => $newInterfaceId,
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s')
-                    ]);
-                }
-
-                DB::table('server_interfaces')->insert([
-                    'server_id' => $sId,
+            // give access to all superadmins
+            $superAdmins = DB::table('users')->where('user_type', UserType::SUPERADMIN->value)->get();
+            foreach ($superAdmins as $superAdmin) {
+                DB::table('user_interfaces')->insert([
+                    'user_id' => $superAdmin->id,
                     'interface_id' => $newInterfaceId,
-                    'server_interface_id' => $newRemoteInterface[0]['.id']
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
                 ]);
+            }
 
-                // insert on all remote servers
-                for($i=1; $i<count($servers); $i++) {
-                    $server= $servers[$i];
-                    $sAddress = $server->server_address;
-                    $sId = $server->id;
+            foreach ($servers as $server) {
+                $sAddress = $server->server_address;
+                $sId = $server->id;
 
-                    curl_general('POST', 
-                        $sAddress . '/rest/interface/wireguard/add',
-                        json_encode([
-                            'name' => $request->name,
-                            // 'public-key' => $public_key,
-                            'private-key' => $private_key,
-                            'mtu' => $request->mtu,
-                            'listen-port' => $request->listen_port
-                        ]),
-                        true);
+                // add remote interface
+                $res = curl_general('POST', 
+                    $sAddress . '/rest/interface/wireguard/add',
+                    json_encode([
+                        'name' => $request->name,
+                        'private-key' => $private_key,
+                        'mtu' => $request->mtu,
+                        'listen-port' => $request->listen_port
+                    ]),
+                    true
+                );
 
+                if (is_array($res) && isset($res[0]['ret'])) {
+                    $message .= "$sAddress OK!\r\n";
+                    $newRemoteInterface = $res[0]['ret'];
+                    // add remote ip address
                     curl_general('POST', 
                         $sAddress . '/rest/ip/address/add',
                         json_encode([
                             'address' => $request->ip_range.'1/24',
                             'interface' => $request->name,
                         ]),
-                        true);
+                        true
+                    );
 
-                    $newRemoteInterface = curl_general('GET', $sAddress . '/rest/interface/wireguard?name='.$request->name);
-                    if (count($newRemoteInterface) > 0) {
-                        DB::table('server_interfaces')->insert([
-                            'server_id' => $sId,
-                            'interface_id' => $newInterfaceId,
-                            'server_interface_id' => $newRemoteInterface[0]['.id']
-                        ]);
-                        $message .= $sAddress . ': OK!\n\r';
-                    } else {
-                        $message .= $sAddress . ' did not respond.\n\r';
-                    }
+                    
+                    DB::table('server_interfaces')->insert([
+                        'server_id' => $sId,
+                        'interface_id' => $newInterfaceId,
+                        'server_interface_id' => $newRemoteInterface
+                    ]);
+                } else {
+                    $message .= "$sAddress failed!\r\n";
                 }
-                return back()->with('message', $message)->with('type', 'success');
-            } else {
-                return back()->with('message', 'Unable to create interface on remote.')->with('type', 'danger');
             }
+            return back()->with('message', $message)->with('type', 'success');
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage)->with('type', 'danger');
         }

@@ -421,6 +421,16 @@ class SettingController extends Controller
                     true
                 );
 
+                // add ip address as well
+                curl_general('POST', 
+                    $sAddress . '/rest/ip/address/add',
+                    json_encode([
+                        'address' => $localInterface->ip_range.'1/24',
+                        'interface' => $localInterfaceName,
+                    ]),
+                    true
+                );
+
                 if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
                     $remoteInterfaceId = $res[0]['ret'];
                 } else {
