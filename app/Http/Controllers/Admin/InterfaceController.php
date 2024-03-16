@@ -70,7 +70,7 @@ class InterfaceController extends Controller
                     true
                 );
 
-                if (is_array($res) && isset($res[0]['ret'])) {
+                if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
                     $message .= "$sAddress: OK!\r\n";
                     $newRemoteInterface = $res[0]['ret'];
                     // add remote ip address
@@ -82,7 +82,6 @@ class InterfaceController extends Controller
                         ]),
                         true
                     );
-
                     
                     DB::table('server_interfaces')->insert([
                         'server_id' => $sId,
