@@ -448,7 +448,10 @@ class SettingController extends Controller
             $saddress = $request->server_address;
 
             $remotePeers = curl_general('GET',
-                $saddress . '/rest/interface/wireguard/peers'
+                $saddress . '/rest/interface/wireguard/peers',
+                '',
+                false,
+                30 // timeout (s)
             );
             $remotePeersAllowedAddresses = array_column($remotePeers, 'allowed-address');
             $localPeersClientAddresses = array_column($localPeers->toArray(), 'client_address');
@@ -466,10 +469,12 @@ class SettingController extends Controller
                 }
             }
 
+            $numberOfFailedAttempts = 0;
             foreach ($localPeers as $localPeer) {
                 $key = array_search($localPeer->client_address, $remotePeersAllowedAddresses);
-                dump($key);
+
                 if ($key > 0) { // peer exists on remote
+                    
                     // check id is correct
                     $server_peer = DB::table('server_peers')
                                     ->where('server_id', $sId)
@@ -507,34 +512,26 @@ class SettingController extends Controller
                     }
                 } else { // peer does not exist on remote
                     // create peer on remote
-                    $server_interface = DB::table('server_interfaces')
-                                            ->where('server_id', $sId)
-                                            ->where('interface_id', $localPeer->interface_id)
-                                            ->first();
-                    
+                    $interface = DB::table('interfaces')->find($localPeer->interface_id);
+                    $caddress = substr($localPeer->client_address,0,-3);
+                    $interfaceName = $interface->name;
+                    $cdns = $localPeer->dns ?? $interface->dns;
+                    $wgserveraddress = $localPeer->endpoint_address ?? $interface->default_endpoint_address;
+
                     $wg = new WiregaurdController();
-                    $addResponse = $wg->addPeer($saddress, 
-                        substr($localPeer->client_address,0,-3), 
-                        $server_interface->server_interface_id,
-                        $localPeer->dns, 
-                        $localPeer->endpoint_address, 
-                        $localPeer->comment,
-                        $localPeer->public_key
-                    );
-                    dump($addResponse);
-                    if ($addResponse) {
-                        DB::table('server_peers')->insert([
-                            'server_id' => $sId,
-                            'peer_id' => $localPeer->id,
-                            'server_peer_id' => $addResponse
-                        ]);
-                    } else {
-                        return $this->fail('Unable to sync!');
+                    $addResponse = $wg->addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $localPeer->comment, $localPeer->public_key, $localPeer->id);
+                    
+                    if (! $addResponse) {
+                        $numberOfFailedAttempts++;
                     }
                 }
             }
 
-            return $this->success('Peers Synced Successfully');
+            if ($numberOfFailedAttempts > 0) {
+                return $this->fail('Sync was not successful!');
+            } else {
+                return $this->success('Peers Synced Successfully');
+            }
         } catch (\Exception $exception) {
             return $this->fail($exception->getMessage());
         }
