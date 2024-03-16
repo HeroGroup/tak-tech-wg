@@ -20,7 +20,6 @@ class InterfaceController extends Controller
     public function addInterface(Request $request)
     {
         try {
-            $message = '';
             $servers = DB::table('servers')
                 ->where('router_os_version', '>=', '7.12.1')
                 ->where('router_os_version', 'not like', '%beta%')
@@ -42,7 +41,7 @@ class InterfaceController extends Controller
                 'private_key' => $privateKey
             ]);
 
-            $message .= "Local: OK!\r\n";
+            $message = "Local: OK!\r\n";
 
             // give access to all superadmins
             $superAdmins = DB::table('users')->where('user_type', UserType::SUPERADMIN->value)->get();
@@ -70,10 +69,9 @@ class InterfaceController extends Controller
                     ]),
                     true
                 );
-                dd($res);
 
                 if (is_array($res) && isset($res[0]['ret'])) {
-                    $message .= "$sAddress OK!\r\n";
+                    $message .= "$sAddress: OK!\r\n";
                     $newRemoteInterface = $res[0]['ret'];
                     // add remote ip address
                     curl_general('POST', 
@@ -92,7 +90,7 @@ class InterfaceController extends Controller
                         'server_interface_id' => $newRemoteInterface
                     ]);
                 } else {
-                    $message .= "$sAddress failed!\r\n";
+                    $message .= "$sAddress: failed!\r\n";
                 }
             }
             return back()->with('message', $message)->with('type', 'success');
