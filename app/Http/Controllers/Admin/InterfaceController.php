@@ -112,6 +112,9 @@ class InterfaceController extends Controller
                 'listen_port' => $request->listen_port,
             ]);
 
+            // TODO: update on remote (mtu, listen_port)
+            // TODO: update ip address on remote
+
             return back()->with('message', 'Interface updated successfully.')->with('type', 'success');
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage())->with('type', 'danger');
@@ -137,7 +140,8 @@ class InterfaceController extends Controller
                 );
                 // TODO: delete ip address as well
             }
-            $server_interfaces = DB::table('server_interfaces')->where('interface_id', $request->id)->delete();
+            DB::table('server_interfaces')->where('interface_id', $request->id)->delete();
+            DB::table('user_interfaces')->where('interface_id', $request->id)->delete();
 
             return $this->success('Interface removed successfully.');
         } catch (\Exception $exception) {
