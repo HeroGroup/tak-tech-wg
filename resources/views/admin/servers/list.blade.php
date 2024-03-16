@@ -36,8 +36,6 @@
                 <a href="{{route('admin.settings.servers.info',$id)}}" class="dropdown-item text-warning">
                     <i class="fa fa-info-circle"></i> Server Details
                 </a>
-                <a href="#" onclick="" class="dropdown-item text-success">
-                    <i class="fa fa-sync"></i> Sync
                 <div class="dropdown-divider"></div>
                 <a href="#" onclick="destroy('{{route('admin.settings.servers.delete')}}','{{$id}}','{{$id}}')" class="dropdown-item text-danger">
                     <i class="fa fa-trash"></i> Remove

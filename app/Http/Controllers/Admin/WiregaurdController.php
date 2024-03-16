@@ -121,7 +121,7 @@ class WiregaurdController extends Controller
             'publicKey' => $publicKey
         ];
     }
-    public function addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $commentApply, $publicKey, $localPeerId)
+    public function addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $commentApply, $publicKey, $localPeerId, $enabled=1)
     {
         $data = [
 			'interface' => $interfaceName,
@@ -132,7 +132,9 @@ class WiregaurdController extends Controller
 			'comment' => $commentApply,
         ];
 
-        if (! auth()->user()->is_admin) { // reseller user
+        if (in_array($enabled, [0, 1])) {
+            $data['disabled'] = !(bool)$enabled;
+        } else if (! auth()->user()->is_admin) { // reseller user
             $data['disabled'] = true;
         }
 

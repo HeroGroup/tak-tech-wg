@@ -529,7 +529,7 @@ class SettingController extends Controller
                     $wgserveraddress = $localPeer->endpoint_address ?? $interface->default_endpoint_address;
 
                     $wg = new WiregaurdController();
-                    $addResponse = $wg->addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $localPeer->comment, $localPeer->public_key, $localPeer->id);
+                    $addResponse = $wg->addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $localPeer->comment, $localPeer->public_key, $localPeer->id, $localPeer->is_enabled);
                     
                     if (! $addResponse) {
                         $numberOfFailedAttempts++;
