@@ -98,6 +98,7 @@ class WiregaurdController extends Controller
         $qrcodeFilePath = resource_path("confs/$today/$time/$commentApply.png");
         createQRcode($content, $qrcodeFilePath);
 
+        $now = date('Y-m-d H:i:s');
         $newLocalPeerId = DB::table('peers')->insertGetId([
             'interface_id' => $interfaceId,
             'dns' => $cdns,
@@ -106,10 +107,12 @@ class WiregaurdController extends Controller
             'comment' => $commentApply,
             'private_key' => $privateKey,
             'public_key' => $publicKey,
+            'is_enabled' => auth()->user()->is_admin,
+            'first_enabled' => auth()->user()->is_admin ? $now : null,
             'conf_file' => $confFilePath,
             'qrcode_file' => $qrcodeFilePath,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
+            'created_at' => $now,
+            'updated_at' => $now,
             'created_by' => auth()->user()->id
         ]);
 
@@ -128,6 +131,10 @@ class WiregaurdController extends Controller
             'public-key' => $publicKey,
 			'comment' => $commentApply,
         ];
+
+        if (! auth()->user()->is_admin) { // reseller user
+            $data['disabled'] = true;
+        }
 
         // return new peer id
         $newRemotePeer = curl_general(
@@ -323,7 +330,13 @@ class WiregaurdController extends Controller
     {
         try {
             // toggle on local DB
-            DB::table('peers')->where('id', $id)->update(['is_enabled' => $status]);
+            $peer = DB::table('peers')->find($id);
+            $update = ['is_enabled' => $status];
+            if ($status == 1 && (! $peer->first_enabled)) {
+                $update['first_enabled'] = date('Y-m-d H:i:s');
+            }
+            
+            DB::table('peers')->where('id', $id)->update($update);
 
             // loop on servers and perform action
             $server_peers = DB::table('server_peers')->where('peer_id', $id)->get();
