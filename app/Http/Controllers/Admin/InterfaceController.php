@@ -96,7 +96,7 @@ class InterfaceController extends Controller
             }
             return back()->with('message', $message)->with('type', 'success');
         } catch (\Exception $exception) {
-            return back()->with('message', $exception->getMessage)->with('type', 'danger');
+            return back()->with('message', $exception->getMessage())->with('type', 'danger');
         }
     }
 
