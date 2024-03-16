@@ -13,6 +13,7 @@
 <div class="table-responsive">
   <table class="table table-striped" id="dataTable">
     <thead>
+      <th>Row</th>
       <th>Name</th>
       <th>Default Endpoint</th>
       <th>DNS</th>
@@ -22,8 +23,10 @@
       <th>Actions</th>
     </thead>
     <tbody>
+    <?php $row = 0; ?>
     @foreach($interfaces as $interface)
       <tr id="{{$interface->id}}">
+        <td>{{++$row}}</td>
         <td>{{$interface->name}}</td>
         <td>{{$interface->default_endpoint_address}}</td>
         <td>{{$interface->dns}}</td>
