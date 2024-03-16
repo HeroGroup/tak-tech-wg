@@ -28,6 +28,7 @@ class InterfaceController extends Controller
             $keys = createKeys();
             $privateKey = $keys['private_key'];
             $publicKey = $keys['public_key'];
+            $now = date('Y-m-d H:i:s');
 
             // insert on local DB
             $newInterfaceId = DB::table('interfaces')->insertGetId([
@@ -38,7 +39,9 @@ class InterfaceController extends Controller
                 'mtu' => $request->mtu,
                 'listen_port' => $request->listen_port,
                 'public_key' => $publicKey,
-                'private_key' => $privateKey
+                'private_key' => $privateKey,
+                'created_at' => $now,
+                'updated_at' => $now
             ]);
 
             $message = "Local: OK!\r\n";
@@ -49,8 +52,8 @@ class InterfaceController extends Controller
                 DB::table('user_interfaces')->insert([
                     'user_id' => $superAdmin->id,
                     'interface_id' => $newInterfaceId,
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s')
+                    'created_at' => $now,
+                    'updated_at' => $now
                 ]);
             }
 
@@ -69,7 +72,7 @@ class InterfaceController extends Controller
                     ]),
                     true
                 );
-
+dum($res);
                 if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
                     $message .= "$sAddress: OK!\r\n";
                     $newRemoteInterface = $res[0]['ret'];
