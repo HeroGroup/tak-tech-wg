@@ -70,6 +70,7 @@ class InterfaceController extends Controller
                     ]),
                     true
                 );
+                dd($res);
 
                 if (is_array($res) && isset($res[0]['ret'])) {
                     $message .= "$sAddress OK!\r\n";
