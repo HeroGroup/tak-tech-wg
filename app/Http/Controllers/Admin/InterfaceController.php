@@ -64,7 +64,7 @@ class InterfaceController extends Controller
                     $sAddress . '/rest/interface/wireguard/add',
                     json_encode([
                         'name' => $request->name,
-                        'private-key' => $private_key,
+                        'private-key' => $privateKey,
                         'mtu' => $request->mtu,
                         'listen-port' => $request->listen_port
                     ]),
