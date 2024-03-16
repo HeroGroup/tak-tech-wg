@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
+
 require_once app_path('Helpers/phpqrcode/qrlib.php');
 
 function createKeys()
@@ -20,9 +22,12 @@ function createKeys()
 
 function curl_general($method, $url, $data=null, $withHeader=false, $timeout=3)
 {
+  $server_api_username = DB::table('settings')->where('setting_key', 'SERVERS_API_USERNAME')->first()->setting_value;
+  $server_api_password = DB::table('settings')->where('setting_key', 'SERVERS_API_PASSWORD')->first()->setting_value;
+  
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, 'http://' . $url);
-  curl_setopt($ch, CURLOPT_USERPWD, env('SERVERS_API_USERNAME') . ":" . env('SERVERS_API_PASSWORD'));
+  curl_setopt($ch, CURLOPT_USERPWD, $server_api_username . ":" . $server_api_password);
   if ($data) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
   }
