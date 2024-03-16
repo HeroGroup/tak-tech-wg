@@ -431,8 +431,8 @@ class SettingController extends Controller
                     true
                 );
 
-                if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
-                    $remoteInterfaceId = $res[0]['ret'];
+                if ($res && is_array($res) && count($res) > 0 && isset($res['ret'])) {
+                    $remoteInterfaceId = $res['ret'];
                 } else {
                     $remoteInterface = curl_general('GET', $sAddress . '/rest/interface/wireguard?name='.$localInterfaceName);
                     $remoteInterfaceId = $remoteInterface[0]['.id'];

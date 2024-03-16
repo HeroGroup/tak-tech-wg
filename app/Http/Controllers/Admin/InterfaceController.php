@@ -73,9 +73,9 @@ class InterfaceController extends Controller
                     true
                 );
 
-                // if ($res && is_array($res) && count($res) > 0 && isset($res[0]['ret'])) {
+                if ($res && is_array($res) && count($res) > 0 && isset($res['ret'])) {
                     $message .= `$sAddress: OK!\r\n`;
-                    $newRemoteInterface = $res[0]['ret'];
+                    $newRemoteInterface = $res['ret'];
                     // add remote ip address
                     curl_general('POST', 
                         $sAddress . '/rest/ip/address/add',
@@ -91,9 +91,9 @@ class InterfaceController extends Controller
                         'interface_id' => $newInterfaceId,
                         'server_interface_id' => $newRemoteInterface
                     ]);
-                // } else {
-                    // $message .= `$sAddress: failed! \r\n`;
-                // }
+                } else {
+                    $message .= `$sAddress: failed! \r\n`;
+                }
             }
             return back()->with('message', $message)->with('type', 'success');
         } catch (\Exception $exception) {
