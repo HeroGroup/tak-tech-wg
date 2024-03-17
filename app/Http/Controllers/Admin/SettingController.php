@@ -577,9 +577,13 @@ class SettingController extends Controller
                     $resMessage = $result['message'];
                     $message .= "$sAddress: $resMessage\r\n";
                 }
+
+                return $this->success($message);
             }
 
-            return $this->success($message);
+            return $this->fail('token mismatch!');
+
+            
         } catch (\Exception $exception) {
             return $this->fail($exception->getMessage());
         }
