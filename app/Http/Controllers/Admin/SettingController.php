@@ -536,18 +536,22 @@ class SettingController extends Controller
             }
 
             if ($numberOfFailedAttempts > 0) {
-                return $this->fail('Sync was not successful!');
+                ['status' => -1, 'message' => 'Sync was not successful!'];
             } else {
-                return $this->success('Peers Synced Successfully');
+                ['status' => 1, 'message' => 'Peers Synced Successfully'];
             }
         } catch (\Exception $exception) {
-            return $this->fail($exception->getMessage());
+            return ['status' => -1, 'message' => $exception->getMessage()];
         }
     }
 
     public function syncPeers(Request $request)
     {
-        return $this->syncPeersOnServer($request->id, $request->server_address);
+        $result = $this->syncPeersOnServer($request->id, $request->server_address);
+        $status = $result['status'];
+        $message = $result['message'];
+
+        return $status == 1 ? $this->success($message) : $this->fail($message);
     }
 
     public function isServerAddressUnique($address)
@@ -564,15 +568,19 @@ class SettingController extends Controller
         try {
             $token = "hul8_ken=1s9k=0+2em1qal";
             $request_token = $request->query('token');
+            $message = "";
 
             if ($token == $request_token) {
                 $servers = DB::table('servers')->get();
                 foreach ($servers as $server) {
-                    $this->syncPeersOnServer($server->id, $server->server_address);
+                    $sAddress = $server->server_address;
+                    $result = $this->syncPeersOnServer($server->id, $sAddress);
+                    $resMessage = $result['message'];
+                    $message .= "$sAddress: $resMessage\r\n";
                 }
             }
 
-            return $this->success('Sync Ok!');
+            return $this->success($message);
         } catch (\Exception $exception) {
             return $this->fail($exception->getMessage());
         }
