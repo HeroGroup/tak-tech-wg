@@ -228,9 +228,6 @@
 </div>
 
 <script>
-  window.addEventListener('load', function () {
-    turnOffLoader();
-  });
   function clearAllFilters() {
     window.location.href = "{{route('wiregaurd.peers.index')}}";
   }
@@ -328,12 +325,13 @@
     return ids;
   }
   function massDelete() {
-    turnOnLoader();
     var ids = checkedItems();
     if (ids.length == 0) {
       return;
     }
 
+    turnOnLoader();
+    
     var formData = createFormData({
       '_token': '{{csrf_token()}}',
       '_method': 'DELETE',
@@ -356,11 +354,12 @@
     sendRequest(params);
   }
   function toggleEnableMass(status) {
-    turnOnLoader();
     var ids = checkedItems();
     if (ids.length == 0) {
       return;
     }
+
+    turnOnLoader();
 
     var formData = createFormData({
       '_token': '{{csrf_token()}}',
@@ -396,11 +395,12 @@
     sendRequest(params);
   }
   function regenerateMass() {
-    turnOnLoader();
     var ids = checkedItems();
     if (ids.length == 0) {
       return;
     }
+
+    turnOnLoader();
 
     var formData = createFormData({
       '_token': '{{csrf_token()}}',
@@ -419,12 +419,14 @@
     sendRequest(params);
   }
   function updateMass() {
-    turnOnLoader();
+
     var ids = checkedItems();
     if (ids.length == 0) {
       return;
     }
 
+    turnOnLoader();
+    
     var formData = createFormData({
       '_token': '{{csrf_token()}}',
       '_method': 'PUT',

@@ -118,16 +118,15 @@ function createZip($directory, $time)
   return ['status' => 1, 'file' => $zipFile];
 }
 
-function zipPeer($peer, $filename)
+function zipPeer($comment, $conf_file, $qrcode_file, $zipFileName)
 {
   $zip = new ZipArchive();
-  $comment = $peer->comment;
 
-  if ($zip->open($filename, ZipArchive::CREATE)!==TRUE) {
-      exit("cannot open <$filename>\n");
+  if ($zip->open($zipFileName, ZipArchive::CREATE)!==TRUE) {
+      exit("cannot open <$zipFileName>\n");
   }
-  $zip->addFile($peer->conf_file, "$comment.conf");
-  $zip->addFile($peer->qrcode_file, "$comment.png");
+  $zip->addFile($conf_file, "$comment.conf");
+  $zip->addFile($qrcode_file, "$comment.png");
   $zip->close();
 
   return $zip;

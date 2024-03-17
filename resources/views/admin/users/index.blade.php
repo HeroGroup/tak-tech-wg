@@ -17,13 +17,17 @@
       <th>Email</th>
       <th>Type</th>
       <th>Interface Access</th>
+      <th>Peers</th>
       <th>Active</th>
       <th>Actions</th>
     </thead>
     <tbody>
       @foreach($users as $user)
       <tr>
-        <?php $userInterfaces = \Illuminate\Support\Facades\DB::table('user_interfaces')->where('user_id', $user->id)->join('interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')->get(); ?>
+        <?php 
+          $userInterfaces = \Illuminate\Support\Facades\DB::table('user_interfaces')->where('user_id', $user->id)->join('interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')->get();
+          $x = array_column($userInterfaces->toArray(), 'interface_id');
+        ?>
         <td>{{$user->name}}</td>
         <td>{{$user->email}}</td>
         <td>{{$user->user_type}}</td>
@@ -38,6 +42,7 @@
           </ul>
           @endif
         </td>
+        <td>{{\Illuminate\Support\Facades\DB::table('peers')->whereIn('interface_id', array_unique($x))->count()}}</td>
         <td>
           <label class="switch">
             <input type="checkbox" name="is_active_{{$user->id}}" id="is_active_{{$user->id}}" @if($user->is_active) checked @endif onchange="toggleActive('{{$user->id}}', this.checked)">

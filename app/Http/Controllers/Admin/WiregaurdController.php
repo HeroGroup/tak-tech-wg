@@ -555,9 +555,38 @@ class WiregaurdController extends Controller
     {
         $peer = DB::table('peers')->find($id);
         $comment = $peer->comment;
-        $filename =  resource_path("confs/$comment.zip");
-        zipPeer($peer, $filename);
+        $zipFileName =  resource_path("confs/$comment.zip");
+        
+        if ($peer->conf_file && $peer->qrcode_file) {
+            zipPeer($comment, $peer->conf_file, $peer->qrcode_file, $zipFileName);
+        } else {
+            if ($peer->private_key) {
+                $interface = DB::table('interfaces')->find($peer->interface_id);
+                $cdns = $peer->dns ?? $interface->dns;
+                $wgserveraddress = $peer->endpoint_address ?? $interface->default_endpoint_address;
+                
+                // create conf and qr
+                $time = time();
+                $today = date('Y-m-d', $time);
 
-        return response()->download($filename);
+                // generate config file
+                $confFilePath = resource_path("confs/$today/$time/$comment.conf");
+                $content = createConfFile($today, $time, $confFilePath, $peer->private_key, $peer->client_address, $cdns, $interface->public_key, $wgserveraddress, $interface->listen_port);
+                    
+                // creat QR image
+                $qrcodeFilePath = resource_path("confs/$today/$time/$comment.png");
+                createQRcode($content, $qrcodeFilePath);
+
+                DB::table('peers')->where('id', $id)->update([
+                    'conf_file' => $confFilePath,
+                    'qrcode_file' => $qrcodeFilePath
+                ]);
+
+                zipPeer($comment, $confFilePath, $qrcodeFilePath, $zipFileName);
+            }
+        }
+        
+
+        return response()->download($zipFileName);
     }
 }
