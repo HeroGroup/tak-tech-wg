@@ -71,17 +71,19 @@ class SettingController extends Controller
         $localPeersCount = DB::table('peers')->count();
         $remotePeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers', '', false, 30);
         $remoteCounts['peers'] = is_array($remotePeers) ? count($remotePeers) : '-';
-        // dd($remoteCounts['peers']);
+
+        $disabledArray = array_column($remotePeers, 'disabled');
+        $disabledArrayCounts = array_count_values($disabledArray);
+        $enabledRemotePeersCount = $disabledArrayCounts['false'];
+        $disabledRemotePeersCount = $disabledArrayCounts['true'];
 
         // enabled peers count
         $localEnabledPeersCount = DB::table('peers')->where('is_enabled', 1)->count();
-        $remoteEnabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=no', '', false, 30);
-        $remoteCounts['enabledPeers'] = is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : '-';
+        $remoteCounts['enabledPeers'] = $enabledRemotePeersCount;
 
         // disabled peers count
         $localDisabledPeersCount = DB::table('peers')->where('is_enabled', 0)->count();
-        $remoteDisabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=yes', '', false, 30);
-        $remoteCounts['disabledPeers'] = is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : '-';
+        $remoteCounts['disabledPeers'] = $disabledRemotePeersCount;
 
         $remoteQueues = curl_general('GET', $sAddress . '/rest/queue/simple');
         $remoteCounts['queues'] = is_array($remoteQueues) ? count($remoteQueues) : '-';
@@ -461,6 +463,21 @@ class SettingController extends Controller
                 false,
                 30 // timeout (s)
             );
+
+            // check if server is already synced by number of enabled and disabled peers
+            $remotePeersTotalCount = count($remotePeers);
+            $disabledArray = array_column($remotePeers, 'disabled');
+            $disabledArrayCounts = array_count_values($disabledArray);
+            $enabledRemotePeersCount = $disabledArrayCounts['false'];
+            $disabledRemotePeersCount = $disabledArrayCounts['true'];
+
+            $localEnabledPeersCount = DB::table('peers')->where('is_enabled', 1)->count();
+            $localDisabledPeersCount = DB::table('peers')->where('is_enabled', 0)->count();
+
+            if ($localEnabledPeersCount == $enabledRemotePeersCount && $localDisabledPeersCount == $disabledRemotePeersCount) {
+                return ['status' => 1, 'message' => 'Server is already synced!'];
+            }
+            
             $remotePeersAllowedAddresses = array_column($remotePeers, 'allowed-address');
             $localPeersClientAddresses = array_column($localPeers->toArray(), 'client_address');
             
