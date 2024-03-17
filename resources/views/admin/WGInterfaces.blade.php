@@ -34,7 +34,11 @@
         <td>{{$interface->ip_range}}</td>
         <td>{{$interface->mtu}}</td>
         <td>{{$interface->listen_port}}</td>
-        <td>{{\Illuminate\Support\Facades\DB::table('peers')->where('interface_id', $interface->id)->count()}}</td>
+        <td>
+            <a href="/wiregaurd/peers?wiregaurd={{$interface->id}}">
+                {{\Illuminate\Support\Facades\DB::table('peers')->where('interface_id', $interface->id)->count()}}
+            </a>
+        </td>
         <td>
           <a href="#" class="btn btn-info btn-circle btn-sm" data-toggle="modal" data-target="#edit-interface-modal-{{$interface->id}}" title="Edit">
                 <i class="fas fa-pen"></i>
