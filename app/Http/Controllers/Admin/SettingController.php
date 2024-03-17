@@ -536,9 +536,9 @@ class SettingController extends Controller
             }
 
             if ($numberOfFailedAttempts > 0) {
-                ['status' => -1, 'message' => 'Sync was not successful!'];
+                return ['status' => -1, 'message' => 'Sync was not successful!'];
             } else {
-                ['status' => 1, 'message' => 'Peers Synced Successfully'];
+                return ['status' => 1, 'message' => 'Peers Synced Successfully'];
             }
         } catch (\Exception $exception) {
             return ['status' => -1, 'message' => $exception->getLine() . ': ' . $exception->getMessage()];
