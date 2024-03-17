@@ -541,7 +541,7 @@ class SettingController extends Controller
                 ['status' => 1, 'message' => 'Peers Synced Successfully'];
             }
         } catch (\Exception $exception) {
-            return ['status' => -1, 'message' => $exception->getMessage()];
+            return ['status' => -1, 'message' => $exception->getLine() . ': ' . $exception->getMessage()];
         }
     }
 
@@ -585,7 +585,7 @@ class SettingController extends Controller
 
             
         } catch (\Exception $exception) {
-            return $this->fail($exception->getMessage());
+            return $this->fail($exception->getLine() . ': ' . $exception->getMessage());
         }
     }
 }
