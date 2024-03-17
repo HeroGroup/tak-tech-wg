@@ -563,11 +563,10 @@ class SettingController extends Controller
         }
     }
 
-    public function syncAll()
+    public function syncAll($request_token)
     {
         try {
             $token = "hul8_ken=1s9k=0+2em1qal";
-            $request_token = $request->query('token');
             $message = "";
 
             if ($token == $request_token) {
