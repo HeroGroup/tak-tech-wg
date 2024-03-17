@@ -449,13 +449,11 @@ class SettingController extends Controller
         return $this->success('Sync OK!');
     }
 
-    public function syncPeers(Request $request)
+    protected function syncPeersOnServer($sId, $saddress)
     {
         // TODO: depend on server version, add method is different
         try {
             $localPeers = DB::table('peers')->get();
-            $sId = $request->id;
-            $saddress = $request->server_address;
 
             $remotePeers = curl_general('GET',
                 $saddress . '/rest/interface/wireguard/peers',
@@ -547,12 +545,36 @@ class SettingController extends Controller
         }
     }
 
+    public function syncPeers(Request $request)
+    {
+        return $this->syncPeersOnServer($request->id, $request->server_address);
+    }
+
     public function isServerAddressUnique($address)
     {
         try {
             return DB::table('servers')->where('server_address', $address)->count() == 0;
         } catch (\Exception $ex) {
             return false;
+        }
+    }
+
+    public function syncAll()
+    {
+        try {
+            $token = "hul8_ken=1s9k=0+2em1qal";
+            $request_token = $request->query('token');
+
+            if ($token == $request_token) {
+                $servers = DB::table('servers')->get();
+                foreach ($servers as $server) {
+                    $this->syncPeersOnServer($server->id, $server->server_address);
+                }
+            }
+
+            return $this->success('Sync Ok!');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
         }
     }
 }

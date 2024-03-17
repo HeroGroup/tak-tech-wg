@@ -13,6 +13,8 @@ Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'postLogin'])->name('post.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/servers/syncAll', [SettingController::class, 'syncAll'])->name('servers.syncPeers');
+
 Route::middleware(['auth', 'active'])->group(function() {
   Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
   Route::get('/users/changePassword', [AuthController::class, 'changePassword'])->name('users.changePassword');
