@@ -107,8 +107,8 @@ class WiregaurdController extends Controller
             'comment' => $commentApply,
             'private_key' => $privateKey,
             'public_key' => $publicKey,
-            'is_enabled' => auth()->user()->is_admin,
-            'first_enabled' => auth()->user()->is_admin ? $now : null,
+            'is_enabled' => 1,
+            // 'first_enabled' => auth()->user()->is_admin ? $now : null,
             'conf_file' => $confFilePath,
             'qrcode_file' => $qrcodeFilePath,
             'created_at' => $now,
@@ -132,11 +132,11 @@ class WiregaurdController extends Controller
 			'comment' => $commentApply,
         ];
 
-        if (in_array($enabled, [0, 1])) {
-            $data['disabled'] = !(bool)$enabled;
-        } else if (! auth()->user()->is_admin) { // reseller user
-            $data['disabled'] = true;
-        }
+        // if (in_array($enabled, [0, 1])) {
+        //     $data['disabled'] = !(bool)$enabled;
+        // } else if (! auth()->user()->is_admin) { // reseller user
+        //     $data['disabled'] = true;
+        // }
 
         // return new peer id
         $newRemotePeer = curl_general(
@@ -465,12 +465,17 @@ class WiregaurdController extends Controller
         return $this->success('Selected items removed successfully.');
     }
 
-    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $today, $time)
+    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $today, $time, $mass=false)
     {
         try {
             
             $peer = DB::table('peers')->find($id);
             $interface = DB::table('interfaces')->find($peer->interface_id);
+            $update = [
+                'dns' => $dns,
+                'endpoint_address' => $endpoint_address,
+            ];
+
             if ($peer->dns != $dns || $peer->endpoint_address != $endpoint_address) {
                 $cdns = $dns ?? $interface->dns;
                 $wgserveraddress = $endpoint_address ?? $interface->default_endpoint_address;
@@ -496,18 +501,22 @@ class WiregaurdController extends Controller
                 createQRcode($content, $qrcodeFilePath);
 
                 // update record with new values
-                DB::table('peers')->where('id', $id)->update([
-                    'dns' => $dns,
-                    'endpoint_address' => $endpoint_address,
-                    'conf_file' => $confFilePath,
-                    'qrcode_file' => $qrcodeFilePath,
-                ]);
-            } else if ($note || $expire_days) {
-                DB::table('peers')->where('id', $id)->update([
-                    'note' => $note,
-                    'expire_days' => $expire_days
-                ]);
+                $update['conf_file'] = $confFilePath;
+                $update['qrcode_file'] = $qrcodeFilePath;
+
+            } 
+            if ($note != $peer->note) {
+                $update['note'] = $note;
             }
+            if ($mass) {
+                if ($expire_days && $expire_days != $peer->expire_days) {
+                    $update['expire_days'] = $expire_days;
+                }
+            } else if ($expire_days != $peer->expire_days) {
+                $update['expire_days'] = $expire_days;
+            }
+
+            DB::table('peers')->where('id', $id)->update($update);
             
             return ['status' => 1, 'message' => 'Peer updated successully'];
         } catch (\Exception $exception) {
@@ -532,7 +541,7 @@ class WiregaurdController extends Controller
         try {
             $ids = json_decode($request->ids);
             foreach($ids as $id) {
-                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, null, $today, $time);
+                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, $request->expire_days, $today, $time, true);
                 $message .= $result['message'] . "\r\n";
             }
             

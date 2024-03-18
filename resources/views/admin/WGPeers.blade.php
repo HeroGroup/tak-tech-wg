@@ -199,7 +199,7 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editPeersMassModalLabel">Edit peer</h5>
+        <h5 class="modal-title" id="editPeersMassModalLabel">Edit peers</h5>
         <button class="close" type="button" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
@@ -215,6 +215,12 @@
           <div class="col-md-12">
             <label for="mass_dns">DNS</label>
             <input class="form-control" name="mass_dns" id="mass_dns" placeholder="192.168.200.1">
+          </div>
+        </div>
+        <div class="form-group row mb-4">
+          <div class="col-md-12">
+            <label for="mass_expire_days">Expire (days)</label>
+            <input class="form-control" name="mass_expire_days" id="mass_expire_days">
           </div>
         </div>
         <div class="form-group row mb-4">
@@ -433,6 +439,7 @@
       'ids': JSON.stringify(ids),
       'dns': document.getElementById('mass_dns').value,
       'endpoint_address': document.getElementById('mass_endpoint_address').value,
+      'expire_days': document.getElementById('mass_expire_days').value,
     });
 
     var params = {
