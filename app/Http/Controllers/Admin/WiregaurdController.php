@@ -530,6 +530,29 @@ class WiregaurdController extends Controller
         $today = date('Y-m-d', $time);
         $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $today, $time);
 
+        $peer = DB::table('peers')->where('id', $request->id)->first();
+
+        if ($request->comment != $peer->comment) {
+            $newComment = $request->comment;
+            // update comment on local
+            DB::table('peers')->where('id', $request->id)->update([
+                'comment' => $newComment
+            ]);
+            // update on remote as well
+            // loop on all servers to update on remote
+            $server_peers = DB::table('server_peers')->where('peer_id', $request->id)->get();
+            foreach ($server_peers as $server_peer) {
+                $sAddress = DB::table('servers')->find($server_peer->server_id)->server_address;
+                $data = [".id" => $server_peer->server_peer_id, "comment" => $newComment];
+                curl_general(
+                    'POST',
+                    $sAddress . '/rest/interface/wireguard/peers/set',
+                    json_encode($data),
+                    true
+                );
+            }
+            
+        }
         return back()->with('message', $result['message'])->with('type', $result['status'] == 1 ? 'success' : 'danger');
     }
     

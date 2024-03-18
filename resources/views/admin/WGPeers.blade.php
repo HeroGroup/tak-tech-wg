@@ -158,6 +158,12 @@
                             </div>
                             <div class="form-group row mb-4">
                                 <div class="col-md-12">
+                                    <label for="comment">Comment</label>
+                                    <input class="form-control" name="comment" value="{{$peer->comment}}">
+                                </div>
+                            </div>
+                            <div class="form-group row mb-4">
+                                <div class="col-md-12">
                                     <label for="note">Note</label>
                                     <input class="form-control" name="note" value="{{$peer->note}}">
                                 </div>
