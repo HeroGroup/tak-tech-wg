@@ -59,7 +59,6 @@ class SettingController extends Controller
     {
         $server = DB::table('servers')->find($id);
         $sAddress = $server->server_address;
-
         $remoteCounts = [];
         
         // interfaces count
@@ -72,18 +71,25 @@ class SettingController extends Controller
         $remotePeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers', '', false, 30);
         $remoteCounts['peers'] = is_array($remotePeers) ? count($remotePeers) : '-';
 
-        $disabledArray = array_column($remotePeers, 'disabled');
-        $disabledArrayCounts = array_count_values($disabledArray);
-        $enabledRemotePeersCount = $disabledArrayCounts['false'];
-        $disabledRemotePeersCount = $disabledArrayCounts['true'];
+        $duplicates = [];
+        if ($remoteCounts['peers'] > 0) {
+            $x = array_count_values(array_column($remotePeers, 'allowed-address'));
+            foreach ($x as $key => $value) 
+                if ($value > 1) 
+                    $duplicates[$key] = $value;
+        }
+
+        $disabledArrayCounts = is_array($remotePeers) ? 
+            array_count_values(array_column($remotePeers, 'disabled')) : 
+            ['false' => '-', 'true' => '-'];
 
         // enabled peers count
         $localEnabledPeersCount = DB::table('peers')->where('is_enabled', 1)->count();
-        $remoteCounts['enabledPeers'] = $enabledRemotePeersCount;
+        $remoteCounts['enabledPeers'] = $disabledArrayCounts['false'] ?? '-';
 
         // disabled peers count
         $localDisabledPeersCount = DB::table('peers')->where('is_enabled', 0)->count();
-        $remoteCounts['disabledPeers'] = $disabledRemotePeersCount;
+        $remoteCounts['disabledPeers'] = $disabledArrayCounts['true'] ?? '-';
 
         $remoteQueues = curl_general('GET', $sAddress . '/rest/queue/simple');
         $remoteCounts['queues'] = is_array($remoteQueues) ? count($remoteQueues) : '-';
@@ -100,7 +106,7 @@ class SettingController extends Controller
         $remoteRoutes = curl_general('GET', $sAddress . '/rest/ip/route');
         $remoteCounts['routes'] = is_array($remoteRoutes) ? count($remoteRoutes) : '-';
 
-        return view('admin.servers.info', compact('server', 'remoteCounts', 'localInterfacesCount', 'localPeersCount', 'localEnabledPeersCount', 'localDisabledPeersCount'));
+        return view('admin.servers.info', compact('server', 'remoteCounts', 'localInterfacesCount', 'localPeersCount', 'localEnabledPeersCount', 'localDisabledPeersCount', 'duplicates'));
     }
     
     public function deleteSetting(Request $request)
@@ -147,13 +153,14 @@ class SettingController extends Controller
                 $remoteInterfaces = curl_general('GET', $sAddress . '/rest/interface/wireguard');
                 $infos[$sId]['interfaces'] = is_array($remoteInterfaces) ? count($remoteInterfaces) : '-';
                 
-                $remoteEnabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=no', '', false, 30);
-                $infos[$sId]['enabledPeers'] = is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : '-';
+                $remotePeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers', '', false, 30);
+                $disabledArrayCounts = is_array($remotePeers) ? 
+                    array_count_values(array_column($remotePeers, 'disabled')) : 
+                    ['false' => '-', 'true' => '-'];
                 
-                $remoteDisabledPeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers?=disabled=yes', '', false, 30);
-                $infos[$sId]['disabledPeers'] = is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : '-';
-
-                $infos[$sId]['totalPeers'] = (is_array($remoteEnabledPeers) ? count($remoteEnabledPeers) : 0) + (is_array($remoteDisabledPeers) ? count($remoteDisabledPeers) : 0);
+                $infos[$sId]['totalPeers'] = is_array($remotePeers) ? count($remotePeers) : '-';
+                $infos[$sId]['enabledPeers'] = $disabledArrayCounts['false'] ?? '-';
+                $infos[$sId]['disabledPeers'] = $disabledArrayCounts['true'] ?? '-';
             }
 
             $localInterfaces = DB::table('interfaces')->count();
@@ -306,6 +313,7 @@ class SettingController extends Controller
     public function getPeers(Request $request)
     {
         try {
+            $messages = [];
             $numberOfNewlyCreatedPeers = 0;
             $numberOfUpdatedPeers = 0;
     
@@ -313,17 +321,20 @@ class SettingController extends Controller
     
             if (is_array($remotePeers) && count($remotePeers) > 0) {
                 foreach ($remotePeers as $remotePeer) {
+                    $remotePeerAllowedAddress = $remotePeer['allowed-address'];
+                    $interfaceName = $remotePeer['interface'];
+
                     $correspondingLocalPeer = DB::table('peers')
-                                                ->where('client_address', $remotePeer['allowed-address']);
+                                                ->where('client_address', $remotePeerAllowedAddress);
                     
                     if ($correspondingLocalPeer->count() > 0) {
                         $localPeerId = $correspondingLocalPeer->first()->id;
                     } else {
-                        $interface = DB::table('interfaces')->where('name', $remotePeer['interface'])->first();
+                        $interface = DB::table('interfaces')->where('name', $interfaceName)->first();
                         // create new peer
                         $localPeerId = DB::table('peers')->insertGetId([
                             'interface_id' => $interface->id,
-                            'client_address' => $remotePeer['allowed-address'],
+                            'client_address' => $remotePeerAllowedAddress,
                             'comment' => $remotePeer['comment'] ?? '-',
                             'is_enabled' => $remotePeer['disabled'] == "false" ? 1 : 0,
                             'public_key' => $remotePeer['public-key'],
@@ -332,6 +343,8 @@ class SettingController extends Controller
                         ]);
         
                         $numberOfNewlyCreatedPeers++;
+                        $x = substr($remotePeerAllowedAddress, 0, -3);
+                        array_push($messages, "$x created on $interfaceName");
                     }
         
                     $server_peer = DB::table('server_peers')
@@ -348,6 +361,8 @@ class SettingController extends Controller
                                 ->update(['server_peer_id' => $remotePeer['.id']]);
         
                             $numberOfUpdatedPeers++;
+                            $x = substr($remotePeerAllowedAddress, 0, -3);
+                            array_push($messages, "$x id updated on $interfaceName");
                         }
                     } else {
                         // create new server_peer
@@ -358,11 +373,8 @@ class SettingController extends Controller
                         ]);
                     }
                 }
-                return $this->success(
-                    $numberOfNewlyCreatedPeers . 
-                    ' peers created successfully. ' . 
-                    $numberOfUpdatedPeers . 
-                    ' peers updated successfully');
+                $y = implode("\r\n", $messages);
+                return $this->success("$numberOfNewlyCreatedPeers peers created successfully. $numberOfUpdatedPeers peers updated successfully. Details: $y");
             } else {
                 return $this->fail('Unable to fetch remote peers.');
             }
@@ -455,6 +467,7 @@ class SettingController extends Controller
     {
         // TODO: depend on server version, add method is different
         try {
+            $messages = [];
             $localPeers = DB::table('peers')->get();
 
             $remotePeers = curl_general('GET',
@@ -468,8 +481,8 @@ class SettingController extends Controller
             $remotePeersTotalCount = count($remotePeers);
             $disabledArray = array_column($remotePeers, 'disabled');
             $disabledArrayCounts = array_count_values($disabledArray);
-            $enabledRemotePeersCount = $disabledArrayCounts['false'];
-            $disabledRemotePeersCount = $disabledArrayCounts['true'];
+            $enabledRemotePeersCount = $disabledArrayCounts['false'] ?? '-';
+            $disabledRemotePeersCount = $disabledArrayCounts['true'] ?? '-';
 
             $localEnabledPeersCount = DB::table('peers')->where('is_enabled', 1)->count();
             $localDisabledPeersCount = DB::table('peers')->where('is_enabled', 0)->count();
@@ -485,12 +498,16 @@ class SettingController extends Controller
             foreach ($remotePeers as $remotePeer) {
                 $key = array_search($remotePeer['allowed-address'], $localPeersClientAddresses);
                 if (! $key) {
-                    curl_general(
+                    $res = curl_general(
                         'POST',
                         $saddress . '/rest/interface/wireguard/peers/remove',
-                        json_encode(['.id', $remotePeer['.id']]),
+                        json_encode(['.id' => $remotePeer['.id']]),
                         true
                     );
+
+                    $address = substr($remotePeer['allowed-address'], 0 , -3);
+                    $resMessage = is_array($res) ? implode('-', $res) : $res;
+                    array_push($messages, "$saddress, $address remove response: $resMessage");
                 }
             }
 
@@ -523,17 +540,21 @@ class SettingController extends Controller
                     }
 
                     // check enabled
-                    $remotePeerEnable = !(bool)$remotePeers[$key]['disabled'];
-                    if ((bool)$localPeer->is_enabled != $remotePeerEnable) {
+                    $remotePeerDisabledStatus = $remotePeers[$key]['disabled'];
+                    $localPeerDisabledStatus = $localPeer->is_enabled ? "false" : "true";
+                    if ($localPeerDisabledStatus != $remotePeerDisabledStatus) {
                         // update remote peer
                         $data = [".id" => $remotePeers[$key]['.id']];
-                        $command = $localPeer->is_enabled ? 'enable' : 'disable';
+                        $command = $localPeerDisabledStatus == "false" ? 'enable' : 'disable';
                         $response = curl_general(
                             'POST',
                             $saddress . '/rest/interface/wireguard/peers/'.$command,
                             json_encode($data),
                             true
                         );
+                        $address = substr($remotePeers[$key]['allowed-address'], 0, -3);
+                        $responseMessage = is_array($response) ? implode('-', $response) : $response;
+                        array_push($messages, "$saddress, Peer $address $command response: $responseMessage");
                     }
                 } else { // peer does not exist on remote
                     // create peer on remote
@@ -545,12 +566,14 @@ class SettingController extends Controller
 
                     $wg = new WiregaurdController();
                     $addResponse = $wg->addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $localPeer->comment, $localPeer->public_key, $localPeer->id, $localPeer->is_enabled);
-                    
+                    array_push($messages, "$saddress, Add Peer $caddress response: $addResponse");
                     if (! $addResponse) {
                         $numberOfFailedAttempts++;
                     }
                 }
             }
+
+            return ['status' => 1, 'message' => implode("\r\n", $messages)];
 
             if ($numberOfFailedAttempts > 0) {
                 return ['status' => -1, 'message' => 'Sync was not successful!'];

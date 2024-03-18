@@ -4,7 +4,7 @@
 <x-loader/>
 
 <div class="row">
-  <div class="col-lg-12">
+  <div class="col-lg-8">
     <div class="card shadow mb-4">
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">Server Details</h6>
@@ -98,6 +98,35 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Remote Duplicates</h6>
+      </div>
+      <div class="card-body">
+      @if(count($duplicates) > 0)
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <th>Allowed Address</th>
+              <th>numbers</th>
+            </thead>
+            <tbody>
+                @foreach($duplicates as $address => $numbers)
+                  <tr>
+                    <td>{{$address}}</td>
+                    <td>{{$numbers}}</td>
+                  </tr>
+                @endforeach
+            </tbody>
+          </table>
+        </div>
+        @else
+          <h6>No duplicates found!</h6>
+        @endif
       </div>
     </div>
   </div>
