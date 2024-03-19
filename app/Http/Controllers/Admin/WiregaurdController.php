@@ -633,7 +633,7 @@ class WiregaurdController extends Controller
             $peers = DB::table('peers')->whereNotNull('expire_days')->whereNotNull('activate_date')->where('is_enabled', 1)->get();
             $now = time();
             foreach ($peers as $peer) {
-                $expire = $peer->expire_days;
+                $expire = $peer->expire_days - 1;
                 $diff = strtotime($peer->activate_date. " + $expire days")-$now;
 
                 if ($diff <= 0) {

@@ -111,7 +111,7 @@
         <td>{{$peer->note}}</td>
         <td>
           @if($peer->expire_days && $peer->activate_date)
-          <?php $expire = $peer->expire_days; $diff = strtotime($peer->activate_date. " + $expire days")-$now; ?>
+          <?php $expire = $peer->expire_days - 1; $diff = strtotime($peer->activate_date. " + $expire days")-$now; ?>
             @if($diff <= 0)
             0
             @else
