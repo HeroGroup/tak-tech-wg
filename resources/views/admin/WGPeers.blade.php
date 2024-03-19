@@ -98,7 +98,7 @@
       <th>Actions</th>
     </thead>
     <tbody>
-      <?php $row = 0; ?>
+      <?php $row = 0; $now = time(); ?>
     @foreach($peers as $peer)
       <tr id="{{$peer->id}}">
         <td>
@@ -109,7 +109,18 @@
         <td>{{\Illuminate\Support\Facades\DB::table('interfaces')->find($peer->interface_id)->name}}</td>
         <td>{{$peer->client_address}}</td>
         <td>{{$peer->note}}</td>
-        <td>{{$peer->expire_days}}</td>
+        <td>
+          @if($peer->expire_days && $peer->activate_date)
+          <?php $expire = $peer->expire_days; $diff = strtotime($peer->activate_date. " + $expire days")-$now; ?>
+            @if($diff <= 0)
+            0
+            @else
+            {{idate('d', $diff)}}
+            @endif
+          @else
+          -
+          @endif
+        </td>
         <td>
             <!-- <span> Disable </span> -->
             <label class="switch">
@@ -170,7 +181,7 @@
                             </div>
                             <div class="form-group row mb-4">
                                 <div class="col-md-12">
-                                    <label for="expire_days">Expire (days)</label>
+                                    <label for="expire_days">Expires after (days)</label>
                                     <input type="number" class="form-control" name="expire_days" value="{{$peer->expire_days}}">
                                 </div>
                             </div>
@@ -225,7 +236,7 @@
         </div>
         <div class="form-group row mb-4">
           <div class="col-md-12">
-            <label for="mass_expire_days">Expire (days)</label>
+            <label for="mass_expire_days">Expires after (days)</label>
             <input class="form-control" name="mass_expire_days" id="mass_expire_days">
           </div>
         </div>

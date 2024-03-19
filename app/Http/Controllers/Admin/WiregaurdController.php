@@ -511,9 +511,11 @@ class WiregaurdController extends Controller
             if ($mass) {
                 if ($expire_days && $expire_days != $peer->expire_days) {
                     $update['expire_days'] = $expire_days;
+                    $update['activate_date'] = date('Y-m-d H:i:s', $time);
                 }
             } else if ($expire_days != $peer->expire_days) {
                 $update['expire_days'] = $expire_days;
+                $update['activate_date'] = date('Y-m-d H:i:s', $time);
             }
 
             DB::table('peers')->where('id', $id)->update($update);
@@ -620,5 +622,35 @@ class WiregaurdController extends Controller
         
 
         return response()->download($zipFileName);
+    }
+
+    public function disableExpiredPeers($request_token)
+    {
+        $token = "gu-rG67=hrT6fhdnridk_sq=";
+
+        if ($request_token == $token) {
+            $disabled = [];
+            $peers = DB::table('peers')->whereNotNull('expire_days')->whereNotNull('activate_date')->where('is_enabled', 1)->get();
+            $now = time();
+            foreach ($peers as $peer) {
+                $expire = $peer->expire_days;
+                $diff = strtotime($peer->activate_date. " + $expire days")-$now;
+
+                if ($diff <= 0) {
+                    // disable peer
+                    $this->toggleEnable($peer->id, 0);
+                    array_push($disabled, $peer->comment);
+                }
+            }
+
+            if (count($disabled) > 0) {
+                return implode(' - ', $disabled) . ' disabled successfully!';
+            } else {
+                return 'nothing to disabled!';
+            }
+        } else {
+            return 'token mismatch!';
+        }
+        
     }
 }

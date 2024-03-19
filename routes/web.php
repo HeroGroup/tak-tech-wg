@@ -14,6 +14,7 @@ Route::post('/login', [AuthController::class, 'postLogin'])->name('post.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/servers/syncAll/{token}', [SettingController::class, 'syncAll'])->name('servers.syncPeers');
+Route::get('/wiregaurd/peers/disableExpired/{token}', [WiregaurdController::class, 'disableExpiredPeers'])->name('disableExpiredPeers');
 
 Route::middleware(['auth', 'active'])->group(function() {
   Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
