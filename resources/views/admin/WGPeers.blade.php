@@ -160,16 +160,32 @@
             <!-- <span> Enable </span> -->
         </td>
         <td>
-          @if($peer->conf_file && $peer->qrcode_file)
-          <a href="{{route('wiregaurd.peers.download',$peer->id)}}" class="btn btn-sm btn-success btn-circle">
-            <i class="fa fa-fw fa-download"></i>
-          </a>
-          &nbsp;
-          @endif
-          <a href="#" class="btn btn-sm btn-info btn-circle" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="edit">
-            <i class="fa fa-fw fa-pen"></i>
-          </a>
-          &nbsp;
+          <div class="dropdown no-arrow show">
+            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink" x-placement="bottom-end" style="position: absolute; transform: translate3d(-158px, 19px, 0px); top: 0px; left: 0px; will-change: transform;">
+                <div class="dropdown-header">Actions:</div>
+                @if($peer->conf_file && $peer->qrcode_file)
+                <a href="{{route('wiregaurd.peers.download',$peer->id)}}" class="dropdown-item text-success">
+                  <i class="fa fa-fw fa-download"></i> Download
+                </a>
+                @endif
+                <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="edit">
+                  <i class="fa fa-fw fa-pen"></i> Edit
+                </a>
+                <a href="#" onclick="regenerateSingle('{{$peer->id}}')" class="dropdown-item text-primary" title="regenerate">
+                  <i class="fa fa-fw fa-sync"></i> Regenerate
+                </a>
+                @if(auth()->user()->is_admin)
+
+                <a href="#" class="dropdown-item text-danger" title="Delete" onclick="destroy('{{route('admin.wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
+                  <i class="fas fa-trash"></i> Remove
+                </a>
+                @endif
+            </div>
+          </div>
+          
           <!-- Edit peer Modal -->
           <div class="modal fade" id="edit-peer-modal-{{$peer->id}}" tabindex="-1" role="dialog" aria-labelledby="editpeerModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
@@ -225,15 +241,7 @@
                 </div>
             </div>
           </div>
-          <a href="#" onclick="regenerateSingle('{{$peer->id}}')" class="btn btn-sm btn-primary btn-circle" title="regenerate">
-            <i class="fa fa-fw fa-sync"></i>
-          </a>
-          @if(auth()->user()->is_admin)
-          &nbsp;
-          <a href="#" class="btn btn-sm btn-danger btn-circle" title="Delete" onclick="destroy('{{route('admin.wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
-            <i class="fas fa-trash"></i>
-          </a>
-          @endif
+
         </td>
       </tr>
     @endforeach
