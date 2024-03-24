@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InterfaceController;
+use App\Http\Controllers\Admin\ServerController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WiregaurdController;
@@ -13,7 +14,7 @@ Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'postLogin'])->name('post.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/servers/syncAll/{token}', [SettingController::class, 'syncAll'])->name('servers.syncPeers');
+Route::get('/servers/syncAll/{token}', [ServerController::class, 'syncAll'])->name('servers.syncPeers');
 Route::get('/wiregaurd/peers/disableExpired/{token}', [WiregaurdController::class, 'disableExpiredPeers'])->name('disableExpiredPeers');
 
 Route::middleware(['auth', 'active'])->group(function() {
@@ -64,17 +65,17 @@ Route::prefix('admin')->group(function () {
       Route::put('/settings/update', [SettingController::class, 'updateSetting'])->name('settings.update');
       Route::delete('/settings/delete', [SettingController::class, 'deleteSetting'])->name('settings.delete');
       
-      Route::get('/servers/list', [SettingController::class, 'serversList'])->name('settings.servers.list');
-      Route::get('/servers/report', [SettingController::class, 'serversReport'])->name('settings.servers.report');
-      Route::post('/servers/new', [SettingController::class, 'addServer'])->name('settings.servers.add');
-      Route::get('/servers/{id}/info', [SettingController::class, 'info'])->name('settings.servers.info');
-      Route::put('/servers/update', [SettingController::class, 'updateServer'])->name('settings.servers.update');
-      Route::delete('/servers/delete', [SettingController::class, 'deleteServer'])->name('settings.servers.delete');
+      Route::get('/servers/list', [ServerController::class, 'serversList'])->name('settings.servers.list');
+      Route::get('/servers/report', [ServerController::class, 'serversReport'])->name('settings.servers.report');
+      Route::post('/servers/new', [ServerController::class, 'addServer'])->name('settings.servers.add');
+      Route::get('/servers/{id}/info', [ServerController::class, 'info'])->name('settings.servers.info');
+      Route::put('/servers/update', [ServerController::class, 'updateServer'])->name('settings.servers.update');
+      Route::delete('/servers/delete', [ServerController::class, 'deleteServer'])->name('settings.servers.delete');
 
-      Route::post('/servers/getInterfaces', [SettingController::class, 'getInterfaces'])->name('settings.servers.getInterfaces');
-      Route::post('/servers/getPeers', [SettingController::class, 'getPeers'])->name('settings.servers.getPeers');
-      Route::post('/servers/syncInterfaces', [SettingController::class, 'syncInterfaces'])->name('settings.servers.syncInterfaces');
-      Route::post('/servers/syncPeers', [SettingController::class, 'syncPeers'])->name('settings.servers.syncPeers');
+      Route::post('/servers/getInterfaces', [ServerController::class, 'getInterfaces'])->name('settings.servers.getInterfaces');
+      Route::post('/servers/getPeers', [ServerController::class, 'getPeers'])->name('settings.servers.getPeers');
+      Route::post('/servers/syncInterfaces', [ServerController::class, 'syncInterfaces'])->name('settings.servers.syncInterfaces');
+      Route::post('/servers/syncPeers', [ServerController::class, 'syncPeers'])->name('settings.servers.syncPeers');
     });
   });
 });
