@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 require_once app_path('Helpers/utils.php');
 
+// This class is responsible for management of all wireguard interfaces
+// and wiregaurd peers. All actions.
 class WiregaurdController extends Controller
 {
+    // This function returns a view to create peers
     public function create()
     {
         $interfaces = DB::table('user_interfaces')
@@ -22,6 +25,9 @@ class WiregaurdController extends Controller
 
         return view('admin.WGCreate', compact('interfaces', 'messageDuration'));
     }
+
+    // This function returns list of peers based on the accesibility of the user
+    // also performs search, filter and sort
     public function peers(Request $request)
     {
         $peers = DB::table('peers')
@@ -72,6 +78,8 @@ class WiregaurdController extends Controller
         $messageDuration = 10000;
         return view('admin.WGPeers', compact('peers', 'interface', 'comment', 'enabled', 'sortBy', 'interfaces', 'messageDuration'));
     }
+
+    // This function adds peer to local database
     public function addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $commentApply, $time)
     {
         // check not repetetive
@@ -121,6 +129,8 @@ class WiregaurdController extends Controller
             'publicKey' => $publicKey
         ];
     }
+
+    // This function creates peer on remote router
     public function addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $commentApply, $publicKey, $localPeerId, $enabled=1)
     {
         $data = [
@@ -158,6 +168,9 @@ class WiregaurdController extends Controller
             return false;
         }
     }
+
+    // This function is the entry point of creating a number of peers
+    // random or batch
     public function createWG(Request $request)
     {
         try {
@@ -232,6 +245,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // This function perfomrs the add action on all remote routers
     private function performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $comment, $time)
     {
         $newLocalPeer = $this->addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $comment, $time);
@@ -265,6 +279,7 @@ class WiregaurdController extends Controller
     }
 
     // Actions
+    // regenerate action
     protected function regenerate($id, $time)
     {
         try {
@@ -301,13 +316,14 @@ class WiregaurdController extends Controller
             return $this->fail($exception->getLine() . ': ' . $exception->getMessage());
         }
     }
-
+    // regenerates one peer only
     public function regenerateSingle(Request $request)
     {
         $time = time();
         return $this->regenerate($request->id, $time);
     }
 
+    // regenerates a number of peers and returns new qrcodes and config files
     public function regenerateMass(Request $request)
     {
         $time = time();
@@ -328,6 +344,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // This function changes the enablity status of the peer
     private function toggleEnable($id, $status)
     {
         try {
@@ -361,11 +378,13 @@ class WiregaurdController extends Controller
         }
     }
 
+    // toggles the status of one peer only
     public function toggleEnableSingle(Request $request)
     {
         return $this->toggleEnable($request->id, $request->status);
     }
 
+    // toggles the statuses of a number of selected peers to enable
     public function enableMass(Request $request)
     {
         $ids = json_decode($request->ids);
@@ -376,6 +395,7 @@ class WiregaurdController extends Controller
         return $this->success('Selected items enabled successfully.');
     }
 
+    // toggles the statuses of a number of selected peers to disable
     public function disableMass(Request $request)
     {
         $ids = json_decode($request->ids);
@@ -386,6 +406,7 @@ class WiregaurdController extends Controller
         return $this->success('Selected items disabled successfully.');
     }
 
+    // This function removes a peer on remote router
     public function removeRemote($saddress, $id)
     {
         try {
@@ -406,6 +427,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // This function removes a peer on our local databse
     public function removeLocal($id)
     {
         try {
@@ -428,6 +450,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // This function performs the action of remove to one peer only
     public function removeSingle(Request $request)
     {
         try {
@@ -448,6 +471,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // This function performs the action of remove to a number of selected peers
     public function removeMass(Request $request)
     {
         $ids = json_decode($request->ids);
@@ -465,6 +489,7 @@ class WiregaurdController extends Controller
         return $this->success('Selected items removed successfully.');
     }
 
+    // This function updates the attributes of a peer
     protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $today, $time, $mass=false)
     {
         try {
@@ -526,6 +551,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // This function performs the action of update to one peer only
     public function updatePeerSingle(Request $request)
     {
         $time = time();
@@ -558,6 +584,7 @@ class WiregaurdController extends Controller
         return back()->with('message', $result['message'])->with('type', $result['status'] == 1 ? 'success' : 'danger');
     }
     
+    // This function performs the action of update to a number of selected peers
     public function updatePeersMass(Request $request)
     {
         $time = time();
@@ -576,15 +603,18 @@ class WiregaurdController extends Controller
         }
     }
 
+    // downloads a zip file
     public function downloadZip($date, $file)
     {
         return response()->download(resource_path("confs/$date/$file/$file.zip"));
     }
 
+    // return a view with a download link
     public function getDownloadLink($today, $time) {
         return view('admin.download', compact('today', 'time'));
     }
 
+    // downloads the qr and config of one peer only
     public function downloadPeer($id)
     {
         $peer = DB::table('peers')->find($id);
@@ -624,9 +654,10 @@ class WiregaurdController extends Controller
         return response()->download($zipFileName);
     }
 
+    // This function disables all peers that has been expired
     public function disableExpiredPeers($request_token)
     {
-        $token = "gu-rG67=hrT6fhdnridk_sq=";
+        $token = env('DISABLE_EXPIRED_PEERS_TOKEN');
 
         if ($request_token == $token) {
             $disabled = [];
