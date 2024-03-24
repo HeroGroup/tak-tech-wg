@@ -27,7 +27,7 @@ class WiregaurdController extends Controller
     }
 
     // This function returns list of peers based on the accesibility of the user
-    // also performs search, filter and sort
+    // It also performs search, filter and sort.
     public function peers(Request $request)
     {
         $peers = DB::table('peers')
@@ -59,16 +59,32 @@ class WiregaurdController extends Controller
         if (in_array($enabled, ['0', '1']) && $peers && $peers->count() > 0) {
             $peers = $peers->where('is_enabled', (int)$enabled);
         }
+
+        $peers = $peers->get();
+        $now = time();
+        foreach ($peers as $peer) {
+            $peer->expires_in = '-1';
+
+            if($peer->expire_days && $peer->activate_date) {
+                $expire = $peer->expire_days;
+                $diff = strtotime($peer->activate_date. " + $expire days") - $now;
+                $peer->expires_in = $diff; // int
+            }
+        }
         
         $sortBy = $request->query('sortBy');
         if ($sortBy && $peers && $peers->count() > 0) {
             $by = substr($sortBy, 0, strrpos($sortBy, '_'));
             $type = substr($sortBy, strrpos($sortBy, '_')+1);
 
-            $peers = $peers->orderBy($by, $type);
+            $peers = $peers->sortBy($by, SORT_NATURAL);
+            
+            if ($type == "desc") {
+                $peers = $peers->reverse();
+            }
+        } else {
+            $sortBy = "client_address_asc";
         }
-
-        $peers = $peers->get();
         
         $interfaces = DB::table('user_interfaces')
             ->where('user_id', auth()->user()->id)

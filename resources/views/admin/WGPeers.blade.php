@@ -48,6 +48,8 @@
         <a href="#" onclick="sortResult('comment_desc')" class="btn sort-btn @if($sortBy=='comment_desc') btn-dark @endif" id="sort_comment_desc">Comment <i class="fa fa-sort-amount-down"></i></a>
         <a href="#" onclick="sortResult('client_address_asc')" class="btn sort-btn @if($sortBy=='client_address_asc') btn-dark @endif" id="sort_client_address_asc">Address <i class="fa fa-sort-amount-down-alt"></i></a>
         <a href="#" onclick="sortResult('client_address_desc')" class="btn sort-btn @if($sortBy=='client_address_desc') btn-dark @endif" id="sort_client_address_desc">Address <i class="fa fa-sort-amount-down"></i></a>
+        <a href="#" onclick="sortResult('expires_in_asc')" class="btn sort-btn @if($sortBy=='expires_in_asc') btn-dark @endif" id="sort_expires_in_asc">Expire <i class="fa fa-sort-amount-down-alt"></i></a>
+        <a href="#" onclick="sortResult('expires_in_desc')" class="btn sort-btn @if($sortBy=='expires_in_desc') btn-dark @endif" id="sort_expires_in_desc">Expire <i class="fa fa-sort-amount-down"></i></a>
       </div>
     </div>
   </div>
@@ -98,7 +100,7 @@
       <th>Actions</th>
     </thead>
     <tbody>
-      <?php $row = 0; $now = time(); ?>
+      <?php $row = 0; $nowTime = time(); $nowDateTime = new DateTime(); ?>
     @foreach($peers as $peer)
       <tr id="{{$peer->id}}">
         <td>
@@ -111,12 +113,40 @@
         <td>{{$peer->note}}</td>
         <td>
           @if($peer->expire_days && $peer->activate_date)
-          <?php $expire = $peer->expire_days - 1; $diff = strtotime($peer->activate_date. " + $expire days")-$now; ?>
-            @if($diff <= 0)
-            0
+          <?php 
+            $expire = $peer->expire_days;
+            $diff = strtotime($peer->activate_date. " + $expire days") - $nowTime; 
+            if ($diff > 0) {
+              $expires_on = new DateTime($peer->activate_date);
+              $expires_on->add(new DateInterval("P$expire"."D"));
+              $time_left = $expires_on->diff($nowDateTime);
+              $days_left = $time_left->m*30 + $time_left->d;
+              $hours_left = $time_left->h;
+              $minutes_left = $time_left->i;
+              // $seconds_left = $time_left->s;
+              $time_left_to_show = "";
+              if ($days_left > 0) {
+                $time_left_to_show .= "$days_left days ";
+              }
+              if ($hours_left > 0) {
+                $time_left_to_show .= "$hours_left hours ";
+              }
+              if ($time_left_to_show == "" && $minutes_left > 0) {
+                $time_left_to_show .= "$minutes_left minutes ";
+              }
+            }
+          ?>
+          @if($diff > 0)
+            @if($days_left > 15)
+            <div class="badge badge-success">{{$time_left_to_show}}</div>
+            @elseif($days_left > 8)
+            <div class="badge badge-info">{{$time_left_to_show}}</div>
             @else
-            {{idate('d', $diff)}}
+            <div class="badge badge-warning">{{$time_left_to_show}}</div>
             @endif
+          @else
+            <div class="badge badge-danger">expired</div>
+          @endif
           @else
           -
           @endif
