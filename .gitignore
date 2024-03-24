@@ -22,4 +22,4 @@ yarn-error.log
 /app/Helpers/phpqrcode/
 .env
 /resources/confs
-/app/Http/Controllers/Admin/WiregaurdController.old.php
+/app/Http/Controllers/Admin/WiregaurdControllerOld.php
