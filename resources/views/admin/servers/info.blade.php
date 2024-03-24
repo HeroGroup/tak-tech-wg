@@ -112,13 +112,13 @@
           <table class="table table-striped">
             <thead>
               <th>Allowed Address</th>
-              <th>numbers</th>
+              <th>count</th>
             </thead>
             <tbody>
-                @foreach($duplicates as $address => $numbers)
+                @foreach($duplicates as $address => $count)
                   <tr>
                     <td>{{$address}}</td>
-                    <td>{{$numbers}}</td>
+                    <td>{{$count}}</td>
                   </tr>
                 @endforeach
             </tbody>
