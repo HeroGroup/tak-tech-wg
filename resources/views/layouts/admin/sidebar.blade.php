@@ -15,7 +15,7 @@
     </a>
 
     <!-- Divider -->
-    <hr class="sidebar-divider my-0">
+    <!-- <hr class="sidebar-divider my-0"> -->
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item" id="dashboard">
@@ -26,7 +26,7 @@
     </li>
 
     <!-- Divider -->
-    <hr class="sidebar-divider my-0">
+    <!-- <hr class="sidebar-divider my-0"> -->
 
     @if(auth()->user()->isAdmin)
     <li class="nav-item" id="interfaces">
@@ -78,7 +78,7 @@
     </li>
     
     <!-- Divider -->
-    <hr class="sidebar-divider d-none d-md-block">
+    <!-- <hr class="sidebar-divider d-none d-md-block"> -->
     
     <li class="nav-item" id="users">
         <a class="nav-link" href="{{route('admin.users')}}">
