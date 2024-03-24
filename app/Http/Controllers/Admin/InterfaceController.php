@@ -9,14 +9,18 @@ use Illuminate\Support\Facades\DB;
 
 require_once app_path('Helpers/utils.php');
 
+// This class handles actions related to interfaces
 class InterfaceController extends Controller
 {
+    // return list of interfaces
     public function interfaces()
     {
         $interfaces = DB::table('interfaces')->get();
         return view('admin.WGInterfaces', compact('interfaces'));
     }
 
+    // add an interface in local db and all remote routers
+    // it also add ip address on remote router as well
     public function addInterface(Request $request)
     {
         try {
@@ -101,6 +105,7 @@ class InterfaceController extends Controller
         }
     }
 
+    // update interface attributes
     public function updateInterface(Request $request)
     {
         try {
@@ -121,6 +126,7 @@ class InterfaceController extends Controller
         }
     }
 
+    // deletes an interface both on local and remote
     public function deleteInterface(Request $request)
     {
         try {
