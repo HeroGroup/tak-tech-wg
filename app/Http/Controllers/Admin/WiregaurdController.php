@@ -65,11 +65,15 @@ class WiregaurdController extends Controller
         foreach ($peers as $peer) {
             $peer->expires_in = '-1';
 
-            if($peer->expire_days && $peer->activate_date) {
+            if($peer->expire_days && $peer->activate_date_time) {
                 $expire = $peer->expire_days;
-                $diff = strtotime($peer->activate_date. " + $expire days") - $now;
+                $diff = strtotime($peer->activate_date_time. " + $expire days") - $now;
                 $peer->expires_in = $diff; // int
             }
+        }
+
+        if ($enabled == '2') { // expired
+            $peers = $peers->where('expires_in', '<', 0)->where('expires_in', '!=', -1);
         }
         
         $sortBy = $request->query('sortBy');
@@ -506,10 +510,9 @@ class WiregaurdController extends Controller
     }
 
     // This function updates the attributes of a peer
-    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $today, $time, $mass=false)
+    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $activate_date, $activate_time, $today, $time, $mass=false)
     {
         try {
-            
             $peer = DB::table('peers')->find($id);
             $interface = DB::table('interfaces')->find($peer->interface_id);
             $update = [
@@ -549,14 +552,37 @@ class WiregaurdController extends Controller
             if ($note != $peer->note) {
                 $update['note'] = $note;
             }
-            if ($mass) {
-                if ($expire_days && $expire_days != $peer->expire_days) {
+
+            $activate_d = $peer->activate_date_time ? substr($peer->activate_date_time, 0, 10) : date('Y-m-d', $time);
+            if ($activate_date && $activate_date != $activate_d) {
+                $activate_d = $activate_date;
+            }
+
+            $activate_t = $peer->activate_date_time ? substr($peer->activate_date_time, 11, 5) : date('H:i:s', $time);
+            if ($activate_time && $activate_time != $activate_t) {
+                $activate_t = $activate_time;
+            }
+            if ($mass) { // update mass
+                if ($expire_days) {
                     $update['expire_days'] = $expire_days;
-                    $update['activate_date'] = date('Y-m-d H:i:s', $time);
                 }
-            } else if ($expire_days != $peer->expire_days) {
-                $update['expire_days'] = $expire_days;
-                $update['activate_date'] = date('Y-m-d H:i:s', $time);
+
+                if ($activate_date || $activate_time || $expire_days) { 
+                    // user may want to only change activate_date_time
+                    // However, peer should have expire
+                    if ($expire_days || $peer->expire_days) {
+                        $update['activate_date_time'] = "$activate_d $activate_t";
+                    }
+                }
+            } else { // update single
+                // active_date_time without expire is useless
+                if ($expire_days) {
+                    $update['expire_days'] = $expire_days;
+                    $update['activate_date_time'] = "$activate_d $activate_t";
+                } else {
+                    $update['expire_days'] = null;
+                    $update['activate_date_time'] = null;
+                }
             }
 
             DB::table('peers')->where('id', $id)->update($update);
@@ -572,7 +598,7 @@ class WiregaurdController extends Controller
     {
         $time = time();
         $today = date('Y-m-d', $time);
-        $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $today, $time);
+        $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $request->activate_date, $request->activate_time, $today, $time);
 
         $peer = DB::table('peers')->where('id', $request->id)->first();
 
@@ -609,7 +635,7 @@ class WiregaurdController extends Controller
         try {
             $ids = json_decode($request->ids);
             foreach($ids as $id) {
-                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, $request->expire_days, $today, $time, true);
+                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, $request->expire_days, $request->activate_date, $request->activate_time, $today, $time, true);
                 $message .= $result['message'] . "\r\n";
             }
             
@@ -677,11 +703,11 @@ class WiregaurdController extends Controller
 
         if ($request_token == $token) {
             $disabled = [];
-            $peers = DB::table('peers')->whereNotNull('expire_days')->whereNotNull('activate_date')->where('is_enabled', 1)->get();
+            $peers = DB::table('peers')->whereNotNull('expire_days')->whereNotNull('activate_date_time')->where('is_enabled', 1)->get();
             $now = time();
             foreach ($peers as $peer) {
                 $expire = $peer->expire_days - 1;
-                $diff = strtotime($peer->activate_date. " + $expire days")-$now;
+                $diff = strtotime($peer->activate_date_time. " + $expire days")-$now;
 
                 if ($diff <= 0) {
                     // disable peer

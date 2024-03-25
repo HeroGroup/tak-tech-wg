@@ -6,6 +6,8 @@
         <i class="fa fa-bars"></i>
     </button>
 
+    <h1 class="h3 text-gray-800">{{$pageTitle}}</h1>
+
     <!-- Topbar Navbar -->
     <ul class="navbar-nav ml-auto">
 

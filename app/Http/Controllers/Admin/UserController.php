@@ -9,8 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
+// This class handles user related actions
 class UserController extends Controller
 {
+    // returns list of users with access
     public function index()
     {
         try {
@@ -24,6 +26,7 @@ class UserController extends Controller
         }
     }
 
+    // saves new user
     public function store(Request $request)
     {
         try {
@@ -45,6 +48,7 @@ class UserController extends Controller
         }
     }
 
+    // update existing user
     public function update(Request $request)
     {
         try {
@@ -74,6 +78,7 @@ class UserController extends Controller
         }
     }
 
+    // connect user to accessed interfaces
     protected function createUserInterfaces($userInterfaces, $userId)
     {
         foreach($userInterfaces as $key => $value) {
@@ -86,6 +91,7 @@ class UserController extends Controller
         }
     }
 
+    // makes user active or inactive
     public function toggleActive(Request $request)
     {
         try {

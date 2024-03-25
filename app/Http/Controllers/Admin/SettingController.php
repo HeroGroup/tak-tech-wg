@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 // This class is responsible for management of the settings of the panel
 class SettingController extends Controller
 {
+    // returns list of software settings
     public function index()
     {
         try {
@@ -20,6 +21,7 @@ class SettingController extends Controller
         }
     }
 
+    // add new setting
     public function addSetting(Request $request)
     {
         try {
@@ -41,6 +43,7 @@ class SettingController extends Controller
         }
     }
 
+    // update existing setting
     public function updateSetting(Request $request)
     {
         try {
@@ -53,6 +56,7 @@ class SettingController extends Controller
         }
     }
 
+    // delete setting
     public function deleteSetting(Request $request)
     {
         try {

@@ -3,12 +3,12 @@
 
 <x-loader/>
 
-<a href="{{route('wiregaurd.peers.create')}}" class="btn btn-primary btn-icon-split mb-4">
+<!-- <a href="{{route('wiregaurd.peers.create')}}" class="btn btn-primary btn-icon-split mb-4">
     <span class="icon text-white-50">
         <i class="fas fa-plus"></i>
     </span>
     <span class="text">Create Wiregaurd Peers</span>
-</a>
+</a> -->
 
 <div class="row mb-4">
   <div class="col-sm-2">
@@ -25,6 +25,7 @@
       <option value="all" @if($enabled=="all") selected @endif>All Statuses</option>
       <option value="1" @if($enabled=="1") selected @endif>Enabled</option>
       <option value="0" @if($enabled=="0") selected @endif>Disabled</option>
+      <option value="2" @if($enabled=="2") selected @endif>Expired</option>
     </select>
   </div>
   <div class="col-sm-4">
@@ -84,6 +85,10 @@
   @endif
 </div>
 
+<div style="font-size: 14px;">
+  <span id="number-of-selected-items">0</span> items are selected.
+</div>
+
 <div class="table-responsive">
   <table class="table table-striped">
     <thead>
@@ -112,12 +117,12 @@
         <td>{{$peer->client_address}}</td>
         <td>{{$peer->note}}</td>
         <td>
-          @if($peer->expire_days && $peer->activate_date)
+          @if($peer->expire_days && $peer->activate_date_time)
           <?php 
             $expire = $peer->expire_days;
-            $diff = strtotime($peer->activate_date. " + $expire days") - $nowTime; 
+            $diff = strtotime($peer->activate_date_time. " + $expire days") - $nowTime; 
             if ($diff > 0) {
-              $expires_on = new DateTime($peer->activate_date);
+              $expires_on = new DateTime($peer->activate_date_time);
               $expires_on->add(new DateInterval("P$expire"."D"));
               $time_left = $expires_on->diff($nowDateTime);
               $days_left = $time_left->m*30 + $time_left->d;
@@ -160,15 +165,10 @@
             <!-- <span> Enable </span> -->
         </td>
         <td>
-          @if($peer->conf_file && $peer->qrcode_file)
-          <a href="{{route('wiregaurd.peers.download',$peer->id)}}" class="btn btn-circle btn-sm btn-success">
-            <i class="fa fa-fw fa-download"></i>
-          </a>
-          @endif
           <button class="btn">
           <div class="dropdown no-arrow show">
             <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                <i class="fas fa-ellipsis-h fa-fw text-gray-900"></i>
+                <i class="fas fa-ellipsis-h fa-fw text-gray-700"></i>
             </a>
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink" x-placement="bottom-end" style="position: absolute; transform: translate3d(-158px, 19px, 0px); top: 0px; left: 0px; will-change: transform;">
                 <div class="dropdown-header">Actions</div>
@@ -180,7 +180,6 @@
                   <i class="fa fa-fw fa-sync"></i> Regenerate
                 </a>
                 @if(auth()->user()->is_admin)
-
                 <a href="#" class="dropdown-item text-danger" title="Delete" onclick="destroy('{{route('admin.wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
                   <i class="fas fa-trash"></i> Remove
                 </a>
@@ -188,6 +187,11 @@
             </div>
           </div>
           </button>
+          @if($peer->conf_file && $peer->qrcode_file)
+          <a href="{{route('wiregaurd.peers.download',$peer->id)}}" class="btn btn-circle btn-sm btn-success" title="Download config">
+            <i class="fa fa-fw fa-download"></i>
+          </a>
+          @endif
           <!-- Edit peer Modal -->
           <div class="modal fade" id="edit-peer-modal-{{$peer->id}}" tabindex="-1" role="dialog" aria-labelledby="editpeerModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
@@ -204,33 +208,37 @@
                             <input type="hidden" name="_method" value="PUT">
                             <input type="hidden" name="id" value="{{$peer->id}}">
                             <div class="form-group row mb-4">
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label for="endpoint_address">Endpoint Address</label>
                                     <input class="form-control" name="endpoint_address" value="{{$peer->endpoint_address}}" placeholder="s1.yourdomain.com">
                                 </div>
-                            </div>
-                            <div class="form-group row mb-4">
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label for="dns">DNS</label>
                                     <input class="form-control" name="dns" value="{{$peer->dns}}" placeholder="192.168.200.1">
                                 </div>
                             </div>
                             <div class="form-group row mb-4">
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label for="comment">Comment</label>
                                     <input class="form-control" name="comment" value="{{$peer->comment}}">
                                 </div>
-                            </div>
-                            <div class="form-group row mb-4">
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label for="note">Note</label>
                                     <input class="form-control" name="note" value="{{$peer->note}}">
                                 </div>
                             </div>
                             <div class="form-group row mb-4">
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label for="expire_days">Expires after (days)</label>
                                     <input type="number" class="form-control" name="expire_days" value="{{$peer->expire_days}}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="activate_date">Starting From Date</label>
+                                    <input type="date" class="form-control" name="activate_date" value="{{substr($peer->activate_date_time,0,10)}}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="activate_time">Starting From Time</label>
+                                    <input type="time" class="form-control" name="activate_time" value="{{substr($peer->activate_date_time,11,5)}}">
                                 </div>
                             </div>
                             <div class="form-group row mb-4">
@@ -263,21 +271,27 @@
       </div>
       <div class="modal-body">
         <div class="form-group row mb-4">
-          <div class="col-md-12">
+          <div class="col-md-6">
             <label for="mass_endpoint_address">Endpoint Address</label>
-            <input class="form-control" name="mass_endpoint_address" id="mass_endpoint_address" placeholder="s1.yourdomain.com">
+            <input class="form-control" name="mass_endpoint_address" id="mass_endpoint_address">
           </div>
-        </div>
-        <div class="form-group row mb-4">
-          <div class="col-md-12">
+          <div class="col-md-6">
             <label for="mass_dns">DNS</label>
-            <input class="form-control" name="mass_dns" id="mass_dns" placeholder="192.168.200.1">
+            <input class="form-control" name="mass_dns" id="mass_dns">
           </div>
         </div>
         <div class="form-group row mb-4">
-          <div class="col-md-12">
+          <div class="col-md-6">
             <label for="mass_expire_days">Expires after (days)</label>
             <input class="form-control" name="mass_expire_days" id="mass_expire_days">
+          </div>
+          <div class="col-md-3">
+            <label for="mass_activate_date">Starting From Date</label>
+            <input type="date" class="form-control" name="mass_activate_date" id="mass_activate_date">
+          </div>
+          <div class="col-md-3">
+            <label for="mass_activate_time">Starting From Time</label>
+            <input type="time" class="form-control" name="mass_activate_time" id="mass_activate_time">
           </div>
         </div>
         <div class="form-group row mb-4">
@@ -291,6 +305,12 @@
 </div>
 
 <script>
+  $(document).ready(function() {
+    $('.chk-row:checkbox').click(function() {
+      var x = $('.chk-row:checkbox:checked');
+      document.getElementById('number-of-selected-items').innerHTML = x.length;
+    });
+  });
   function clearAllFilters() {
     window.location.href = "{{route('wiregaurd.peers.index')}}";
   }
@@ -367,6 +387,8 @@
   }
   function checkAll() {
     $('.chk-row:checkbox').prop('checked', $('#chk-all').prop('checked'));
+    var x = $('.chk-row:checkbox:checked');
+    document.getElementById('number-of-selected-items').innerHTML = x.length;
   }
   function checkedItems() {
     var ids = [];
@@ -497,6 +519,8 @@
       'dns': document.getElementById('mass_dns').value,
       'endpoint_address': document.getElementById('mass_endpoint_address').value,
       'expire_days': document.getElementById('mass_expire_days').value,
+      'activate_date': document.getElementById('mass_activate_date').value,
+      'activate_time': document.getElementById('mass_activate_time').value,
     });
 
     var params = {

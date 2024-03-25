@@ -130,11 +130,10 @@
         <!-- Main Content -->
         <div id="content">
 
-            @include('layouts.admin.topbar')
+            @include('layouts.admin.topbar', ['pageTitle' => $pageTitle])
 
             <div class="container-fluid">
                 <div style="display:flex;justify-content:space-between;padding-bottom:10px">
-                    <h1 class="h3 mb-2 text-gray-800">{{$pageTitle}}</h1>
                     @if(isset($newButton))
                         <a href="{{isset($newButtonUrl) ? $newButtonUrl : '#'}}" class="btn btn-primary btn-icon-split">
                             <span class="icon text-white-50">

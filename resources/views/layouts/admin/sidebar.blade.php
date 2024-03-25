@@ -7,12 +7,12 @@
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion toggled" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
+    <!-- <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/"> -->
         <!-- <img src="/images/Logo.png" alt="takvpn" style="width:100%;" /> -->
-        <div class="sidebar-brand-text mx-3">
-            Logo
-        </div>
-    </a>
+        <!-- <div class="sidebar-brand-text mx-3"> -->
+            <!-- Logo -->
+        <!-- </div> -->
+    <!-- </a> -->
 
     <!-- Divider -->
     <!-- <hr class="sidebar-divider my-0"> -->
@@ -49,12 +49,12 @@
         </a>
     </li>
     @if(auth()->user()->isAdmin)
-    <!-- <li class="nav-item" id="limited-peers"> -->
-        <!-- <a class="nav-link" href="#"> -->
-            <!-- <i class="fas fa-fw fa-list-ul"></i> -->
-            <!-- <span>Limited Peers</span> -->
-        <!-- </a> -->
-    <!-- </li> -->
+    <li class="nav-item" id="limited-peers">
+        <a class="nav-link" href="#">
+            <i class="fas fa-fw fa-list-ul"></i>
+            <span>Limited Peers</span>
+        </a>
+    </li>
 
     <li class="nav-item" id="servers">
         <a class="nav-link" href="{{route('admin.settings.servers.list')}}">
