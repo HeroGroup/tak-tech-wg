@@ -160,17 +160,19 @@
             <!-- <span> Enable </span> -->
         </td>
         <td>
+          @if($peer->conf_file && $peer->qrcode_file)
+          <a href="{{route('wiregaurd.peers.download',$peer->id)}}" class="btn btn-circle btn-sm btn-success">
+            <i class="fa fa-fw fa-download"></i>
+          </a>
+          @endif
+          <button class="btn">
           <div class="dropdown no-arrow show">
             <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                <i class="fas fa-ellipsis-h fa-fw text-gray-900"></i>
             </a>
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink" x-placement="bottom-end" style="position: absolute; transform: translate3d(-158px, 19px, 0px); top: 0px; left: 0px; will-change: transform;">
-                <div class="dropdown-header">Actions:</div>
-                @if($peer->conf_file && $peer->qrcode_file)
-                <a href="{{route('wiregaurd.peers.download',$peer->id)}}" class="dropdown-item text-success">
-                  <i class="fa fa-fw fa-download"></i> Download
-                </a>
-                @endif
+                <div class="dropdown-header">Actions</div>
+                
                 <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="edit">
                   <i class="fa fa-fw fa-pen"></i> Edit
                 </a>
@@ -185,7 +187,7 @@
                 @endif
             </div>
           </div>
-          
+          </button>
           <!-- Edit peer Modal -->
           <div class="modal fade" id="edit-peer-modal-{{$peer->id}}" tabindex="-1" role="dialog" aria-labelledby="editpeerModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
