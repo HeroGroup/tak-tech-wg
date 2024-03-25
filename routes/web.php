@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InterfaceController;
+use App\Http\Controllers\Admin\LimitedPeerController;
 use App\Http\Controllers\Admin\ServerController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
@@ -16,6 +17,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/servers/syncAll/{token}', [ServerController::class, 'syncAll'])->name('servers.syncPeers');
 Route::get('/wiregaurd/peers/disableExpired/{token}', [WiregaurdController::class, 'disableExpiredPeers'])->name('disableExpiredPeers');
+Route::get('/wiregaurd/peers/limited/getUsages/{token}', [LimitedPeerController::class, 'storeUsages'])->name('wiregaurd.peers.limited.storeUsages');
 
 Route::middleware(['auth', 'active'])->group(function() {
   Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
