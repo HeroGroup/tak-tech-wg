@@ -612,12 +612,17 @@ class ServerController extends Controller
                     $message .= "$sAddress: $resMessage\r\n";
                 }
 
+                saveCronResult('syncAll', $message);
+                
                 return $this->success($message);
             }
 
+            saveCronResult('syncAll', 'token mismatch!');
             return $this->fail('token mismatch!');
         } catch (\Exception $exception) {
-            return $this->fail($exception->getLine() . ': ' . $exception->getMessage());
+            $message = $exception->getLine() . ': ' . $exception->getMessage();
+            saveCronResult('syncAll', $message);
+            return $this->fail($message);
         }
     }
 }

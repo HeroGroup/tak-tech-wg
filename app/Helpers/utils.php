@@ -131,3 +131,12 @@ function zipPeer($comment, $conf_file, $qrcode_file, $zipFileName)
 
   return $zip;
 }
+
+function saveCronResult($cronName, $cronResult)
+{
+  DB::table('cron_results')->insert([
+    'cron_name' => $cronName,
+    'cron_result' => $cronResult,
+    'created_at' => date('Y-m-d H:i:s', time())
+  ]);
+}

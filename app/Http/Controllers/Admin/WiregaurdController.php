@@ -699,31 +699,42 @@ class WiregaurdController extends Controller
     // This function disables all peers that has been expired
     public function disableExpiredPeers($request_token)
     {
-        $token = env('DISABLE_EXPIRED_PEERS_TOKEN');
+        try {
+            $token = env('DISABLE_EXPIRED_PEERS_TOKEN');
 
-        if ($request_token == $token) {
-            $disabled = [];
-            $peers = DB::table('peers')->whereNotNull('expire_days')->whereNotNull('activate_date_time')->where('is_enabled', 1)->get();
-            $now = time();
-            foreach ($peers as $peer) {
-                $expire = $peer->expire_days - 1;
-                $diff = strtotime($peer->activate_date_time. " + $expire days")-$now;
+            if ($request_token == $token) {
+                $disabled = [];
+                $peers = DB::table('peers')->whereNotNull('expire_days')->whereNotNull('activate_date_time')->where('is_enabled', 1)->get();
+                $now = time();
+                foreach ($peers as $peer) {
+                    $expire = $peer->expire_days - 1;
+                    $diff = strtotime($peer->activate_date_time. " + $expire days")-$now;
 
-                if ($diff <= 0) {
-                    // disable peer
-                    $this->toggleEnable($peer->id, 0);
-                    array_push($disabled, $peer->comment);
+                    if ($diff <= 0) {
+                        // disable peer
+                        $this->toggleEnable($peer->id, 0);
+                        array_push($disabled, $peer->comment);
+                    }
                 }
-            }
 
-            if (count($disabled) > 0) {
-                return implode(' - ', $disabled) . ' disabled successfully!';
+                if (count($disabled) > 0) {
+                    $message = implode(' - ', $disabled) . ' disabled successfully!';
+                    saveCronResult('disableExpiredPeers', $message);
+                    return $message;
+                } else {
+                    $message = 'nothing to disabled!';
+                    saveCronResult('disableExpiredPeers', $message);
+                    return $message;
+                }
             } else {
-                return 'nothing to disabled!';
+                $message = 'token mismatch!';
+                saveCronResult('disableExpiredPeers', $message);
+                return $message;
             }
-        } else {
-            return 'token mismatch!';
+        } catch(\Exception $exception) {
+            $message = $exception->getMessage();
+            saveCronResult('disableExpiredPeers', $message);
+            return $message;
         }
-        
     }
 }
