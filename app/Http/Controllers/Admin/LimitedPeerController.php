@@ -53,7 +53,7 @@ class LimitedPeerController extends Controller
             }
             $peer->tx = round(($sum_tx / 1073741824), 2);
             $peer->rx = round(($sum_rx/ 1073741824), 2);
-            $peer->total_usage = $sum_tx + $sum_rx;
+            $peer->total_usage = $peer->tx + $peer->rx;
         }
         
         return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers'));
