@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,19 +17,42 @@ class LimitedPeerController extends Controller
     {
         $limitedInterfaces = DB::table('interfaces')
             ->where('iType', 'limited')
-            ->pluck('name', 'id')
+            ->join('user_interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->pluck('name', 'interfaces.id')
             ->toArray();
             
         $interface = $request->query('interface');
         if ($interface && $interface != 'all') {
-            $limitedPeers = DB::table('peers')->where('interface_id', $interface)->get();
+            $limitedPeers = DB::table('peers')
+                ->where('interface_id', $interface)
+                ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
+                ->select(['peers.*', 'interfaces.name', 'interfaces.allowed_traffic_GB']);
         } else {
             $limitedInterfacesKeys = array_keys($limitedInterfaces);
-            $limitedPeers = DB::table('peers')->whereIn('interface_id', $limitedInterfacesKeys)->get();
+            $limitedPeers = DB::table('peers')
+                ->whereIn('interface_id', $limitedInterfacesKeys)
+                ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
+                ->select(['peers.*', 'interfaces.name', 'interfaces.allowed_traffic_GB']);
         }
 
-        // calculate tx, rx and total usage
+        $comment = $request->query('comment');
+        if ($comment && $limitedPeers && $limitedPeers->count() > 0) {
+            $limitedPeers = $limitedPeers->where(function (Builder $query) use ($comment) {
+                $query->where('comment', 'like', '%'.$comment.'%')
+                    ->orWhere('client_address', 'like', '%'.$comment.'%')
+                    ->orWhere('note', 'like', '%'.$comment.'%');
+            });
+        }
 
+        $enabled = $request->query('enabled');
+        if (in_array($enabled, ['0', '1']) && $limitedPeers && $limitedPeers->count() > 0) {
+            $limitedPeers = $limitedPeers->where('is_enabled', (int)$enabled);
+        }
+
+        $limitedPeers = $limitedPeers->get();
+
+        $now = time();
         foreach($limitedPeers as $peer) {
             $pId = $peer->id;
             $servers = DB::table('servers')->get();
@@ -54,9 +78,48 @@ class LimitedPeerController extends Controller
             $peer->tx = round(($sum_tx / 1073741824), 2);
             $peer->rx = round(($sum_rx/ 1073741824), 2);
             $peer->total_usage = $peer->tx + $peer->rx;
+
+            $peer->expires_in = '-1';
+
+            if($peer->expire_days && $peer->activate_date_time) {
+                $expire = $peer->expire_days;
+                $diff = strtotime($peer->activate_date_time. " + $expire days") - $now;
+                $peer->expires_in = $diff; // int
+            }
+        }
+
+        if ($enabled == '2') { // expired
+            $limitedPeers = $limitedPeers->where('expires_in', '<', 0)->where('expires_in', '!=', -1);
+        }
+
+        $sortBy = $request->query('sortBy');
+        if ($sortBy && $limitedPeers && $limitedPeers->count() > 0) {
+            $by = substr($sortBy, 0, strrpos($sortBy, '_'));
+            $type = substr($sortBy, strrpos($sortBy, '_')+1);
+
+            $limitedPeers = $limitedPeers->sortBy($by, SORT_NATURAL);
+            
+            if ($type == "desc") {
+                $limitedPeers = $limitedPeers->reverse();
+            }
+        } else {
+            $sortBy = "client_address_asc";
         }
         
-        return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers'));
+        return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'comment', 'enabled', 'sortBy'));
+    }
+
+    public function update(Request $request)
+    {
+        try {
+            $peer = DB::table('peers')->where('id', $request->id)->update([
+                'peer_allowed_traffic_GB' => $request->peer_allowed_traffic_GB
+            ]);
+
+            return back()->with('message', 'Peer updated successfully!')->with('type', 'success');
+        } catch (\Exception $exception) {
+            return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
     }
     // This functions runs periodically and stores tx, rx of to every limited peer
     public function storeUsages($request_token)

@@ -32,7 +32,8 @@ class WiregaurdController extends Controller
     {
         $peers = DB::table('peers')
             ->join('user_interfaces', 'peers.interface_id', '=', 'user_interfaces.interface_id')
-            ->select('peers.*')
+            ->join('interfaces', 'peers.interface_id', '=', 'interfaces.id')
+            ->select(['peers.*', 'interfaces.name'])
             ->where('user_interfaces.user_id', auth()->user()->id);
         
         $interface = $request->query('wiregaurd');

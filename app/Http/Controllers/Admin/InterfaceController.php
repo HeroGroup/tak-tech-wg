@@ -42,6 +42,8 @@ class InterfaceController extends Controller
                 'ip_range' => $request->ip_range,
                 'mtu' => $request->mtu,
                 'listen_port' => $request->listen_port,
+                'iType' => $request->iType,
+                'allowed_traffic_GB' => $request->allowed_traffic_GB,
                 'public_key' => $publicKey,
                 'private_key' => $privateKey,
                 'created_at' => $now,
@@ -72,7 +74,8 @@ class InterfaceController extends Controller
                         'name' => $request->name,
                         'private-key' => $privateKey,
                         'mtu' => $request->mtu,
-                        'listen-port' => $request->listen_port
+                        'listen-port' => $request->listen_port,
+                        'comment' => $request->allowed_traffic_GB
                     ]),
                     true
                 );
@@ -115,6 +118,8 @@ class InterfaceController extends Controller
                 'ip_range' => $request->ip_range,
                 'mtu' => $request->mtu,
                 'listen_port' => $request->listen_port,
+                'iType' => $request->iType,
+                'allowed_traffic_GB' => $request->allowed_traffic_GB,
             ]);
 
             // TODO: update on remote (mtu, listen_port)

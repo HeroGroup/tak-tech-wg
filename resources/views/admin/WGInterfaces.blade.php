@@ -18,8 +18,9 @@
       <th>Default Endpoint</th>
       <th>DNS</th>
       <th>IP Range</th>
-      <th>MTU</th>
       <th>Listen port</th>
+      <th>iType</th>
+      <th>Allowed Traffic (GB)</th>
       <th>Peers</th>
       <th>Actions</th>
     </thead>
@@ -32,8 +33,9 @@
         <td>{{$interface->default_endpoint_address}}</td>
         <td>{{$interface->dns}}</td>
         <td>{{$interface->ip_range}}</td>
-        <td>{{$interface->mtu}}</td>
         <td>{{$interface->listen_port}}</td>
+        <td>{{$interface->iType}}</td>
+        <td>{{$interface->allowed_traffic_GB}}</td>
         <td>
             <a href="/wiregaurd/peers?wiregaurd={{$interface->id}}">
                 {{\Illuminate\Support\Facades\DB::table('peers')->where('interface_id', $interface->id)->count()}}
@@ -61,33 +63,42 @@
                                 <input type="hidden" name="_method" value="PUT">
                                 <input type="hidden" name="id" value="{{$interface->id}}">
                                 <div class="form-group row mb-4">
-                                    <div class="col-md-12">
+                                    <div class="col-md-6">
                                         <label for="default_endpoint_address">Default Endpoint</label>
                                         <input class="form-control" name="default_endpoint_address" value="{{$interface->default_endpoint_address}}" placeholder="s1.yourdomain.com">
                                     </div>
-                                </div>
-                                <div class="form-group row mb-4">
-                                    <div class="col-md-12">
+                                    <div class="col-md-6">
                                         <label for="dns">Wiregaurd DNS</label>
                                         <input class="form-control" name="dns" value="{{$interface->dns}}" placeholder="192.168.200.1">
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
-                                    <div class="col-md-12">
+                                    <div class="col-md-6">
                                         <label for="ip_range">IPv4 Address Range</label>
                                         <input class="form-control" name="ip_range" value="{{$interface->ip_range}}" placeholder="192.168.200.">
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
-                                    <div class="col-md-12">
+                                    <div class="col-md-6">
                                         <label for="mtu">MTU</label>
                                         <input class="form-control" name="mtu" value="{{$interface->mtu}}" placeholder="1440">
                                     </div>
+                                    <div class="col-md-6">
+                                        <label for="listen_port">listen port</label>
+                                        <input class="form-control" name="listen_port" value="{{$interface->listen_port}}">
+                                    </div>
                                 </div>
                                 <div class="form-group row mb-4">
-                                    <div class="col-md-12">
-                                        <label for="listen_port">listen port</label>
-                                        <input class="form-control" name="listen_port" value="{{$interface->listen_port}}" placeholder="">
+                                    <div class="col-md-6">
+                                        <label for="iType">iType</label>
+                                        <select name="iType">
+                                            <option key="unlimited" @if($interface->iType=='unlimited') selected @endif>unlimited</option>
+                                            <option key="limited" @if($interface->iType=='limited') selected @endif>limited</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="allowed_traffic_GB">Allowed Traffic (GB)</label>
+                                        <input type="number" class="form-control" name="allowed_traffic_GB" value="{{$interface->allowed_traffic_GB}}" step="0.5">
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
@@ -124,39 +135,46 @@
                 <form method="post" action="{{route('admin.wiregaurd.interfaces.add')}}" onsubmit="turnOnLoader()">
                     @csrf
                     <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="name">Interface Name</label>
                             <input class="form-control" name="name" placeholder="WG-S" required>
                         </div>
-                    </div>
-                    <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="default_endpoint_address">Default Endpoint</label>
                             <input class="form-control" name="default_endpoint_address" placeholder="s1.yourdomain.com" required>
                         </div>
                     </div>
                     <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="dns">Wiregaurd DNS</label>
                             <input class="form-control" name="dns" placeholder="192.168.200.1" required>
                         </div>
-                    </div>
-                    <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="ip_range">IPv4 Address Range</label>
                             <input class="form-control" name="ip_range" placeholder="192.168.200." required>
                         </div>
                     </div>
                     <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="mtu">MTU</label>
                             <input class="form-control" name="mtu" placeholder="1440" required>
                         </div>
-                    </div>
-                    <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="listen_port">listen port</label>
                             <input class="form-control" name="listen_port" required>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="iType">iType</label>
+                            <select name="iType">
+                                <option key="unlimited">unlimited</option>
+                                <option key="limited">limited</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allowed_traffic_GB">Allowed Traffic (GB)</label>
+                            <input type="number" class="form-control" name="allowed_traffic_GB" step="0.5">
                         </div>
                     </div>
                     <div class="form-group row mb-4">

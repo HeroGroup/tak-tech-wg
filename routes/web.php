@@ -44,6 +44,7 @@ Route::middleware(['auth', 'active'])->group(function() {
 
     Route::prefix('wiregaurd/peers/limited')->group(function () {
       Route::get('/list', [LimitedPeerController::class, 'index'])->name('limited.list');
+      Route::put('/update', [LimitedPeerController::class, 'update'])->name('limited.update');
     });
   });
 });

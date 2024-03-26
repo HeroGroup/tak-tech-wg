@@ -21,7 +21,7 @@
   </div>
 
   <div class="col-sm-2">
-    <select name="wginterface" class="form-control" onchange="searchEnabled(this.value)">
+    <select name="peer-status" class="form-control" onchange="searchEnabled(this.value)">
       <option value="all" @if($enabled=="all") selected @endif>All Statuses</option>
       <option value="1" @if($enabled=="1") selected @endif>Enabled</option>
       <option value="0" @if($enabled=="0") selected @endif>Disabled</option>
@@ -113,7 +113,7 @@
         </td>
         <td>{{++$row}}</td>
         <td>{{$peer->comment}}</td>
-        <td>{{\Illuminate\Support\Facades\DB::table('interfaces')->find($peer->interface_id)->name}}</td>
+        <td>{{$peer->name}}</td>
         <td>{{$peer->client_address}}</td>
         <td>{{$peer->note}}</td>
         <td>
