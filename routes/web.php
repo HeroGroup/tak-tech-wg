@@ -41,6 +41,10 @@ Route::middleware(['auth', 'active'])->group(function() {
     Route::get('/getDownloadLink/{date}/{file}', [WiregaurdController::class, 'getDownloadLink'])->name('getDownloadLink');
     Route::get('/wiregaurd/peers/download/{id}', [WiregaurdController::class, 'downloadPeer'])->name('download');
     Route::get('/wiregaurd/peers/downloadZip/{date}/{file}', [WiregaurdController::class, 'downloadZip'])->name('downloadZip');
+
+    Route::prefix('wiregaurd/peers/limited')->group(function () {
+      Route::get('/list', [LimitedPeerController::class, 'index'])->name('limited.list');
+    });
   });
 });
 

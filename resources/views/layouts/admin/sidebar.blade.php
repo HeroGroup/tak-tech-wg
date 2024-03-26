@@ -50,7 +50,7 @@
     </li>
     @if(auth()->user()->isAdmin)
     <li class="nav-item" id="limited-peers">
-        <a class="nav-link" href="#">
+        <a class="nav-link" href="{{route('wiregaurd.peers.limited.list')}}">
             <i class="fas fa-fw fa-list-ul"></i>
             <span>Limited Peers</span>
         </a>
