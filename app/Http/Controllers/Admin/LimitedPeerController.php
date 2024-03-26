@@ -51,8 +51,8 @@ class LimitedPeerController extends Controller
                 }
                 
             }
-            $peer->tx = $sum_tx;
-            $peer->rx = $sum_rx;
+            $peer->tx = round(($sum_tx / 1073741824), 2);
+            $peer->rx = round(($sum_rx/ 1073741824), 2);
             $peer->total_usage = $sum_tx + $sum_rx;
         }
         
