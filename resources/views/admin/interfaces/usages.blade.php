@@ -2,7 +2,7 @@
 @section('content')
 <div class="row">
   @foreach($interfaces as $interface)
-  <div class="col-lg-12">
+  <div class="col-lg-6">
         <div class="card shadow mb-4">
             <!-- Card Header - Dropdown -->
             <div
