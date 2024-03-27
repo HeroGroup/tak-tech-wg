@@ -114,8 +114,14 @@
         </td>
         <td>{{$peer->tx}}</td>
         <td>{{$peer->rx}}</td>
-        <td>{{$peer->total_usage}}</td>
-        <td>{{$peer->peer_allowed_traffic_GB ?? $peer->allowed_traffic_GB}}</td>
+        <td>
+          <?php 
+            $total = $peer->total_usage; 
+            $max = $peer->peer_allowed_traffic_GB ?? $peer->allowed_traffic_GB;
+          ?>
+            <span @if($total >= $max) class="text-danger" @endif>{{$total}}</span>
+        </td>
+        <td>{{$max}}</td>
         <td>
           <a href="" class="btn btn-sm btn-circle btn-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="Edit Allowed Traffic">
             <i class="fa fa-fw fa-pen"></i>

@@ -304,14 +304,7 @@ class WiregaurdController extends Controller
     protected function regenerate($id, $time)
     {
         try {
-            $message = '';
-            // loop on servers and perform action
-            $server_peers = DB::table('server_peers')->where('peer_id', $id)->get();
-
-            foreach ($server_peers as $server_peer) {
-                $saddress = DB::table('servers')->find($server_peer->server_id)->server_address;
-                $message .= ("$saddress: " . ($this->removeRemote($saddress, $server_peer->server_peer_id) ? "success\r\n" : "fail\r\n"));
-            }
+            $message = $this->removeRemote($id)['message'] . "\r\n";
 
             $peer = DB::table('peers')->find($id);
             $caddress = substr($peer->client_address,0,-3);
@@ -324,6 +317,7 @@ class WiregaurdController extends Controller
             $cdns = $request->dns ?? $interface->dns;
             $wgserveraddress = $peer->endpoint_address ?? $interface->default_endpoint_address;
             $commentApply = $peer->comment;
+
             $removeResult = $this->removeLocal($id);
 
             $message .= $removeResult ? "Local removed successfully\r\n" : "Unable to remove local peer $commentApply. \r\n";
@@ -428,23 +422,35 @@ class WiregaurdController extends Controller
     }
 
     // This function removes a peer on remote router
-    public function removeRemote($saddress, $id)
+    public function removeRemote($peerId)
     {
         try {
-            $data = [".id" => $id];
-            $response = curl_general(
-                'POST',
-                $saddress . '/rest/interface/wireguard/peers/remove',
-                json_encode($data),
-                true
-            );
-            if($response == []) {
-                return true;
-            } else {
-                return false;
+            $server_peers = DB::table('server_peers')
+                ->where('peer_id', $peerId)
+                ->join('servers', 'servers.id', '=', 'server_peers.server_id')
+                ->select(['server_peers.*', 'servers.server_address'])
+                ->get();
+
+            $message = [];
+            foreach ($server_peers as $server_peer) {
+                $saddress = $server_peer->server_address;
+                $response = curl_general(
+                    'POST',
+                    $saddress . '/rest/interface/wireguard/peers/remove',
+                    json_encode([".id" => $server_peer->server_peer_id]),
+                    true
+                );
+                
+                if($response == []) {
+                    array_push($message, "$saddress: removed successfully!");
+                } else {
+                    array_push($message, "$saddress: failed to remove!");
+                }
             }
+            
+            return ['status' => 1, 'message' => implode("\r\n", $message)];
         } catch (\Exception $exception) {
-            return false;
+            return ['status' => -1, 'message' => $exception->getLine() . ': ' . $exception->getMessage()];
         }
     }
 
@@ -475,20 +481,13 @@ class WiregaurdController extends Controller
     public function removeSingle(Request $request)
     {
         try {
-            $message = '';
-            
-            $server_peers = DB::table('server_peers')->where('peer_id', $request->id)->get();
-            foreach ($server_peers as $server_peer) {
-                $saddress = DB::table('servers')->find($server_peer->server_id)->server_address;
-                $removeResponse = $this->removeRemote($saddress, $server_peer->server_peer_id);
-                $message .= $saddress . ($removeResponse ? " succcess\r\n" : " fail\r\n");
-            }
-        
-            $message .= $this->removeLocal($request->id) ? "removed from local\r\n" : "failed to remove from local\r\n";
+            $peerId = $request->id;
+            $message = $this->removeRemote($peerId)['message'] . "\r\n";
+            $message .= $this->removeLocal($peerId) ? "removed from local\r\n" : "failed to remove from local\r\n";
             
             return $this->success($message);
         } catch (\Exception $exception) {
-            return $this->fail($exception->getMessage());
+            return $this->fail($exception->getLine() . ': ' . $exception->getMessage());
         }
     }
 
@@ -496,15 +495,9 @@ class WiregaurdController extends Controller
     public function removeMass(Request $request)
     {
         $ids = json_decode($request->ids);
-        foreach ($ids as $id) {
-            $server_peers = DB::table('server_peers')->where('peer_id', $id)->get();
-            foreach ($server_peers as $server_peer) {
-                $server = 
-                $saddress = DB::table('servers')->find($server_peer->server_id)->server_address;
-                $this->removeRemote($saddress, $server_peer->server_peer_id);
-                DB::table('server_peers')->where('peer_id', $server_peer->peer_id)->where('server_id', $server_peer->server_id)->delete();
-            }
-            DB::table('peers')->where('id', $id)->delete();
+        foreach ($ids as $peerId) {
+            $this->removeRemote($peerId);
+            $this->removeLocal($peerId);
         }
 
         return $this->success('Selected items removed successfully.');
@@ -705,21 +698,36 @@ class WiregaurdController extends Controller
 
             if ($request_token == $token) {
                 $disabled = [];
-                $peers = DB::table('peers')->whereNotNull('expire_days')->whereNotNull('activate_date_time')->where('is_enabled', 1)->get();
+                $removed = [];
+                $peers = DB::table('peers')
+                    ->whereNotNull('expire_days')
+                    ->whereNotNull('activate_date_time')
+                    ->where('is_enabled', 1)
+                    ->join('interfaces', 'interfaces.id' ,'=', 'peers.interface_id')
+                    ->select(['peers.*', 'interfaces.iType'])
+                    ->get();
                 $now = time();
                 foreach ($peers as $peer) {
                     $expire = $peer->expire_days - 1;
                     $diff = strtotime($peer->activate_date_time. " + $expire days")-$now;
 
                     if ($diff <= 0) {
-                        // disable peer
-                        $this->toggleEnable($peer->id, 0);
-                        array_push($disabled, $peer->comment);
+                        $peerId = $peer->id;
+                        // if peer is unlimited, disable peer
+                        if ($peer->iType == "unlimited") {
+                            $this->toggleEnable($peerId, 0);
+                            array_push($disabled, $peer->comment);
+                        } else { // if peer is limited, remove peer
+                            $this->removeRemote($peerId);
+                            $this->removeLocal($peerId);
+                            array_push($removed, $peer->comment);
+                        }
                     }
                 }
 
-                if (count($disabled) > 0) {
-                    $message = implode(' - ', $disabled) . ' disabled successfully!';
+                if ((count($disabled) > 0) || (count($removed) > 0)) {
+                    $message = implode("\r\n", $disabled) . ' disabled successfully!';
+                    $message .= implode("\r\n", $removed) . ' removed successfully!';
                     saveCronResult('disableExpiredPeers', $message);
                     return $message;
                 } else {
@@ -737,5 +745,10 @@ class WiregaurdController extends Controller
             saveCronResult('disableExpiredPeers', $message);
             return $message;
         }
+    }
+
+    public function removeExpiredLimitedPeers($request_token)
+    {
+        // First test removeRemote
     }
 }
