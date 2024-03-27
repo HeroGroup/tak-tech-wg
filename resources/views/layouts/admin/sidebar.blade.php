@@ -30,10 +30,22 @@
 
     @if(auth()->user()->isAdmin)
     <li class="nav-item" id="interfaces">
-        <a class="nav-link" href="{{route('admin.wiregaurd.interfaces')}}">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseInterfaces" aria-expanded="false" aria-controls="collapseInterfaces">
             <i class="fas fa-fw fa-database"></i>
             <span>Interfaces</span>
         </a>
+        <div id="collapseInterfaces" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar" style="">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{route('admin.wiregaurd.interfaces')}}">
+                    <i class="fas fa-fw fa-database"></i>
+                    <span>List</span>
+                </a>
+                <a class="collapse-item" href="{{route('admin.wiregaurd.interfaces.usages')}}">
+                    <i class="fas fa-fw fa-list-ul"></i>
+                    <span>Interfaces Usages</span>
+                </a>
+            </div>
+        </div>
     </li>
     @endif
     <li class="nav-item" id="peers">
@@ -57,18 +69,23 @@
     </li>
     
     @if(auth()->user()->isAdmin)
-    <li class="nav-item" id="servers">
-        <a class="nav-link" href="{{route('admin.settings.servers.list')}}">
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseServers" aria-expanded="false" aria-controls="collapseServers">
             <i class="fas fa-fw fa-server"></i>
             <span>Servers</span>
         </a>
-    </li>
-
-    <li class="nav-item" id="servers_report">
-        <a class="nav-link" href="{{route('admin.settings.servers.report')}}">
-            <i class="fas fa-fw fa-file-contract"></i>
-            <span>Servers Report</span>
-        </a>
+        <div id="collapseServers" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar" style="">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{route('admin.settings.servers.list')}}" id="servres">
+                    <i class="fas fa-fw fa-list"></i>
+                    <span>Servers</span>
+                </a>
+                <a class="collapse-item" href="{{route('admin.settings.servers.report')}}" id="servers-report">
+                    <i class="fas fa-fw fa-file-contract"></i>
+                    <span>Servers Report</span>
+                </a>
+            </div>
+        </div>
     </li>
 
     <li class="nav-item" id="settings">

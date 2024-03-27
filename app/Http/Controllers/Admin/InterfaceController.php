@@ -16,7 +16,7 @@ class InterfaceController extends Controller
     public function interfaces()
     {
         $interfaces = DB::table('interfaces')->get();
-        return view('admin.WGInterfaces', compact('interfaces'));
+        return view('admin.interfaces.list', compact('interfaces'));
     }
 
     // add an interface in local db and all remote routers
@@ -226,5 +226,44 @@ class InterfaceController extends Controller
             return $resultMessage;
         }
         
+    }
+
+    public function usages()
+    {
+        $interfaces = DB::table('interfaces')->select(['id', 'name'])->get();
+        foreach($interfaces as $interface) {
+            $server_interfaces = DB::table('server_interfaces')
+                ->where('interface_id', $interface->id)
+                ->join('servers', 'servers.id', '=', 'server_interfaces.server_id')
+                ->select(['server_interfaces.*', 'servers.server_address'])
+                ->get();
+
+            for($i = 0; $i < 6; $i++) {
+                $sum_tx = 0;
+                $sum_rx = 0;
+                foreach($server_interfaces as $server_interface) {
+                    $server_interface_usage = DB::table('server_interface_usages')
+                        ->where('server_id', $server_interface->server_id)
+                        ->where('server_interface_id', $server_interface->server_interface_id)
+                        ->orderBy('id', 'desc')
+                        ->skip($i)
+                        ->take(1)
+                        ->first();
+
+                    if ($server_interface_usage) {
+                        $key = $server_interface_usage->created_at;
+                        $sum_tx += round(($server_interface_usage->tx / 1073741824), 2);
+                        $sum_rx += round(($server_interface_usage->rx / 1073741824), 2);
+                    }
+                }
+
+                $interface->usages[$i] = $sum_tx + $sum_rx;
+            }
+        }
+        $interfaces = $interfaces->toArray();
+
+        $interfaces_json = json_encode($interfaces);
+
+        return view('admin.interfaces.usages', compact('interfaces', 'interfaces_json'));
     }
 }
