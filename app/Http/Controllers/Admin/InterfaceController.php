@@ -159,4 +159,72 @@ class InterfaceController extends Controller
             return $this->fail($exception->getMessage());
         }
     }
+
+    public function storeInterfacesUsages($request_token)
+    {
+        try {
+            if ($request_token == env('STORE_INTERFACES_USAGES_TOKEN')) {
+                $message = [];
+                $now = date('Y-m-d H:i:s', time());
+
+                $servers = DB::table('servers')->get();
+                foreach($servers as $server) {
+                    $sId = $server->id;
+                    $sAddress = $server->server_address;
+                    $remoteInterfaces = curl_general('GET', $sAddress . '/rest/interface', '', false);
+
+                    if (is_array($remoteInterfaces) && count($remoteInterfaces) > 0) {
+                        foreach ($remoteInterfaces as $remoteInterface) {
+                            $latest = DB::table('server_interface_usages')
+                                ->where('server_id', $sId)
+                                ->where('server_interface_id', $remoteInterface[".id"])
+                                ->orderBy('id', 'desc')
+                                ->first();
+                            
+                            $latest_tx = $latest ? $latest->tx : 0;
+                            $latest_rx = $latest ? $latest->rx : 0;
+                            
+                            $remoteInterfaceTX = $remoteInterface["tx-byte"];
+                            $remoteInterfaceRX = $remoteInterface["rx-byte"];
+
+                            if ($latest_tx > $remoteInterfaceTX) {
+                                $new_tx = $latest_tx + $remoteInterfaceTX;
+                            } else if ($latest_tx <= $remoteInterfaceTX) {
+                                $new_tx = $remoteInterfaceTX;
+                            }
+
+                            if ($latest_rx > $remoteInterfaceRX) {
+                                $new_rx = $latest_rx + $remoteInterfaceRX;
+                            } else if ($latest_rx <= $remoteInterfaceRX) {
+                                $new_rx = $remoteInterfaceRX;
+                            }
+                            
+                            DB::table('server_interface_usages')->insert([
+                                'server_id' => $sId,
+                                'server_interface_id' => $remoteInterface[".id"],
+                                'tx' => $new_tx,
+                                'rx' => $new_rx,
+                                'created_at' => $now
+                            ]);
+
+                        }
+                        array_push($message, "$sAddress: fetch successfull!");
+                    } else {
+                        array_push($message, "$sAddress: $remoteInterfaces");
+                    }
+                }
+                $resultMessage = implode("\r\n", $message);
+                saveCronResult('store-interfaces-usages', $resultMessage);
+                return $resultMessage;
+            }
+            $resultMessage = 'token mismatch!';
+            saveCronResult('store-interfaces-usages', $resultMessage);
+            return $resultMessage;
+        } catch(\Exception $exception) {
+            $resultMessage = $exception->getLine() . ': ' . $exception->getMessage();
+            saveCronResult('store-interfaces-usages', $resultMessage);
+            return $resultMessage;
+        }
+        
+    }
 }

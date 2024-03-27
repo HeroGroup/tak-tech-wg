@@ -732,17 +732,17 @@ class WiregaurdController extends Controller
                     return $message;
                 } else {
                     $message = 'nothing to disabled!';
-                    saveCronResult('disableExpiredPeers', $message);
+                    saveCronResult('disable-expired-peers', $message);
                     return $message;
                 }
             } else {
                 $message = 'token mismatch!';
-                saveCronResult('disableExpiredPeers', $message);
+                saveCronResult('disable-expired-peers', $message);
                 return $message;
             }
         } catch(\Exception $exception) {
             $message = $exception->getMessage();
-            saveCronResult('disableExpiredPeers', $message);
+            saveCronResult('disable-expired-peers', $message);
             return $message;
         }
     }

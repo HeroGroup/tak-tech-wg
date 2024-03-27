@@ -186,16 +186,16 @@ class LimitedPeerController extends Controller
                 }
 
                 $resultMessage = implode("\r\n", $message);
-                saveCronResult('storePeersUsages', $resultMessage);
+                saveCronResult('store-peers-usages', $resultMessage);
                 return $resultMessage;
             }
 
             $resultMessage = 'token mismatch!';
-            saveCronResult('storePeersUsages', $resultMessage);
+            saveCronResult('store-peers-usages', $resultMessage);
             return $resultMessage;
         } catch (\Exception $exception) {
             $resultMessage = $exception->getMessage();
-            saveCronResult('storePeersUsages', $resultMessage);
+            saveCronResult('store-peers-usages', $resultMessage);
             return $resultMessage;
         }
     }
