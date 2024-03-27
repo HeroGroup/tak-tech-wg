@@ -77,7 +77,7 @@
       </div>
   </div>
 </div>
-
+@if(auth()->user()->is_admin)
 <div class="row">
     <div class="col-lg-12">
         <!-- Interfaces Usages -->
@@ -94,7 +94,7 @@
     </div>
 
 </div>
-
+@endif()
 <script src="/vendor/chart.js/Chart.min.js"></script>
 <script>
     var interfacesUsagesString = "{{$interfaces_usages}}";
