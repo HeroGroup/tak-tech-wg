@@ -455,122 +455,128 @@ class ServerController extends Controller
                 30 // timeout (s)
             );
 
-            // check if server is already synced by number of enabled and disabled peers
-            $remotePeersTotalCount = count($remotePeers);
-            $disabledArray = array_column($remotePeers, 'disabled');
-            $disabledArrayCounts = array_count_values($disabledArray);
-            $enabledRemotePeersCount = $disabledArrayCounts['false'] ?? '-';
-            $disabledRemotePeersCount = $disabledArrayCounts['true'] ?? '-';
+            if(is_array($remotePeers)) {
+                // check if server is already synced by number of enabled and disabled peers
+                $remotePeersTotalCount = count($remotePeers);
+                $disabledArray = array_column($remotePeers, 'disabled');
+                $disabledArrayCounts = array_count_values($disabledArray);
+                $enabledRemotePeersCount = $disabledArrayCounts['false'] ?? '-';
+                $disabledRemotePeersCount = $disabledArrayCounts['true'] ?? '-';
 
-            $localEnabledPeersCount = DB::table('peers')->where('is_enabled', 1)->count();
-            $localDisabledPeersCount = DB::table('peers')->where('is_enabled', 0)->count();
+                $localEnabledPeersCount = DB::table('peers')->where('is_enabled', 1)->count();
+                $localDisabledPeersCount = DB::table('peers')->where('is_enabled', 0)->count();
 
-            if ($localEnabledPeersCount == $enabledRemotePeersCount && $localDisabledPeersCount == $disabledRemotePeersCount) {
-                return ['status' => 1, 'message' => 'Server is already synced!'];
-            }
-            
-            $remotePeersAllowedAddresses = array_column($remotePeers, 'allowed-address');
-            $localPeersClientAddresses = array_column($localPeers->toArray(), 'client_address');
-            
-            // delete extra remote peers
-            foreach ($remotePeers as $remotePeer) {
-                $key = array_search($remotePeer['allowed-address'], $localPeersClientAddresses);
-                if (! $key) {
-                    $res = curl_general(
-                        'POST',
-                        $saddress . '/rest/interface/wireguard/peers/remove',
-                        json_encode(['.id' => $remotePeer['.id']]),
-                        true
-                    );
-
-                    $address = substr($remotePeer['allowed-address'], 0 , -3);
-                    $resMessage = is_array($res) ? implode('-', $res) : $res;
-                    array_push($messages, "$saddress, $address remove response: $resMessage");
+                if ($localEnabledPeersCount == $enabledRemotePeersCount && $localDisabledPeersCount == $disabledRemotePeersCount) {
+                    return ['status' => 1, 'message' => 'Server is already synced!'];
                 }
-            }
+                
+                $remotePeersAllowedAddresses = array_column($remotePeers, 'allowed-address');
+                $localPeersClientAddresses = array_column($localPeers->toArray(), 'client_address');
+                
+                // delete extra remote peers
+                foreach ($remotePeers as $remotePeer) {
+                    $key = array_search($remotePeer['allowed-address'], $localPeersClientAddresses);
+                    if (! $key) {
+                        $res = curl_general(
+                            'POST',
+                            $saddress . '/rest/interface/wireguard/peers/remove',
+                            json_encode(['.id' => $remotePeer['.id']]),
+                            true
+                        );
 
-            $numberOfFailedAttempts = 0;
-            foreach ($localPeers as $localPeer) {
-                $key = array_search($localPeer->client_address, $remotePeersAllowedAddresses);
+                        $address = substr($remotePeer['allowed-address'], 0 , -3);
+                        $resMessage = is_array($res) ? implode('-', $res) : $res;
+                        array_push($messages, "$saddress, $address remove response: $resMessage");
+                    }
+                }
 
-                if ($key > 0) { // peer exists on remote
-                    $remotePeerId = $remotePeers[$key]['.id'];
-                    // check id is correct
-                    $server_peer = DB::table('server_peers')
+                $numberOfFailedAttempts = 0;
+                foreach ($localPeers as $localPeer) {
+                    $key = array_search($localPeer->client_address, $remotePeersAllowedAddresses);
+
+                    if ($key > 0) { // peer exists on remote
+                        $remotePeerId = $remotePeers[$key]['.id'];
+                        // check id is correct
+                        $server_peer = DB::table('server_peers')
+                                        ->where('server_id', $sId)
+                                        ->where('peer_id', $localPeer->id);
+
+                        if ($server_peer->count() > 0) { // server_peer exists
+                            if ($server_peer->first()->server_peer_id != $remotePeerId) {
+                                // .id is wrong in local DB
+                                DB::table('server_peers')
                                     ->where('server_id', $sId)
-                                    ->where('peer_id', $localPeer->id);
-
-                    if ($server_peer->count() > 0) { // server_peer exists
-                        if ($server_peer->first()->server_peer_id != $remotePeerId) {
-                            // .id is wrong in local DB
-                            DB::table('server_peers')
-                                ->where('server_id', $sId)
-                                ->where('peer_id', $localPeer->id)
-                                ->update(['server_peer_id' => $remotePeerId]);
+                                    ->where('peer_id', $localPeer->id)
+                                    ->update(['server_peer_id' => $remotePeerId]);
+                            }
+                        } else {
+                            // create new server_peer
+                            DB::table('server_peers')->insert([
+                                'server_id' => $sId,
+                                'peer_id' => $localPeer->id,
+                                'server_peer_id' => $remotePeerId
+                            ]);
                         }
-                    } else {
-                        // create new server_peer
-                        DB::table('server_peers')->insert([
-                            'server_id' => $sId,
-                            'peer_id' => $localPeer->id,
-                            'server_peer_id' => $remotePeerId
-                        ]);
-                    }
 
-                    // check enabled
-                    $remotePeerDisabledStatus = $remotePeers[$key]['disabled'];
-                    $localPeerDisabledStatus = $localPeer->is_enabled ? "false" : "true";
-                    if ($localPeerDisabledStatus != $remotePeerDisabledStatus) {
-                        // update remote peer
-                        $data = [".id" => $remotePeerId];
-                        $command = $localPeerDisabledStatus == "false" ? 'enable' : 'disable';
-                        $response = curl_general(
-                            'POST',
-                            $saddress . '/rest/interface/wireguard/peers/'.$command,
-                            json_encode($data),
-                            true
-                        );
-                        $address = substr($remotePeers[$key]['allowed-address'], 0, -3);
-                        $responseMessage = is_array($response) ? implode('-', $response) : $response;
-                        array_push($messages, "$saddress, Peer $address $command response: $responseMessage");
-                    }
+                        // check enabled
+                        $remotePeerDisabledStatus = $remotePeers[$key]['disabled'];
+                        $localPeerDisabledStatus = $localPeer->is_enabled ? "false" : "true";
+                        if ($localPeerDisabledStatus != $remotePeerDisabledStatus) {
+                            // update remote peer
+                            $data = [".id" => $remotePeerId];
+                            $command = $localPeerDisabledStatus == "false" ? 'enable' : 'disable';
+                            $response = curl_general(
+                                'POST',
+                                $saddress . '/rest/interface/wireguard/peers/'.$command,
+                                json_encode($data),
+                                true
+                            );
+                            $address = substr($remotePeers[$key]['allowed-address'], 0, -3);
+                            $responseMessage = is_array($response) ? implode('-', $response) : $response;
+                            array_push($messages, "$saddress, Peer $address $command response: $responseMessage");
+                        }
 
-                    // check comment
-                    $remotePeerComment = $remotePeers[$key]['comment'];
-                    $localPeerComment = $localPeer->comment;
-                    if ($remotePeerComment != $localPeerComment) {
-                        $data = [".id" => $remotePeerId, "comment" => $localPeerComment];
-                        curl_general(
-                            'POST',
-                            $saddress . '/rest/interface/wireguard/peers/set',
-                            json_encode($data),
-                            true
-                        );
-                    }
-                } else { // peer does not exist on remote
-                    // create peer on remote
-                    $interface = DB::table('interfaces')->find($localPeer->interface_id);
-                    $caddress = substr($localPeer->client_address,0,-3);
-                    $interfaceName = $interface->name;
-                    $cdns = $localPeer->dns ?? $interface->dns;
-                    $wgserveraddress = $localPeer->endpoint_address ?? $interface->default_endpoint_address;
+                        // check comment
+                        $remotePeerComment = $remotePeers[$key]['comment'];
+                        $localPeerComment = $localPeer->comment;
+                        if ($remotePeerComment != $localPeerComment) {
+                            $data = [".id" => $remotePeerId, "comment" => $localPeerComment];
+                            curl_general(
+                                'POST',
+                                $saddress . '/rest/interface/wireguard/peers/set',
+                                json_encode($data),
+                                true
+                            );
+                        }
+                    } else { // peer does not exist on remote
+                        // create peer on remote
+                        $interface = DB::table('interfaces')->find($localPeer->interface_id);
+                        $caddress = substr($localPeer->client_address,0,-3);
+                        $interfaceName = $interface->name;
+                        $cdns = $localPeer->dns ?? $interface->dns;
+                        $wgserveraddress = $localPeer->endpoint_address ?? $interface->default_endpoint_address;
 
-                    $wg = new WiregaurdController();
-                    $addResponse = $wg->addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $localPeer->comment, $localPeer->public_key, $localPeer->id, $localPeer->is_enabled);
-                    array_push($messages, "$saddress, Add Peer $caddress response: $addResponse");
-                    if (! $addResponse) {
-                        $numberOfFailedAttempts++;
+                        $wg = new WiregaurdController();
+                        $addResponse = $wg->addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $localPeer->comment, $localPeer->public_key, $localPeer->id, $localPeer->is_enabled);
+                        array_push($messages, "$saddress, Add Peer $caddress response: $addResponse");
+                        if (! $addResponse) {
+                            $numberOfFailedAttempts++;
+                        }
                     }
                 }
-            }
 
-            return ['status' => 1, 'message' => implode("\r\n", $messages)];
+                return ['status' => 1, 'message' => implode("\r\n", $messages)];
 
-            if ($numberOfFailedAttempts > 0) {
-                return ['status' => -1, 'message' => 'Sync was not successful!'];
+                if ($numberOfFailedAttempts > 0) {
+                    return ['status' => -1, 'message' => 'Sync was not successful!'];
+                } else {
+                    return ['status' => 1, 'message' => 'Peers Synced Successfully'];
+                }
             } else {
-                return ['status' => 1, 'message' => 'Peers Synced Successfully'];
+                return ['status' => -1, 'message' => "$saddress: $remotePeers"];
             }
+            
+            
         } catch (\Exception $exception) {
             return ['status' => -1, 'message' => $exception->getLine() . ': ' . $exception->getMessage()];
         }
