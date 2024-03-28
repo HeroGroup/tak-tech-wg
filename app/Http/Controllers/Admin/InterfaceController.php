@@ -245,9 +245,8 @@ class InterfaceController extends Controller
                     $server_interface_usage = DB::table('server_interface_usages')
                         ->where('server_id', $server_interface->server_id)
                         ->where('server_interface_id', $server_interface->server_interface_id)
-                        ->orderBy('id', 'desc')
+                        // ->orderBy('id', 'desc')
                         ->skip($i)
-                        ->take(1)
                         ->first();
 
                     if ($server_interface_usage) {
