@@ -110,7 +110,7 @@
                 backgroundColor: "#4e73df",
                 hoverBackgroundColor: "#2e59d9",
                 borderColor: "#4e73df",
-                data: Object.values(interfacesUsages),
+                data: Object.values(interfacesUsages).reverse(),
             }],
         },
         options: {
