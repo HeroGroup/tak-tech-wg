@@ -77,7 +77,7 @@
       </div>
   </div>
 </div>
-@if(auth()->user()->email=="navid@gmail.com")
+@if(auth()->user()->is_admin)
 <div class="row">
     <div class="col-lg-12">
         <!-- Interfaces Usages -->
@@ -99,7 +99,7 @@
 <script>
     var interfacesUsagesString = "{{$interfaces_usages}}";
     var interfacesUsages = JSON.parse(interfacesUsagesString.replace(/&quot;/g,'"'));
-    console.log(interfacesUsagesString, interfacesUsages);
+
     var ctx = document.getElementById("interfacesUsagesChart");
     var interfacesUsagesChart = new Chart(ctx, {
         type: 'bar',
