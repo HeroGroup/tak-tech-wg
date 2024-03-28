@@ -179,7 +179,7 @@ class InterfaceController extends Controller
                             return in_array($elm['name'], $localInterfaces);
                         });
                         $inserted = 0;
-                        foreach ($validInterfaces as $remoteInterface) {
+                        foreach ($validInterfaces as $validInterface) {
                             $latest = DB::table('server_interface_usages')
                                 ->where('server_id', $sId)
                                 ->where('server_interface_id', $validInterface[".id"])
