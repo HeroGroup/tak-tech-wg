@@ -1,30 +1,24 @@
-@extends('layouts.admin.main', ['pageTitle' => 'Interfaces Usages (Last 3 hours)', 'active' => 'interfaces'])
+@extends('layouts.admin.main', ['pageTitle' => $interfaceName . ' Usage (Last 3 hours)', 'active' => 'interfaces'])
 @section('content')
 <div class="row">
-  @foreach($interfaces as $interface)
+  @foreach($output as $server => $value)
   <div class="col-lg-6">
         <div class="card shadow mb-4">
             <!-- Card Header - Dropdown -->
             <div
                 class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">{{$interface->name}}</h6>
+                <h6 class="m-0 font-weight-bold text-primary">{{$server}}</h6>
                 <div class="dropdown no-arrow">
                     <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                        aria-labelledby="dropdownMenuLink">
-                        <div class="dropdown-header">Actions</div>
-                        <a class="dropdown-item" href="{{route('admin.wiregaurd.interfaces.usages.details',$interface->id)}}">Details</a>
-                        <a class="dropdown-item" href="#">Monitor</a>
-                    </div>
                 </div>
             </div>
             <!-- Card Body -->
             <div class="card-body">
                 <div class="chart-area">
-                    <canvas id="{{$interface->name}}-chart"></canvas>
+                    <canvas id="{{$server}}-chart"></canvas>
                 </div>
             </div>
         </div>
@@ -34,11 +28,13 @@
 
 <script src="/vendor/chart.js/Chart.min.js"></script>
 <script>
-  var interfacesJson = "{{$interfaces_json}}";
-  var interfaces = JSON.parse(interfacesJson.replace(/&quot;/g,'"'));
+  var usageJson = "{{$output_json}}";
+  var interfaces = JSON.parse(usageJson.replace(/&quot;/g,'"'));
+  var servers = Object.keys(interfaces);
+
   // loop on all interfacaes and create charts
-  for(var i = 0; i < interfaces.length; i++) {
-    var ctx = document.getElementById(`${interfaces[i].name}-chart`);
+  for(var i = 0; i < servers.length; i++) {
+    var ctx = document.getElementById(`${servers[i]}-chart`);
     var myLineChart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -56,7 +52,7 @@
           pointHoverBorderColor: "rgba(78, 115, 223, 1)",
           pointHitRadius: 10,
           pointBorderWidth: 2,
-          data: interfaces[i].usages.reverse(), // [0, 10000, 5000, 15000, 10000, 20000, 15000, 25000, 20000, 30000, 25000, 40000],
+          data: interfaces[servers[i]].reverse(), // [0, 10000, 5000, 15000, 10000, 20000, 15000, 25000, 20000, 30000, 25000, 40000],
         }],
       },
       options: {

@@ -273,4 +273,45 @@ class InterfaceController extends Controller
 
         return view('admin.interfaces.usages', compact('interfaces', 'interfaces_json'));
     }
+
+    public function usageDetails($id)
+    {
+        $interface = DB::table('interfaces')->find($id);
+        $interfaceName = $interface->name;
+        if ($interface) {
+            $output = [];
+            $servers = DB::table('servers')->get();
+            foreach($servers as $server) {
+                // find corresponding server_interface_id
+                $server_interface = DB::table('server_interfaces')
+                    ->where('server_id', $server->id)
+                    ->where('interface_id', $interface->id)
+                    ->first();
+
+                if($server_interface) {
+                    for($i = 0; $i < 6; $i++) {
+                        $sum_tx = 0;
+                        $sum_rx = 0;
+                        $server_interface_usage = DB::table('server_interface_usages')
+                            ->where('server_id', $server->id)
+                            ->where('server_interface_id', $server_interface->server_interface_id)
+                            ->orderBy('id', 'desc')
+                            ->skip($i)
+                            ->first();
+    
+                        if ($server_interface_usage) {
+                            $sum_tx += round(($server_interface_usage->tx / 1073741824), 2);
+                            $sum_rx += round(($server_interface_usage->rx / 1073741824), 2);
+                        }
+
+                        $output[$server->server_address][$i] = $sum_tx + $sum_rx;
+                    }
+                }
+            }
+            $output_json = json_encode($output);
+            return view('admin.interfaces.usageDetails', compact('interfaceName', 'output', 'output_json'));
+        } else {
+            return back()->with('message', 'invalid interface')->with('type', 'danger');
+        }
+    }
 }
