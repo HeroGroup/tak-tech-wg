@@ -238,7 +238,7 @@ class InterfaceController extends Controller
                 ->select(['server_interfaces.*', 'servers.server_address'])
                 ->get();
 
-            for($i = 0; $i < 6; $i++) {
+            for($i = 6; $i > 0; $i++) {
                 $sum_tx = 0;
                 $sum_rx = 0;
                 foreach($server_interfaces as $server_interface) {
