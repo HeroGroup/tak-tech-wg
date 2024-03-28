@@ -39,7 +39,7 @@ class DashboardController extends Controller
                 // find equivalent server_interface_id on each server
                 $server_interface = DB::table('server_interfaces')
                     ->where('server_id', $server->id)
-                    ->where('interface_id', $interface_id)
+                    ->where('interface_id', $interface->id)
                     ->first();
 
                 if($server_interface) {
