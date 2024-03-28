@@ -243,6 +243,7 @@ class InterfaceController extends Controller
                 $sum_tx = 0;
                 $sum_rx = 0;
                 foreach($servers as $server) {
+                    // find corresponding server_interface_id
                     $server_interface = DB::table('server_interfaces')
                         ->where('server_id', $server->id)
                         ->where('interface_id', $interface->id)
