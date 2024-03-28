@@ -708,8 +708,8 @@ class WiregaurdController extends Controller
                     ->get();
                 $now = time();
                 foreach ($peers as $peer) {
-                    $expire = $peer->expire_days - 1;
-                    $diff = strtotime($peer->activate_date_time. " + $expire days")-$now;
+                    $expire = $peer->expire_days;
+                    $diff = strtotime($peer->activate_date_time. " + $expire days") - $now;
 
                     if ($diff <= 0) {
                         $peerId = $peer->id;
@@ -725,9 +725,9 @@ class WiregaurdController extends Controller
                     }
                 }
 
-                if ((count($disabled) > 0) || (count($removed) > 0)) {
+                if ((count($disabled) > 0)/* || (count($removed) > 0)*/) {
                     $message = implode("\r\n", $disabled) . ' disabled successfully!';
-                    $message .= implode("\r\n", $removed) . ' removed successfully!';
+                    // $message .= implode("\r\n", $removed) . ' removed successfully!';
                     saveCronResult('disableExpiredPeers', $message);
                     return $message;
                 } else {
