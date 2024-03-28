@@ -166,6 +166,7 @@ class InterfaceController extends Controller
             if ($request_token == env('STORE_INTERFACES_USAGES_TOKEN')) {
                 $message = [];
                 $now = date('Y-m-d H:i:s', time());
+                $localInterfaces = DB::table('interfaces')->pluck('name', 'id')->toArray();
 
                 $servers = DB::table('servers')->get();
                 foreach($servers as $server) {
@@ -174,19 +175,22 @@ class InterfaceController extends Controller
                     $remoteInterfaces = curl_general('GET', $sAddress . '/rest/interface', '', false);
 
                     if (is_array($remoteInterfaces) && count($remoteInterfaces) > 0) {
+                        $validInterfaces = array_filter($remoteInterfaces, function($elm) use ($localInterfaces) {
+                            return in_array($elm['name'], $localInterfaces);
+                        });
                         $inserted = 0;
-                        foreach ($remoteInterfaces as $remoteInterface) {
+                        foreach ($validInterfaces as $remoteInterface) {
                             $latest = DB::table('server_interface_usages')
                                 ->where('server_id', $sId)
-                                ->where('server_interface_id', $remoteInterface[".id"])
+                                ->where('server_interface_id', $validInterface[".id"])
                                 ->orderBy('id', 'desc')
                                 ->first();
                             
                             $latest_tx = $latest ? $latest->tx : 0;
                             $latest_rx = $latest ? $latest->rx : 0;
                             
-                            $remoteInterfaceTX = $remoteInterface["tx-byte"];
-                            $remoteInterfaceRX = $remoteInterface["rx-byte"];
+                            $remoteInterfaceTX = $validInterface["tx-byte"];
+                            $remoteInterfaceRX = $validInterface["rx-byte"];
 
                             if ($remoteInterfaceTX >= $latest_tx) {
                                 $new_tx = $remoteInterfaceTX;
@@ -202,14 +206,14 @@ class InterfaceController extends Controller
                             
                             DB::table('server_interface_usages')->insert([
                                 'server_id' => $sId,
-                                'server_interface_id' => $remoteInterface[".id"],
+                                'server_interface_id' => $validInterface[".id"],
                                 'tx' => $new_tx,
                                 'rx' => $new_rx,
                                 'created_at' => $now
                             ]);
                             $inserted++;
                         }
-                        $cnt = count($remoteInterfaces);
+                        $cnt = count($validInterfaces);
                         array_push($message, "$sAddress: $cnt fetch successfull! $inserted inserted.");
                     } else {
                         array_push($message, "$sAddress: $remoteInterfaces");
@@ -232,6 +236,7 @@ class InterfaceController extends Controller
 
     public function usages()
     {
+        dd(curl_general('GET', '185.136.135.52/rest/interface', '', false));
         $interfaces = DB::table('interfaces')->select(['id', 'name'])->get();
         $servers = DB::table('servers')->get();
         foreach($interfaces as $interface) {
