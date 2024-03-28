@@ -210,7 +210,7 @@ class InterfaceController extends Controller
                             $inserted++;
                         }
                         $cnt = count($remoteInterfaces);
-                        array_push($message, "$sAddress: $cnt fetch successfull! $$inserted inserted.");
+                        array_push($message, "$sAddress: $cnt fetch successfull! $inserted inserted.");
                     } else {
                         array_push($message, "$sAddress: $remoteInterfaces");
                     }

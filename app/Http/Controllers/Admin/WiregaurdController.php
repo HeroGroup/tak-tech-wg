@@ -714,14 +714,14 @@ class WiregaurdController extends Controller
                     if ($diff <= 0) {
                         $peerId = $peer->id;
                         // if peer is unlimited, disable peer
-                        if ($peer->iType == "unlimited") {
+                        // if ($peer->iType == "unlimited") {
                             $this->toggleEnable($peerId, 0);
                             array_push($disabled, $peer->comment);
-                        } else { // if peer is limited, remove peer
-                            $this->removeRemote($peerId);
-                            $this->removeLocal($peerId);
-                            array_push($removed, $peer->comment);
-                        }
+                        // } else { // if peer is limited, remove peer
+                            // $this->removeRemote($peerId);
+                            // $this->removeLocal($peerId);
+                            // array_push($removed, $peer->comment);
+                        // }
                     }
                 }
 
