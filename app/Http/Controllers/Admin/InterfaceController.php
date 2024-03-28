@@ -239,42 +239,29 @@ class InterfaceController extends Controller
         $interfaces = DB::table('interfaces')->select(['id', 'name'])->get();
         $servers = DB::table('servers')->get();
         foreach($interfaces as $interface) {
-            // $server_interfaces = DB::table('server_interfaces')
-            //     ->where('interface_id', $interface->id)
-            //     ->join('servers', 'servers.id', '=', 'server_interfaces.server_id')
-            //     ->select(['server_interfaces.*', 'servers.server_address'])
-            //     ->get();
-
             for($i = 0; $i < 6; $i++) {
                 $sum_tx = 0;
                 $sum_rx = 0;
                 foreach($servers as $server) {
-                    $server_interface_usage = DB::table('server_interface_usages')
-                        ->where('server_interface_usages.server_id', $server->id)
-                        ->join('server_interfaces', 'server_interfaces.server_interface_id', '=', 'server_interface_usages.server_interface_id')
-                        ->where('server_interfaces.interface_id', $interface->id)
-                        ->orderBy('server_interface_usages.id', 'desc')
-                        ->skip($i)
+                    $server_interface = DB::table('server_interfaces')
+                        ->where('server_id', $server->id)
+                        ->where('interface_id', $interface->id)
                         ->first();
-    
-                    if ($server_interface_usage) {
-                        $sum_tx += round(($server_interface_usage->tx / 1073741824), 2);
-                        $sum_rx += round(($server_interface_usage->rx / 1073741824), 2);
+
+                    if($server_interface) {
+                        $server_interface_usage = DB::table('server_interface_usages')
+                            ->where('server_id', $server->id)
+                            ->where('server_interface_id', $server_interface->server_interface_id)
+                            ->orderBy('id', 'desc')
+                            ->skip($i)
+                            ->first();
+
+                        if ($server_interface_usage) {
+                            $sum_tx += round(($server_interface_usage->tx / 1073741824), 2);
+                            $sum_rx += round(($server_interface_usage->rx / 1073741824), 2);
+                        }
                     }
                 }
-                // foreach($server_interfaces as $server_interface) {
-                //     $server_interface_usage = DB::table('server_interface_usages')
-                //         ->where('server_id', $server_interface->server_id)
-                //         ->where('server_interface_id', $server_interface->server_interface_id)
-                //         ->orderBy('id', 'desc')
-                //         ->skip($i)
-                //         ->first();
-
-                //     if ($server_interface_usage) {
-                //         $sum_tx += round(($server_interface_usage->tx / 1073741824), 2);
-                //         $sum_rx += round(($server_interface_usage->rx / 1073741824), 2);
-                //     }
-                // }
 
                 $interface->usages[$i] = $sum_tx + $sum_rx;
             }
