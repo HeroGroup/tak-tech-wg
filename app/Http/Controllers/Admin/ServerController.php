@@ -573,7 +573,7 @@ class ServerController extends Controller
                     return ['status' => 1, 'message' => 'Peers Synced Successfully'];
                 }
             } else {
-                return ['status' => -1, 'message' => "$saddress: $remotePeers"];
+                return ['status' => -1, 'message' => "$remotePeers"];
             }
             
             
