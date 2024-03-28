@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InterfaceController;
 use App\Http\Controllers\Admin\LimitedPeerController;
+use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\ServerController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
@@ -85,6 +86,8 @@ Route::prefix('admin')->group(function () {
       Route::post('/servers/getPeers', [ServerController::class, 'getPeers'])->name('settings.servers.getPeers');
       Route::post('/servers/syncInterfaces', [ServerController::class, 'syncInterfaces'])->name('settings.servers.syncInterfaces');
       Route::post('/servers/syncPeers', [ServerController::class, 'syncPeers'])->name('settings.servers.syncPeers');
+
+      Route::get('/logs/cronJobs', [LogController::class, 'cronJobs'])->name('logs.cronJobs');
     });
   });
 });

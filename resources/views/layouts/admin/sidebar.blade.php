@@ -88,6 +88,21 @@
         </div>
     </li>
 
+    <li class="nav-item" id="logs">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseLogs" aria-expanded="false" aria-controls="collapseLogs">
+            <i class="fas fa-fw fa-history"></i>
+            <span>Logs</span>
+        </a>
+        <div id="collapseLogs" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar" style="">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{route('admin.logs.cronJobs')}}">
+                    <i class="fas fa-fw fa-database"></i>
+                    <span>Cron Jobs</span>
+                </a>
+            </div>
+        </div>
+    </li>
+
     <li class="nav-item" id="settings">
         <a class="nav-link" href="{{route('admin.settings')}}">
             <i class="fas fa-fw fa-cog"></i>
