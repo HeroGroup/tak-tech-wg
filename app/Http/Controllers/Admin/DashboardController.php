@@ -36,15 +36,22 @@ class DashboardController extends Controller
         foreach($interfaces as $interface) {
             $interface_total_usage = 0;
             foreach($servers as $server) {
-                $server_interface_usage = DB::table('server_interface_usages')
-                    ->where('server_interface_usages.server_id', $server->id)
-                    ->join('server_interfaces', 'server_interfaces.server_interface_id', '=', 'server_interface_usages.server_interface_id')
-                    ->where('server_interfaces.interface_id', $interface->id)
-                    ->orderBy('server_interface_usages.id', 'desc')
+                // find equivalent server_interface_id on each server
+                $server_interface = DB::table('server_interfaces')
+                    ->where('server_id', $server->id)
+                    ->where('interface_id', $interface_id)
                     ->first();
 
-                if ($server_interface_usage) {
-                    $interface_total_usage += round(($server_interface_usage->tx / 1073741824)) + round(($server_interface_usage->rx / 1073741824));
+                if($server_interface) {
+                    $server_interface_usage = DB::table('server_interface_usages')
+                        ->where('server_id', $server->id)
+                        ->where('server_interface_id', $server_interface->server_interface_id)
+                        ->orderBy('id', 'desc')
+                        ->first();
+
+                    if ($server_interface_usage) {
+                        $interface_total_usage += round(($server_interface_usage->tx / 1073741824)) + round(($server_interface_usage->rx / 1073741824));
+                    }
                 }
             }
             $interface->total_usage = $interface_total_usage;
