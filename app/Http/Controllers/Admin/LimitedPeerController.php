@@ -109,6 +109,7 @@ class LimitedPeerController extends Controller
         return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'comment', 'enabled', 'sortBy'));
     }
 
+    // update limited peer
     public function update(Request $request)
     {
         try {

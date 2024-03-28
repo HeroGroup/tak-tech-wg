@@ -236,7 +236,6 @@ class InterfaceController extends Controller
 
     public function usages()
     {
-        dd(curl_general('GET', '185.136.135.52/rest/interface', '', false));
         $interfaces = DB::table('interfaces')->select(['id', 'name'])->get();
         $servers = DB::table('servers')->get();
         foreach($interfaces as $interface) {
