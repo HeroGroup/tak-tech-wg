@@ -96,7 +96,7 @@
         <div id="collapseLogs" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar" style="">
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="{{route('admin.logs.cronJobs')}}">
-                    <i class="fas fa-fw fa-database"></i>
+                    <i class="fas fa-fw fa-history"></i>
                     <span>Cron Jobs</span>
                 </a>
             </div>
