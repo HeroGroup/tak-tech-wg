@@ -50,7 +50,7 @@ class DashboardController extends Controller
                         ->first();
 
                     if ($server_interface_usage) {
-                        $interface_total_usage += round(($server_interface_usage->tx / 1073741824)) + round(($server_interface_usage->rx / 1073741824));
+                        $interface_total_usage += round(($server_interface_usage->tx / 1099511627776), 3) + round(($server_interface_usage->rx / 1099511627776), 3);
                     }
                 }
             }

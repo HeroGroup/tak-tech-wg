@@ -140,7 +140,7 @@
                     maxTicksLimit: 5,
                     padding: 10,
                     callback: function(value, index, values) {
-                        return value + ' GB';
+                        return value + ' TB';
                     }
                 },
                 gridLines: {
@@ -170,7 +170,7 @@
                 callbacks: {
                     label: function(tooltipItem, chart) {
                         var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-                        return datasetLabel + ': ' + tooltipItem.yLabel + ' GB';
+                        return datasetLabel + ': ' + tooltipItem.yLabel + ' TB';
                     }
                 }
             },
