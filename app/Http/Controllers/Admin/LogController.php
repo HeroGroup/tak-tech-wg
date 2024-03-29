@@ -9,12 +9,18 @@ use Illuminate\Support\Facades\DB;
 class LogController extends Controller
 {
     // shows recent cron jobs logs
-    public function cronJobs()
+    public function cronJobs(Request $request)
     {
-        $jobs = DB::table('cron_results')
-            ->orderBy('id', 'desc')
-            ->simplePaginate(100);
+        $type = $request->query('type');
+        
+        $jobs = DB::table('cron_results');
 
-        return view('admin.logs.cronJobs', compact('jobs'));
+        if ($type && $type != 'all') {
+            $jobs = $jobs->where('cron_name', $type);
+        }
+
+        $jobs = $jobs->orderBy('id', 'desc')->simplePaginate(100);
+
+        return view('admin.logs.cronJobs', compact('type', 'jobs'));
     }
 }
