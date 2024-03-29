@@ -1,4 +1,4 @@
-@extends('layouts.admin.main', ['pageTitle' => 'Limited Peers', 'active' => 'limited-peers'])
+@extends('layouts.admin.main', ['pageTitle' => 'Limited Peers (Last update: ' . $lastUpdate . ')', 'active' => 'limited-peers'])
 @section('content')
 
 <x-loader/>

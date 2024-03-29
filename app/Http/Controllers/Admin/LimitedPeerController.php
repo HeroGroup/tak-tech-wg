@@ -75,6 +75,7 @@ class LimitedPeerController extends Controller
                 }
                 
             }
+            
             $peer->tx = round(($sum_tx / 1073741824), 2);
             $peer->rx = round(($sum_rx/ 1073741824), 2);
             $peer->total_usage = $peer->tx + $peer->rx;
@@ -105,8 +106,10 @@ class LimitedPeerController extends Controller
         } else {
             $sortBy = "client_address_asc";
         }
+
+        $lastUpdate = substr($record->created_at, 0, 16);
         
-        return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'comment', 'enabled', 'sortBy'));
+        return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'lastUpdate', 'comment', 'enabled', 'sortBy'));
     }
 
     // update limited peer
