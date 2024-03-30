@@ -8,7 +8,7 @@
             <option value="store-peers-usages" @if($type=="store-peers-usages") selected @endif>store peers usages</option>
             <option value="syncAll" @if($type=="syncAll") selected @endif>sync all</option>
             <option value="disable-expired-peers" @if($type=="disable-expired-peers") selected @endif>disable expired peers</option>
-            <option value="remove-limited-expired-peers" @if($type=="remove-limited-expired-peers") selected @endif>remove limited expired peers</option>
+            <option value="remove-expired-limited-peers" @if($type=="remove-limited-expired-peers") selected @endif>remove limited expired peers</option>
         </select>
     </div>
 </div>

@@ -766,9 +766,6 @@ class WiregaurdController extends Controller
                     $peerId = $limitedPeer->id;
                     $limit = $limitedPeer->peer_allowed_traffic_GB ?? $limitedPeer->allowed_traffic_GB;
                     $usage = 0;
-
-                    $sum_tx = 0;
-                    $sum_rx = 0;
                     foreach ($servers as $server) {
                         $sId = $server->id;
                         $server_peer = DB::table('server_peers')
@@ -785,12 +782,13 @@ class WiregaurdController extends Controller
                             $usage += $record->rx ?? 0;
                         }
                     }
+            array_push($removed, $limitedPeer->comment . ' , ' . round($usage / 1073741824) . ' - ' . $limit);
 
                     if (round($usage / 1073741824) > $limit) { // GB
                         // remove peer
-                        $this->removeRemote($peerId);
-                        $this->removeLocal($peerId);
-                        array_push($removed, $limitedPeer->comment);
+                        // $this->removeRemote($peerId);
+                        // $this->removeLocal($peerId);
+                        // array_push($removed, $limitedPeer->comment . ' , ' . round($usage / 1073741824) . ' - ' . $limit);
                     }
                 }
 
