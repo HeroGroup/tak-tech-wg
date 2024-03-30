@@ -787,8 +787,8 @@ class WiregaurdController extends Controller
 
                     if (round($usage / 1073741824) > $limit) { // GB
                         // remove peer
-                        // $this->removeRemote($peerId);
-                        // $this->removeLocal($peerId);
+                        $this->removeRemote($peerId);
+                        $this->removeLocal($peerId);
                         array_push($removed, $limitedPeer->comment);
                     }
                 }
