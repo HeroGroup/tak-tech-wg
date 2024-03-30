@@ -52,10 +52,10 @@ class LimitedPeerController extends Controller
 
         $limitedPeers = $limitedPeers->get();
 
+        $servers = DB::table('servers')->get();
         $now = time();
         foreach($limitedPeers as $peer) {
             $pId = $peer->id;
-            $servers = DB::table('servers')->get();
             $sum_tx = 0;
             $sum_rx = 0;
             foreach ($servers as $server) {
@@ -118,19 +118,6 @@ class LimitedPeerController extends Controller
         return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'lastUpdate', 'comment', 'enabled', 'sortBy'));
     }
 
-    // update limited peer
-    public function update(Request $request)
-    {
-        try {
-            $peer = DB::table('peers')->where('id', $request->id)->update([
-                'peer_allowed_traffic_GB' => $request->peer_allowed_traffic_GB
-            ]);
-
-            return back()->with('message', 'Peer updated successfully!')->with('type', 'success');
-        } catch (\Exception $exception) {
-            return back()->with('message', $exception->getMessage())->with('type', 'danger');
-        }
-    }
     // This functions runs periodically and stores tx, rx of to every limited peer
     public function storeUsages($request_token)
     {

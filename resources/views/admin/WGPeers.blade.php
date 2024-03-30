@@ -3,12 +3,12 @@
 
 <x-loader/>
 
-<!-- <a href="{{route('wiregaurd.peers.create')}}" class="btn btn-primary btn-icon-split mb-4">
+<a href="{{route('wiregaurd.peers.create')}}" class="btn btn-primary btn-icon-split mb-4">
     <span class="icon text-white-50">
         <i class="fas fa-plus"></i>
     </span>
     <span class="text">Create Wiregaurd Peers</span>
-</a> -->
+</a>
 
 <div class="row mb-4">
   <div class="col-sm-2">
@@ -207,6 +207,7 @@
                             @csrf
                             <input type="hidden" name="_method" value="PUT">
                             <input type="hidden" name="id" value="{{$peer->id}}">
+                            <input type="hidden" name="peer_allowed_traffic_GB" value="{{$peer->peer_allowed_traffic_GB}}">
                             <div class="form-group row mb-4">
                                 <div class="col-md-6">
                                     <label for="endpoint_address">Endpoint Address</label>
@@ -264,7 +265,7 @@
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editPeersMassModalLabel">Edit peers</h5>
+        <h5 class="modal-title" id="editPeersMassModalLabel">Edit Peers</h5>
         <button class="close" type="button" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>

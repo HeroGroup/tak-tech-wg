@@ -504,7 +504,7 @@ class WiregaurdController extends Controller
     }
 
     // This function updates the attributes of a peer
-    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $activate_date, $activate_time, $today, $time, $mass=false)
+    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $activate_date, $activate_time, $peer_allowed_traffic_GB, $today, $time, $mass=false)
     {
         try {
             $peer = DB::table('peers')->find($id);
@@ -579,11 +579,15 @@ class WiregaurdController extends Controller
                 }
             }
 
+            if ($peer_allowed_traffic_GB) {
+                $update['peer_allowed_traffic_GB'] = $peer_allowed_traffic_GB;
+            }
+
             DB::table('peers')->where('id', $id)->update($update);
             
             return ['status' => 1, 'message' => 'Peer updated successully'];
         } catch (\Exception $exception) {
-            return ['status' => -1, 'message' => $exception->getMessage()];
+            return ['status' => -1, 'message' => $exception->getLine() . ': ' . $exception->getMessage()];
         }
     }
 
@@ -592,7 +596,7 @@ class WiregaurdController extends Controller
     {
         $time = time();
         $today = date('Y-m-d', $time);
-        $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $request->activate_date, $request->activate_time, $today, $time);
+        $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $request->activate_date, $request->activate_time, $request->peer_allowed_traffic_GB, $today, $time);
 
         $peer = DB::table('peers')->where('id', $request->id)->first();
 
@@ -629,7 +633,7 @@ class WiregaurdController extends Controller
         try {
             $ids = json_decode($request->ids);
             foreach($ids as $id) {
-                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, $request->expire_days, $request->activate_date, $request->activate_time, $today, $time, true);
+                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, $request->expire_days, $request->activate_date, $request->activate_time, $request->peer_allowed_traffic_GB, $today, $time, true);
                 $message .= $result['message'] . "\r\n";
             }
             
@@ -728,7 +732,7 @@ class WiregaurdController extends Controller
                 if ((count($disabled) > 0)/* || (count($removed) > 0)*/) {
                     $message = implode("\r\n", $disabled) . ' disabled successfully!';
                     // $message .= implode("\r\n", $removed) . ' removed successfully!';
-                    saveCronResult('disableExpiredPeers', $message);
+                    saveCronResult('disable-expired-peers', $message);
                     return $message;
                 } else {
                     $message = 'nothing to disabled!';
@@ -749,6 +753,65 @@ class WiregaurdController extends Controller
 
     public function removeExpiredLimitedPeers($request_token)
     {
-        // First test removeRemote
+        try {
+            if ($request_token == env('REMOVE_EXPIRED_LIMITED_PEERS_TOKEN')) {
+                $removed = [];
+                $limitedPeers = DB::table('peers')
+                    ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
+                    ->where('interfaces.iType', 'limited')
+                    ->get();
+                    
+                $servers = DB::table('servers')->get();
+                foreach($limitedPeers as $limitedPeer) {
+                    $peerId = $limitedPeer->id;
+                    $limit = $limitedPeer->peer_allowed_traffic_GB ?? $limitedPeer->allowed_traffic_GB;
+                    $usage = 0;
+
+                    $sum_tx = 0;
+                    $sum_rx = 0;
+                    foreach ($servers as $server) {
+                        $sId = $server->id;
+                        $server_peer = DB::table('server_peers')
+                            ->where('server_id', $sId)
+                            ->where('peer_id', $peerId)
+                            ->first();
+                        if ($server_peer) {
+                            $record = DB::table('server_peer_usages')
+                                ->where('server_id', $sId)
+                                ->where('server_peer_id', $server_peer->server_peer_id)
+                                ->orderBy('id', 'desc')
+                                ->first ();
+                            $usage += $record->tx ?? 0;
+                            $usage += $record->rx ?? 0;
+                        }
+                    }
+
+                    if (round($usage / 1073741824) > $limit) { // GB
+                        // remove peer
+                        $this->removeRemote($peerId);
+                        $this->removeLocal($peerId);
+                        array_push($removed, $limitedPeer->comment);
+                    }
+                }
+
+                if (count($removed) > 0) {
+                    $message = implode("\r\n", $removed) . ' removed successfully!';
+                    saveCronResult('remove-expired-limited-peers', $message);
+                    return $message;
+                } else {
+                    $message = 'nothing to remove!';
+                    saveCronResult('remove-expired-limited-peers', $message);
+                    return $message;
+                }
+            } else {
+                $message = 'token mismatch!';
+                saveCronResult('remove-expired-limited-peers', $message);
+                return $message;
+            }
+        } catch(\Exception $exception) {
+            $message = $exception->getMessage();
+            saveCronResult('remove-expired-limited-peers', $message);
+            return $message;
+        }
     }
 }

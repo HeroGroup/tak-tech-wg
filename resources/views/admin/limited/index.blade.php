@@ -3,6 +3,13 @@
 
 <x-loader/>
 
+<a href="{{route('wiregaurd.peers.create')}}" class="btn btn-primary btn-icon-split mb-4">
+    <span class="icon text-white-50">
+        <i class="fas fa-plus"></i>
+    </span>
+    <span class="text">Create Wiregaurd Peers</span>
+</a>
+
 <div class="row mb-4">
   <div class="col-sm-2">
     <select name="interface" class="form-control" onchange="searchInterface(this.value)">
@@ -48,9 +55,47 @@
   </div>
 </div>
 
+<div class="row mb-4">
+  <div class="col-md-12">
+    <a href="#" data-toggle="modal" data-target="#edit-peers-mass-modal" title="Edit" class="text-info" style="text-decoration:none;">
+      <i class="fa fa-fw fa-pen"></i>
+      <span>Edit</span>
+    </a>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    <a href="#" onclick="toggleEnableMass(1)" title="Enable" class="text-success" style="text-decoration:none;">
+      <i class="fa fa-fw fa-toggle-on"></i>
+      <span>Enable</span>
+    </a>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    <a href="#" onclick="toggleEnableMass(0)" title="Disable" class="text-warning" style="text-decoration:none;">
+      <i class="fa fa-fw fa-toggle-off"></i>
+      <span>Disable</span>
+    </a>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    <a href="#" onclick="regenerateMass()" title="regenerate" class="text-info" style="text-decoration:none;">
+      <i class="fa fa-fw fa-sync"></i>
+      <span>regenerate</span>
+    </a>
+    @if(auth()->user()->is_admin)
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    <a href="#" onclick="massDelete()" class="text-danger" style="text-decoration:none;">
+      <i class="fas fa-trash"></i>
+      <span>Delete</span>
+    </a>
+    @endif
+  </div>
+</div>
+
+<div style="font-size: 14px;">
+  <span id="number-of-selected-items">0</span> items are selected.
+</div>
+
 <div class="table-responsive">
   <table class="table table-striped">
     <thead>
+      <th>
+        <input type="checkbox" id="chk-all" onclick="checkAll()">
+      </th>
       <th>row</th>
       <th>Comment</th>
       <th>Interface</th>
@@ -59,14 +104,18 @@
       <th>Expire</th>
       <th>TX (GB)</th>
       <th>RX (GB)</th>
-      <th>Total Usage (GB)</th>
+      <th>Total (GB)</th>
       <th>Allowed Traffic (GB)</th>
+      <th>Enabled</th>
       <th>Actions</th>
     </thead>
     <tbody>
       <?php $row = 0; $nowTime = time(); $nowDateTime = new DateTime(); ?>
       @foreach($limitedPeers as $peer)
       <tr id="{{$peer->id}}">
+        <td>
+          <input type="checkbox" class="chk-row">
+        </td>
         <td>{{++$row}}</td>
         <td>{{$peer->comment}}</td>
         <td>{{$peer->name}}</td>
@@ -122,10 +171,40 @@
             <span @if($total >= $max) class="text-danger" @endif>{{$total}}</span>
         </td>
         <td>{{$max}}</td>
+        <td style="font-size: 10px;">
+          <label class="switch">
+            <input type="checkbox" name="Enabled" id="enabled_{{$peer->id}}" @if($peer->is_enabled) checked @endif onchange="toggleEnable('{{$peer->id}}', '{{$peer->comment}}', this.checked)">
+            <span class="slider round"></span>
+          </label>
+        </td>
         <td>
-          <a href="" class="btn btn-sm btn-circle btn-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="Edit Allowed Traffic">
-            <i class="fa fa-fw fa-pen"></i>
+          <button class="btn">
+            <div class="dropdown no-arrow show">
+              <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                  <i class="fas fa-ellipsis-h fa-fw text-gray-700"></i>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink" x-placement="bottom-end" style="position: absolute; transform: translate3d(-158px, 19px, 0px); top: 0px; left: 0px; will-change: transform;">
+                  <div class="dropdown-header">Actions</div>
+                  
+                  <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="edit">
+                    <i class="fa fa-fw fa-pen"></i> Edit
+                  </a>
+                  <a href="#" onclick="regenerateSingle('{{$peer->id}}')" class="dropdown-item text-primary" title="regenerate">
+                    <i class="fa fa-fw fa-sync"></i> Regenerate
+                  </a>
+                  @if(auth()->user()->is_admin)
+                  <a href="#" class="dropdown-item text-danger" title="Delete" onclick="destroy('{{route('admin.wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
+                    <i class="fas fa-trash"></i> Remove
+                  </a>
+                  @endif
+              </div>
+            </div>
+          </button>
+          @if($peer->conf_file && $peer->qrcode_file)
+          <a href="{{route('wiregaurd.peers.download',$peer->id)}}" class="btn btn-circle btn-sm btn-success" title="Download config">
+            <i class="fa fa-fw fa-download"></i>
           </a>
+          @endif
           <!-- Edit peer Modal -->
           <div class="modal fade" id="edit-peer-modal-{{$peer->id}}" tabindex="-1" role="dialog" aria-labelledby="editpeerModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
@@ -137,7 +216,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form method="post" action="{{route('wiregaurd.peers.limited.update')}}" onsubmit="turnOnLoader()">
+                        <form method="post" action="{{route('wiregaurd.peers.update')}}" onsubmit="turnOnLoader()">
                             @csrf
                             <input type="hidden" name="_method" value="PUT">
                             <input type="hidden" name="id" value="{{$peer->id}}">
@@ -145,6 +224,40 @@
                                 <div class="col-md-6">
                                     <label for="peer_allowed_traffic_GB">Allowed Traffic (GB)</label>
                                     <input type="number" step="0.5" class="form-control" name="peer_allowed_traffic_GB" value="{{$peer->peer_allowed_traffic_GB}}">
+                                </div>
+                            </div>
+                            <div class="form-group row mb-4">
+                                <div class="col-md-6">
+                                    <label for="endpoint_address">Endpoint Address</label>
+                                    <input class="form-control" name="endpoint_address" value="{{$peer->endpoint_address}}" placeholder="s1.yourdomain.com">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="dns">DNS</label>
+                                    <input class="form-control" name="dns" value="{{$peer->dns}}" placeholder="192.168.200.1">
+                                </div>
+                            </div>
+                            <div class="form-group row mb-4">
+                                <div class="col-md-6">
+                                    <label for="comment">Comment</label>
+                                    <input class="form-control" name="comment" value="{{$peer->comment}}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="note">Note</label>
+                                    <input class="form-control" name="note" value="{{$peer->note}}">
+                                </div>
+                            </div>
+                            <div class="form-group row mb-4">
+                                <div class="col-md-6">
+                                    <label for="expire_days">Expires after (days)</label>
+                                    <input type="number" class="form-control" name="expire_days" value="{{$peer->expire_days}}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="activate_date">Starting From Date</label>
+                                    <input type="date" class="form-control" name="activate_date" value="{{substr($peer->activate_date_time,0,10)}}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="activate_time">Starting From Time</label>
+                                    <input type="time" class="form-control" name="activate_time" value="{{substr($peer->activate_date_time,11,5)}}">
                                 </div>
                             </div>
                             <div class="form-group row mb-4">
@@ -164,7 +277,64 @@
   </table>
 </div>
 
+<!-- Edit peers Mass Modal -->
+<div class="modal fade" id="edit-peers-mass-modal" tabindex="-1" role="dialog" aria-labelledby="editPeersMassModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editPeersMassModalLabel">Edit Peers</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group row mb-4">
+            <div class="col-md-6">
+                <label for="mass_peer_allowed_traffic_GB">Allowed Traffic (GB)</label>
+                <input type="number" step="0.5" class="form-control" name="mass_peer_allowed_traffic_GB" id="mass_peer_allowed_traffic_GB">
+            </div>
+        </div>
+        <div class="form-group row mb-4">
+          <div class="col-md-6">
+            <label for="mass_endpoint_address">Endpoint Address</label>
+            <input class="form-control" name="mass_endpoint_address" id="mass_endpoint_address">
+          </div>
+          <div class="col-md-6">
+            <label for="mass_dns">DNS</label>
+            <input class="form-control" name="mass_dns" id="mass_dns">
+          </div>
+        </div>
+        <div class="form-group row mb-4">
+          <div class="col-md-6">
+            <label for="mass_expire_days">Expires after (days)</label>
+            <input class="form-control" name="mass_expire_days" id="mass_expire_days">
+          </div>
+          <div class="col-md-3">
+            <label for="mass_activate_date">Starting From Date</label>
+            <input type="date" class="form-control" name="mass_activate_date" id="mass_activate_date">
+          </div>
+          <div class="col-md-3">
+            <label for="mass_activate_time">Starting From Time</label>
+            <input type="time" class="form-control" name="mass_activate_time" id="mass_activate_time">
+          </div>
+        </div>
+        <div class="form-group row mb-4">
+            <div class="col-md-12" style="text-align:center;">
+                <button onclick="updateMass()" class="btn btn-success">Save and close</button>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+  $(document).ready(function() {
+    $('.chk-row:checkbox').click(function() {
+      var x = $('.chk-row:checkbox:checked');
+      document.getElementById('number-of-selected-items').innerHTML = x.length;
+    });
+  });
   function clearAllFilters() {
     window.location.href = "{{route('wiregaurd.peers.limited.list')}}";
   }
@@ -214,6 +384,185 @@
     var sortBy = urlParams.get('sortBy');
     
     window.location.href = "{{route('wiregaurd.peers.limited.list')}}" + `?interface=${interface || ''}` + `&comment=${comment || ''}` + `&enabled=${val}` + `&sortBy=${sortBy || ''}`;
+  }
+  function toggleEnable(id, comment, checked) {
+    turnOnLoader();
+    var formData = createFormData({
+      '_token': '{{csrf_token()}}',
+      '_method': 'PUT',
+      'id': id,
+      'comment': comment,
+      'status': checked ? 1 : 0
+    });
+    
+    var params = {
+      method: 'POST',
+      route: "{{route('wiregaurd.peers.toggleEnable')}}",
+      formData,
+      successCallback: turnOffLoader,
+      failCallback: function() {
+        turnOffLoader();
+        document.getElementById(`enabled_${id}`).checked = !checked;
+      }
+    };
+
+    sendRequest(params);
+    
+  }
+  function checkAll() {
+    $('.chk-row:checkbox').prop('checked', $('#chk-all').prop('checked'));
+    var x = $('.chk-row:checkbox:checked');
+    document.getElementById('number-of-selected-items').innerHTML = x.length;
+  }
+  function checkedItems() {
+    var ids = [];
+    var x = $('.chk-row:checkbox:checked');
+    for (var i=0; i<x.length;i++) {
+      ids.push(x[i].parentElement.parentElement.id);
+    }
+    
+    if (ids.length == 0) {
+      Swal.fire({
+          position: 'top-end',
+          icon: 'warning',
+          title: 'No items are selected',
+          showConfirmButton: false,
+          timer: 1500
+        });
+    }
+
+    return ids;
+  }
+  function massDelete() {
+    var ids = checkedItems();
+    if (ids.length == 0) {
+      return;
+    }
+
+    turnOnLoader();
+    
+    var formData = createFormData({
+      '_token': '{{csrf_token()}}',
+      '_method': 'DELETE',
+      'ids': JSON.stringify(ids)
+    });
+    
+    var params = {
+      method: 'POST',
+      route: "{{route('admin.wiregaurd.peers.remove.mass')}}",
+      formData,
+      successCallback: function() {
+        ids.forEach(element => {
+          document.getElementById(element).remove();
+        });
+        turnOffLoader();
+      },
+      failCallback: turnOffLoader,
+    };
+
+    sendRequest(params);
+  }
+  function toggleEnableMass(status) {
+    var ids = checkedItems();
+    if (ids.length == 0) {
+      return;
+    }
+
+    turnOnLoader();
+
+    var formData = createFormData({
+      '_token': '{{csrf_token()}}',
+      '_method': 'PUT',
+      'ids': JSON.stringify(ids)
+    });
+
+    var params = {
+      method: 'POST',
+      route: status ? "{{route('wiregaurd.peers.enable.mass')}}" : "{{route('wiregaurd.peers.disable.mass')}}",
+      formData,
+      successCallback: reloadWithTimeout,
+      failCallback: turnOffLoader,
+    };
+
+    sendRequest(params);
+  }
+  function regenerateSingle(id) {
+    turnOnLoader();
+    var formData = createFormData({
+      '_token': '{{csrf_token()}}',
+      'id': id
+    });
+    
+    var params = {
+      method: 'POST',
+      route: "{{route('wiregaurd.peers.regenerate')}}",
+      formData,
+      successCallback: reloadWithTimeout,
+      failCallback: turnOffLoader,
+    };
+
+    sendRequest(params);
+  }
+  function regenerateMass() {
+    var ids = checkedItems();
+    if (ids.length == 0) {
+      return;
+    }
+
+    turnOnLoader();
+
+    var formData = createFormData({
+      '_token': '{{csrf_token()}}',
+      'ids': JSON.stringify(ids)
+    });
+
+    var params = {
+      method: 'POST',
+      route: "{{route('wiregaurd.peers.regenerate.mass')}}",
+      formData,
+      // successCallback: reloadWithTimeout,
+      failCallback: turnOffLoader,
+
+    };
+
+    sendRequest(params);
+  }
+  function updateMass() {
+
+    var ids = checkedItems();
+    if (ids.length == 0) {
+      return;
+    }
+
+    turnOnLoader();
+    
+    var formData = createFormData({
+      '_token': '{{csrf_token()}}',
+      '_method': 'PUT',
+      'ids': JSON.stringify(ids),
+      'dns': document.getElementById('mass_dns').value,
+      'endpoint_address': document.getElementById('mass_endpoint_address').value,
+      'expire_days': document.getElementById('mass_expire_days').value,
+      'activate_date': document.getElementById('mass_activate_date').value,
+      'activate_time': document.getElementById('mass_activate_time').value,
+      'peer_allowed_traffic_GB': document.getElementById('mass_peer_allowed_traffic_GB').value,
+    });
+
+    var params = {
+      method: 'POST',
+      route: "{{route('wiregaurd.peers.update.mass')}}",
+      formData,
+      successCallback: reloadWithTimeout,
+      failCallback: turnOffLoader,
+    };
+
+    sendRequest(params);
+  }
+  function reloadWithTimeout() {
+    setTimeout(function() {
+      location.reload();
+    }, 
+    2000);
   }
 </script>
 

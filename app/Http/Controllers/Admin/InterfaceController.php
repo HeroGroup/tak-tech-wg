@@ -212,6 +212,14 @@ class InterfaceController extends Controller
                                 'created_at' => $now
                             ]);
                             $inserted++;
+
+                            // reset counters for interface on remote
+                            curl_general(
+                                'POST',
+                                $sAddress . '/rest/interface/reset-counters',
+                                json_encode([".id" => $validInterface[".id"]]),
+                                true
+                            );
                         }
                         $cnt = count($validInterfaces);
                         array_push($message, "$sAddress: $cnt fetch successfull! $inserted inserted.");
