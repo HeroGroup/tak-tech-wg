@@ -77,7 +77,7 @@ class LimitedPeerController extends Controller
             }
             
             $peer->tx = round(($sum_tx / 1073741824), 2);
-            $peer->rx = round(($sum_rx/ 1073741824), 2);
+            $peer->rx = round(($sum_rx / 1073741824), 2);
             $peer->total_usage = $peer->tx + $peer->rx;
 
             $peer->expires_in = '-1';
