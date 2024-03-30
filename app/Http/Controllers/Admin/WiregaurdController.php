@@ -784,15 +784,13 @@ class WiregaurdController extends Controller
                             $usage += $record->rx ?? 0;
                         }
                     }
-array_push($removed, $limitedPeer->comment . ' , ' . round(($usage / 1073741824), 2), $limit);
 
-
-                    // if (round($usage / 1073741824) > $limit) { // GB
+                    if (round($usage / 1073741824) > $limit) { // GB
                         // remove peer
                         // $this->removeRemote($peerId);
                         // $this->removeLocal($peerId);
-                        // array_push($removed, $limitedPeer->comment);
-                    // }
+                        array_push($removed, $limitedPeer->comment);
+                    }
                 }
 
                 if (count($removed) > 0) {
