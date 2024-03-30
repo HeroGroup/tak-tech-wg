@@ -759,6 +759,7 @@ class WiregaurdController extends Controller
                 $limitedPeers = DB::table('peers')
                     ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
                     ->where('interfaces.iType', 'limited')
+                    ->select(['peers.*', 'interfaces.peer_allowed_traffic_GB'])
                     ->get();
                     
                 $servers = DB::table('servers')->get();
@@ -779,12 +780,12 @@ class WiregaurdController extends Controller
                                 ->orderBy('id', 'desc')
                                 ->first();
 
-                            array_push($removed, $limitedPeer->comment . ' , ' . $server->server_address . ' , ' . round(($record->tx / 1073741824), 2) . ' , ' . round(($record->rx / 1073741824), 2));
                             $usage += $record->tx ?? 0;
                             $usage += $record->rx ?? 0;
                         }
                     }
-            
+array_push($removed, $limitedPeer->comment . ' , ' . round(($usage / 1073741824), 2), $limit);
+
 
                     // if (round($usage / 1073741824) > $limit) { // GB
                         // remove peer
