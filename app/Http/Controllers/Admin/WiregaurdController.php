@@ -759,7 +759,7 @@ class WiregaurdController extends Controller
                 $limitedPeers = DB::table('peers')
                     ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
                     ->where('interfaces.iType', 'limited')
-                    ->select(['peers.*', 'interfaces.peer_allowed_traffic_GB'])
+                    ->select(['peers.*', 'interfaces.allowed_traffic_GB'])
                     ->get();
                     
                 $servers = DB::table('servers')->get();
