@@ -176,6 +176,17 @@ class LimitedPeerController extends Controller
                             ]);
 
                         }
+
+                        foreach ($remotePeers as $remotePeer) {
+                            // store last-handshake for all peers
+                            DB::table('server_peers')
+                                ->where('server_id', $sId)
+                                ->where('server_peer_id', $limitedPeer[".id"])
+                                ->update([
+                                    'last_handshake' => $limitedPeer["last-handshake"] ?? null,
+                                    'last_handshake_updated_at' => $now
+                                ]);
+                        }
                         array_push($message, "$sAddress: fetch successfull!");
                     } else {
                         array_push($message, "$sAddress: $remotePeers");
