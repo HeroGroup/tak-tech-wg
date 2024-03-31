@@ -181,9 +181,9 @@ class LimitedPeerController extends Controller
                             // store last-handshake for all peers
                             DB::table('server_peers')
                                 ->where('server_id', $sId)
-                                ->where('server_peer_id', $limitedPeer[".id"])
+                                ->where('server_peer_id', $remotePeer[".id"])
                                 ->update([
-                                    'last_handshake' => $limitedPeer["last-handshake"] ?? null,
+                                    'last_handshake' => $remotePeer["last-handshake"] ?? null,
                                     'last_handshake_updated_at' => $now
                                 ]);
                         }
