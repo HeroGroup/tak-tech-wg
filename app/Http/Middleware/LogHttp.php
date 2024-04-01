@@ -18,8 +18,7 @@ class LogHttp
         $now = time();
         $today = date('Y-m-d', $now);
         $time = date('H:i:s', $now);
-      
-        $file = fopen(base_path("/logs/http/$today.log"), 'a');
+
         $user = auth()->user()->email ?? 'Guest';
         $uri = $request->fullUrl();
         $method = $request->method();
@@ -28,8 +27,7 @@ class LogHttp
         
         $content = "[$time] $user $method $uri $body \r\n";
 
-        fwrite($file, $content);
-        fclose($file);
+        file_put_contents(base_path("/logs/http/$today.log"), $content, FILE_APPEND | LOCK_EX);
 
         return $next($request);
     }

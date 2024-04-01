@@ -143,19 +143,16 @@ function saveCronResult($cronName, $cronResult)
   }
 }
 
-function reportLog($error)
+function logError($error)
 {
   $now = time();
   $today = date('Y-m-d', $now);
   $time = date('H:i:s', $now);
-
-  $file = fopen(base_path("/logs/errors/$today.log"), 'a');
     
   $line = $error->getLine();
   $message = $error->getMessage();
   $errorFile = $error->getFile();
   $content = "[$time] $line: $message IN FILE $errorFile \r\n";
-    
-  fwrite($file, $content);
-  fclose($file);
+
+  file_put_contents(base_path("/logs/errors/$today.log"), $content, FILE_APPEND | LOCK_EX);
 }
