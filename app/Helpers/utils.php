@@ -142,3 +142,20 @@ function saveCronResult($cronName, $cronResult)
     ]);
   }
 }
+
+function reportLog($error)
+{
+  $now = time();
+  $today = date('Y-m-d', $now);
+  $time = date('H:i:s', $now);
+
+  $file = fopen(base_path("/logs/errors/$today.log"), 'w');
+    
+  $line = $error->getLine();
+  $message = $error->getMessage();
+  $errorFile = $error->getFile();
+  $content = "[$time] $line: $message IN FILE $errorFile";
+    
+  fwrite($file, $content);
+  fclose($file);
+}
