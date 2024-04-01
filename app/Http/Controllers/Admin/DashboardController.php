@@ -12,7 +12,7 @@ class DashboardController extends Controller
     // This function return a few statistics to show on diagrams
     public function dashboard()
     {
-        $numberOServers = DB::table('servers')->count();
+        $numberOfServers = DB::table('servers')->count();
         
         $numberOfInterfaces = DB::table('user_interfaces')->where('user_id', auth()->user()->id)->count();
         
