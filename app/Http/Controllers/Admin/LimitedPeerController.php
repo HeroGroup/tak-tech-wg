@@ -107,13 +107,15 @@ class LimitedPeerController extends Controller
             $sortBy = "client_address_asc";
         }
 
-        if(date('Y-m-d', $now) == substr($record->created_at, 0, 10)) {
-            $time = substr($record->created_at, 11, 5);
-            $lastUpdate = "Today $time";
-        } else {
-            $lastUpdate = substr($record->created_at, 0, 16);
+        $lastUpdate = '';
+        if ($record) {
+            if(date('Y-m-d', $now) == substr($record->created_at, 0, 10)) {
+                $time = substr($record->created_at, 11, 5);
+                $lastUpdate = "Today $time";
+            } else {
+                $lastUpdate = substr($record->created_at, 0, 16);
+            }
         }
-        
         
         return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'lastUpdate', 'comment', 'enabled', 'sortBy'));
     }
