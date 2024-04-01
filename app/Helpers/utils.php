@@ -149,12 +149,12 @@ function reportLog($error)
   $today = date('Y-m-d', $now);
   $time = date('H:i:s', $now);
 
-  $file = fopen(base_path("/logs/errors/$today.log"), 'w');
+  $file = fopen(base_path("/logs/errors/$today.log"), 'a');
     
   $line = $error->getLine();
   $message = $error->getMessage();
   $errorFile = $error->getFile();
-  $content = "[$time] $line: $message IN FILE $errorFile";
+  $content = "[$time] $line: $message IN FILE $errorFile \r\n";
     
   fwrite($file, $content);
   fclose($file);

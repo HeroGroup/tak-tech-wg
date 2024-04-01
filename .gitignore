@@ -23,4 +23,6 @@ yarn-error.log
 .env
 /resources/confs
 /app/Http/Controllers/Admin/WiregaurdControllerOld.php
+/logs/api/*
 /logs/errors/*
+/logs/http/*
