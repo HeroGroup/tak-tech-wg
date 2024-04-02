@@ -867,10 +867,10 @@ class WiregaurdController extends Controller
                     }
                 }
                 if (count($suspected) > 0) {
-                    $message = implode("\r\n", $suspected) . ' went into suspect list.';
+                    $message = implode(", ", $suspected) . ' went into suspect list.';
                 }
                 if (count($blocked) > 0) {
-                    $message .= implode("\r\n", $blocked) . ' blocked (disabled) due to violation.';
+                    $message .= implode(", ", $blocked) . ' blocked (disabled) due to violation.';
                     saveCronResult('block-peers', $message);
                     return $message;
                 } else {
