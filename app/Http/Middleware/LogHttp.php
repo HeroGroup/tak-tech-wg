@@ -20,7 +20,7 @@ class LogHttp
         $time = date('H:i:s', $now);
 
         $user = auth()->user()->email ?? 'Guest';
-        $uri = $request->fullUrl();
+        $uri = $request->path();
         $method = $request->method();
         $body = json_encode($request->all());
         
