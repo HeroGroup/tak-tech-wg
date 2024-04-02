@@ -816,24 +816,21 @@ class WiregaurdController extends Controller
 
     public function blockPeers($request_token)
     {
-        return [
-            convertLastHandshakeToSeconds('3s'),
-            convertLastHandshakeToSeconds('50m41s'),
-            convertLastHandshakeToSeconds('4h30m40s'),
-            convertLastHandshakeToSeconds('1d6h4m30s'),
-            convertLastHandshakeToSeconds('1w2d5h51m53s'),
-        ];
         try {
-            if ($request_token == env('BLOCK_PEERS_TOKEN')) {
+            if ($request_token == env('LOOK_FOR_VIOLATIONS_TOKEN')) {
+                $blocked = [];
+                // select only unlimited peers
                 $peers = DB::table('peers')
                     ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
                     ->where('interfaces.iType', 'unlimited')
                     ->select(['peers.*'])
                     ->get();
 
-                $handshake_period_seconds = 180;
+                $handshake_period_seconds = DB::table('settings')->where('setting_key', 'HANDSHAKE_PERIOD_SECONDS')->first()->setting_value;
+                $max_number_of_violations = DB::table('settings')->where('setting_key', 'MAX_NUMBER_OF_VIOLATIONS')->first()->setting_value;
                 foreach ($peers as $peer) {
-                    $server_peers = DB::table('server_peers')->where('peer_id', $peer->id)->get();
+                    $peerId = $peer->id;
+                    $server_peers = DB::table('server_peers')->where('peer_id', $peerId)->get();
                     $number_of_active_connections = 0;
                     // convert last_handshake to seconds
                     foreach ($server_peers as $server_peer) {
@@ -844,11 +841,35 @@ class WiregaurdController extends Controller
                             }
                         }
                     }
-                    if ($number_of_active_connections > $peer->max_allowed_connections) {
-                        // if is not in suspect list
+                    $max = $peer->max_allowed_connections ?? 1;
+                    if ($number_of_active_connections > $max) {
                         // add peer to suspect list
-                        // if already in suspect list, counter++
+                        DB::table('suspect_list')->insert([
+                            'peer_id' => $peerId,
+                            'created_at' => date('Y-m-d H:i:s', time())
+                        ]);
+                        $cnt = DB::table('suspect_list')->where('peer_id', $peerId)->count();
+
+                        if ($cnt > $max_number_of_violations) {
+                            // make peer disable
+                            // for test // $this->toggleEnable($peerId, 0);
+                            DB::table('block_list')->insert([
+                                'peer_id' => $peerId,
+                                'created_at' => date('Y-m-d H:i:s', time())
+                            ]);
+                            
+                            array_push($blocked, $peer->comment);
+                        }
                     }
+                }
+                if (count($blocked) > 0) {
+                    $message = implode("\r\n", $blocked) . ' blocked (disabled) due to violation.';
+                    saveCronResult('block-peers', $message);
+                    return $message;
+                } else {
+                    $message = 'no violations were detected!';
+                    saveCronResult('block-peers', $message);
+                    return $message;
                 }
             } else {
                 $message = 'token mismatch!';
@@ -858,6 +879,55 @@ class WiregaurdController extends Controller
         } catch (\Exception $exception) {
             $message = $exception->getMessage();
             saveCronResult('block-peers', $message);
+            return $message;
+        }
+    }
+
+    public function unblockViolatedPeers($request_token)
+    {
+        try {
+            if ($request_token == env('UNBLOCK_PEERS_TOKEN')) {
+                $blocked = DB::table('block_list')->get();
+                $unblock_after = DB::table('settings')->where('setting_key', 'UNBLOCK_AFTER_MINUTES')->first()->setting_value;
+                $now = time();
+                $unblocked = [];
+                foreach($blocked as $item) {
+                    $diff = $now - strtotime($item->created_at. " + $unblock_after minutes");
+                    if ($diff > 0) {
+                        // unblock peer
+                        $peerId = $item->peer_id;
+                        $peer = DB::table('peers')->find($peerId);
+                        
+                        // make peer enable
+                        // for test // $this->toggleEnable($peerId , 1);
+                        
+                        // remove from suspect_list
+                        DB::table('suspect_list')->where('peer_id', $peerId)->delete();
+                        
+                        // remove from block_list
+                        DB::table('block_list')->where('peer_id', $peerId)->delete();
+                        
+                        array_push($unblocked, $peer->comment);
+                    }
+                }
+
+                if (count($unblocked) > 0) {
+                    $message = implode("\r\n", $unblocked) . ' unblocked (enabled) successfully!';
+                    saveCronResult('unblock-peers', $message);
+                    return $message;
+                } else {
+                    $message = 'nothing to unblock!';
+                    saveCronResult('unblock-peers', $message);
+                    return $message;
+                }
+            } else {
+                $message = 'token mismatch!';
+                saveCronResult('unblock-peers', $message);
+                return $message;
+            }
+        } catch (\Exception $exeption) {
+            $message = $exception->getMessage();
+            saveCronResult('unblock-peers', $message);
             return $message;
         }
     }
