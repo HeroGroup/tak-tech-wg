@@ -820,6 +820,7 @@ class WiregaurdController extends Controller
             if ($request_token == env('LOOK_FOR_VIOLATIONS_TOKEN')) {
                 $suspected = [];
                 $blocked = [];
+                $message = '';
                 // select only unlimited peers
                 $peers = DB::table('peers')
                     ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
@@ -866,15 +867,19 @@ class WiregaurdController extends Controller
                         }
                     }
                 }
+                
                 if (count($suspected) > 0) {
-                    $message = implode(", ", $suspected) . ' went into suspect list.';
+                    $message .= implode(", ", $suspected) . ' went into suspect list.';
                 }
                 if (count($blocked) > 0) {
                     $message .= implode(", ", $blocked) . ' blocked (disabled) due to violation.';
+                }
+
+                if (count($suspected) == 0 && count($blocked) == 0){
+                    $message = 'no violations were detected!';
                     saveCronResult('block-peers', $message);
                     return $message;
                 } else {
-                    $message = 'no violations were detected!';
                     saveCronResult('block-peers', $message);
                     return $message;
                 }
