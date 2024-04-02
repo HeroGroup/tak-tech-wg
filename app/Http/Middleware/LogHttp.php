@@ -22,8 +22,7 @@ class LogHttp
         $user = auth()->user()->email ?? 'Guest';
         $uri = $request->fullUrl();
         $method = $request->method();
-        $input = $request->all();
-        $body = $input ? implode(' - ', $input) : '';;
+        $body = json_encode($request->all());
         
         $content = "[$time] $user $method $uri $body \r\n";
 
