@@ -243,6 +243,12 @@
                                 </div>
                             </div>
                             <div class="form-group row mb-4">
+                                <div class="col-md-6">
+                                    <label for="max_allowed_connections">Max Allowed Connections</label>
+                                    <input type="number" class="form-control" name="max_allowed_connections" value="{{$peer->max_allowed_connections}}">
+                                </div>
+                            </div>
+                            <div class="form-group row mb-4">
                                 <div class="col-md-12" style="text-align:center;">
                                     <input type="submit" class="btn btn-success" value="Save and close" />
                                 </div>
@@ -293,6 +299,12 @@
           <div class="col-md-3">
             <label for="mass_activate_time">Starting From Time</label>
             <input type="time" class="form-control" name="mass_activate_time" id="mass_activate_time">
+          </div>
+        </div>
+        <div class="form-group row mb-4">
+          <div class="col-md-6">
+            <label for="mass_max_allowed_connections">Max Allowed Connections</label>
+            <input type="number" class="form-control" name="mass_max_allowed_connections" id="mass_max_allowed_connections">
           </div>
         </div>
         <div class="form-group row mb-4">
@@ -522,6 +534,7 @@
       'expire_days': document.getElementById('mass_expire_days').value,
       'activate_date': document.getElementById('mass_activate_date').value,
       'activate_time': document.getElementById('mass_activate_time').value,
+      'max_allowed_connections': document.getElementById('mass_max_allowed_connections').value,
     });
 
     var params = {

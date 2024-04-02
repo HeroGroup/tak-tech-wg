@@ -504,7 +504,7 @@ class WiregaurdController extends Controller
     }
 
     // This function updates the attributes of a peer
-    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $activate_date, $activate_time, $peer_allowed_traffic_GB, $today, $time, $mass=false)
+    protected function updatePeer($id, $dns, $endpoint_address, $note, $expire_days, $activate_date, $activate_time, $peer_allowed_traffic_GB, $max_allowed_connections, $today, $time, $mass=false)
     {
         try {
             $peer = DB::table('peers')->find($id);
@@ -583,6 +583,10 @@ class WiregaurdController extends Controller
                 $update['peer_allowed_traffic_GB'] = $peer_allowed_traffic_GB;
             }
 
+            if ($max_allowed_connections) {
+                $update['max_allowed_connections'] = $max_allowed_connections;
+            }
+
             DB::table('peers')->where('id', $id)->update($update);
             
             return ['status' => 1, 'message' => 'Peer updated successully'];
@@ -596,7 +600,7 @@ class WiregaurdController extends Controller
     {
         $time = time();
         $today = date('Y-m-d', $time);
-        $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $request->activate_date, $request->activate_time, $request->peer_allowed_traffic_GB, $today, $time);
+        $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $request->activate_date, $request->activate_time, $request->peer_allowed_traffic_GB, $request->max_allowed_connections, $today, $time);
 
         $peer = DB::table('peers')->where('id', $request->id)->first();
 
@@ -633,7 +637,7 @@ class WiregaurdController extends Controller
         try {
             $ids = json_decode($request->ids);
             foreach($ids as $id) {
-                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, $request->expire_days, $request->activate_date, $request->activate_time, $request->peer_allowed_traffic_GB, $today, $time, true);
+                $result = $this->updatePeer($id, $request->dns, $request->endpoint_address, null, $request->expire_days, $request->activate_date, $request->activate_time, $request->peer_allowed_traffic_GB, $request->max_allowed_connections, $today, $time, true);
                 $message .= $result['message'] . "\r\n";
             }
             
@@ -818,11 +822,13 @@ class WiregaurdController extends Controller
     {
         try {
             if ($request_token == env('LOOK_FOR_VIOLATIONS_TOKEN')) {
+                $now = date('Y-m-d H:i:s', time());
                 $suspected = [];
                 $blocked = [];
                 $message = '';
                 // select only unlimited peers
                 $peers = DB::table('peers')
+                    ->where('is_enabled', 1)
                     ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
                     ->where('interfaces.iType', 'unlimited')
                     ->select(['peers.*'])
@@ -848,7 +854,7 @@ class WiregaurdController extends Controller
                         // add peer to suspect list
                         DB::table('suspect_list')->insert([
                             'peer_id' => $peerId,
-                            'created_at' => date('Y-m-d H:i:s', time())
+                            'created_at' => $now
                         ]);
 
                         array_push($suspected, $peer->comment);
@@ -860,14 +866,14 @@ class WiregaurdController extends Controller
                             // for test // $this->toggleEnable($peerId, 0);
                             DB::table('block_list')->insert([
                                 'peer_id' => $peerId,
-                                'created_at' => date('Y-m-d H:i:s', time())
+                                'created_at' => $now
                             ]);
                             
                             array_push($blocked, $peer->comment);
                         }
                     }
                 }
-                
+
                 if (count($suspected) > 0) {
                     $message .= implode(", ", $suspected) . ' went into suspect list.';
                 }
