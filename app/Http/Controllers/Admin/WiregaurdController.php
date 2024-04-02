@@ -813,4 +813,52 @@ class WiregaurdController extends Controller
             return $message;
         }
     }
+
+    public function blockPeers($request_token)
+    {
+        return [
+            convertLastHandshakeToSeconds('3s'),
+            convertLastHandshakeToSeconds('50m41s'),
+            convertLastHandshakeToSeconds('4h30m40s'),
+            convertLastHandshakeToSeconds('1d6h4m30s'),
+            convertLastHandshakeToSeconds('1w2d5h51m53s'),
+        ];
+        try {
+            if ($request_token == env('BLOCK_PEERS_TOKEN')) {
+                $peers = DB::table('peers')
+                    ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
+                    ->where('interfaces.iType', 'unlimited')
+                    ->select(['peers.*'])
+                    ->get();
+
+                $handshake_period_seconds = 180;
+                foreach ($peers as $peer) {
+                    $server_peers = DB::table('server_peers')->where('peer_id', $peer->id)->get();
+                    $number_of_active_connections = 0;
+                    // convert last_handshake to seconds
+                    foreach ($server_peers as $server_peer) {
+                        if ($server_peer->last_handshake) {
+                            $last_handshake_seconds = convertLastHandshakeToSeconds($server_peer->last_handshake);
+                            if ($last_handshake_seconds < $handshake_period_seconds) {
+                                $number_of_active_connections++;
+                            }
+                        }
+                    }
+                    if ($number_of_active_connections > $peer->max_allowed_connections) {
+                        // if is not in suspect list
+                        // add peer to suspect list
+                        // if already in suspect list, counter++
+                    }
+                }
+            } else {
+                $message = 'token mismatch!';
+                saveCronResult('block-peers', $message);
+                return $message;
+            }
+        } catch (\Exception $exception) {
+            $message = $exception->getMessage();
+            saveCronResult('block-peers', $message);
+            return $message;
+        }
+    }
 }

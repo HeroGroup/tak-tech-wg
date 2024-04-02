@@ -156,3 +156,43 @@ function logError($error)
 
   file_put_contents(base_path("/logs/errors/$today.log"), $content, FILE_APPEND | LOCK_EX);
 }
+
+function convertLastHandshakeToSeconds($input)
+{
+  $weeks = 0;
+  $days = 0;
+  $hours = 0;
+  $minutes = 0;
+  $seconds = 0;
+
+  $w_position = strpos($input, 'w');
+  if ($w_position) {
+    $weeks = substr($input, 0, $w_position);
+    $input = substr($input, $w_position+1);
+  }
+
+  $d_position = strpos($input, 'd');
+  if ($d_position) {
+    $days = substr($input, 0, $d_position);
+    $input = substr($input, $d_position+1);
+  }
+
+  $h_position = strpos($input, 'h');
+  if ($h_position) {
+    $hours = substr($input, 0, $h_position);
+    $input = substr($input, $h_position+1);
+  }
+
+  $m_position = strpos($input, 'm');
+  if ($m_position) {
+    $minutes = substr($input, 0, $m_position);
+    $input = substr($input, $m_position+1);
+  }
+
+  $s_position = strpos($input, 's');
+  if ($s_position) {
+    $seconds = substr($input, 0, $s_position);
+  }
+
+  return ($weeks*7*24*60*60) + ($days*24*60*60) + ($hours*60*60) + ($minutes*60) + ($seconds);
+}

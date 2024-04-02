@@ -21,6 +21,7 @@ Route::get('/wiregaurd/peers/disableExpired/{token}', [WiregaurdController::clas
 Route::get('/wiregaurd/peers/removeExpiredLimitedPeers/{token}', [WiregaurdController::class, 'removeExpiredLimitedPeers'])->name('removeExpiredLimitedPeers');
 Route::get('/wiregaurd/peers/limited/getUsages/{token}', [LimitedPeerController::class, 'storeUsages'])->name('wiregaurd.peers.limited.storeUsages');
 Route::get('/wiregaurd/interfaces/getUsages/{token}', [InterfaceController::class, 'storeInterfacesUsages'])->name('wiregaurd.interfaces.storeUsages');
+Route::get('/wiregaurd/interfaces/peers/block/{token}', [WiregaurdController::class, 'blockPeers'])->name('wiregaurd.interfaces.peers.block');
 
 Route::middleware(['auth', 'active'])->group(function() {
   Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
