@@ -508,6 +508,9 @@ class WiregaurdController extends Controller
     {
         try {
             $peer = DB::table('peers')->find($id);
+            if (! $peer) {
+                return ['status' => -1, 'message' => 'Invalid peer!'];
+            }
             $interface = DB::table('interfaces')->find($peer->interface_id);
             $update = [
                 'dns' => $dns,
@@ -604,6 +607,10 @@ class WiregaurdController extends Controller
 
         $peer = DB::table('peers')->find($request->id);
 
+        if (! $peer) {
+            return back()->with('message', 'invalid peer')->with('type', 'danger');
+        }
+        
         if ($request->comment != $peer->comment) {
             $newComment = $request->comment;
             // update comment on local
