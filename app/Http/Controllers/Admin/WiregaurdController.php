@@ -634,7 +634,6 @@ class WiregaurdController extends Controller
                     true
                 );
             }
-            
         }
         return back()->with('message', $result['message'])->with('type', $result['status'] == 1 ? 'success' : 'danger');
     }

@@ -113,6 +113,7 @@ class InterfaceController extends Controller
     {
         try {
             DB::table('interfaces')->where('id', $request->id)->update([
+                'name' => $request->name,
                 'default_endpoint_address' => $request->default_endpoint_address,
                 'dns' => $request->dns,
                 'ip_range' => $request->ip_range,
@@ -122,7 +123,27 @@ class InterfaceController extends Controller
                 'allowed_traffic_GB' => $request->allowed_traffic_GB,
             ]);
 
-            // TODO: update on remote (mtu, listen_port)
+            // update on remote (name, mtu, listen_port)
+            $server_interfaces = DB::table('server_interfaces')
+                ->where('interface_id', $request->id)
+                ->join('servers', 'servers.id', '=', 'server_interfaces.server_id')
+                ->select(['server_interfaces.*', 'servers.server_address'])
+                ->get();
+            foreach ($server_interfaces as $server_interface) {
+                $sAddress = $server_interface->server_address;
+                $data = [
+                    ".id" => $server_interface->server_interface_id, 
+                    "name" => $request->name,
+                    "mtu" => $request->mtu,
+                    "listen-port" => $request->listen_port,
+                ];
+                curl_general(
+                    'POST',
+                    $sAddress . '/rest/interface/wireguard/set',
+                    json_encode($data),
+                    true
+                );
+            }
             // TODO: update ip address on remote
 
             return back()->with('message', 'Interface updated successfully.')->with('type', 'success');

@@ -64,15 +64,19 @@
                                 <input type="hidden" name="id" value="{{$interface->id}}">
                                 <div class="form-group row mb-4">
                                     <div class="col-md-6">
+                                        <label for="name">Name</label>
+                                        <input class="form-control" name="name" value="{{$interface->name}}" required>
+                                    </div>
+                                    <div class="col-md-6">
                                         <label for="default_endpoint_address">Default Endpoint</label>
                                         <input class="form-control" name="default_endpoint_address" value="{{$interface->default_endpoint_address}}" placeholder="s1.yourdomain.com">
                                     </div>
+                                </div>
+                                <div class="form-group row mb-4">
                                     <div class="col-md-6">
                                         <label for="dns">Wiregaurd DNS</label>
                                         <input class="form-control" name="dns" value="{{$interface->dns}}" placeholder="192.168.200.1">
                                     </div>
-                                </div>
-                                <div class="form-group row mb-4">
                                     <div class="col-md-6">
                                         <label for="ip_range">IPv4 Address Range</label>
                                         <input class="form-control" name="ip_range" value="{{$interface->ip_range}}" placeholder="192.168.200.">
