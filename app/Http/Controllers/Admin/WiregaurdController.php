@@ -602,7 +602,7 @@ class WiregaurdController extends Controller
         $today = date('Y-m-d', $time);
         $result = $this->updatePeer($request->id, $request->dns, $request->endpoint_address, $request->note, $request->expire_days, $request->activate_date, $request->activate_time, $request->peer_allowed_traffic_GB, $request->max_allowed_connections, $today, $time);
 
-        $peer = DB::table('peers')->where('id', $request->id)->first();
+        $peer = DB::table('peers')->find($request->id);
 
         if ($request->comment != $peer->comment) {
             $newComment = $request->comment;
@@ -612,9 +612,13 @@ class WiregaurdController extends Controller
             ]);
             // update on remote as well
             // loop on all servers to update on remote
-            $server_peers = DB::table('server_peers')->where('peer_id', $request->id)->get();
+            $server_peers = DB::table('server_peers')
+                ->where('peer_id', $request->id)
+                ->join('servers', 'servers.id', '=', 'server_peers.server_id')
+                ->select(['server_peers.*', 'servers.server_address'])
+                ->get();
             foreach ($server_peers as $server_peer) {
-                $sAddress = DB::table('servers')->find($server_peer->server_id)->server_address;
+                $sAddress = $server_peer->server_address;
                 $data = [".id" => $server_peer->server_peer_id, "comment" => $newComment];
                 curl_general(
                     'POST',

@@ -30,11 +30,14 @@ class UserController extends Controller
     public function store(Request $request)
     {
         try {
+            $now = date('Y-m-d H:i:s');
             $userId = DB::table('users')->insertGetId([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'user_type' => $request->user_type,
+                'created_at' => $now,
+                'updated_at' => $now
             ]);
 
             $userInterfaces = $request->interfaces;
