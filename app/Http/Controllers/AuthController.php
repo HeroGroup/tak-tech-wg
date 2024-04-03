@@ -8,14 +8,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
+// This class handles user authentication and profile
 class AuthController extends Controller
 {
-    // login, forget password
+    // returns view for user to login
     public function login()
     {
+        if (auth()->user()) {
+            return redirect(route('dashboard'));
+        }
+
         return view('auth.login');
     }
 
+    // login attempt
     public function postLogin(Request $request)
     {
         try {
@@ -43,6 +49,7 @@ class AuthController extends Controller
         }
     }
 
+    // logs out user
     public function logout(Request $request)
     {
         Auth::logout();
@@ -54,6 +61,7 @@ class AuthController extends Controller
         return redirect(RouteServiceProvider::HOME);
     }
 
+    // stores every login attempt with user ip and device
     public function saveLoginSession($request_ip, $requset_user_agent) 
     {
         // save login session
@@ -68,10 +76,12 @@ class AuthController extends Controller
         ]);
     }
 
+    // shows a view for user to change password
     public function changePassword() {
         return view('admin.changePassword');
     }
     
+    // updates users password
     public function updatePassword(Request $request) {
         try {
             $user = User::find(auth()->user()->id);
