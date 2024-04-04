@@ -9,6 +9,8 @@
             <option value="syncAll" @if($type=="syncAll") selected @endif>sync all</option>
             <option value="disable-expired-peers" @if($type=="disable-expired-peers") selected @endif>disable expired peers</option>
             <option value="remove-expired-limited-peers" @if($type=="remove-expired-limited-peers") selected @endif>remove limited expired peers</option>
+            <option value="block-peers" @if($type=="block-peers") selected @endif>block peers</option>
+            <option value="unblock-peers" @if($type=="unblock-peers") selected @endif>unblock peers</option>
         </select>
     </div>
 </div>
