@@ -67,11 +67,11 @@ class UserController extends Controller
             }
 
             DB::table('users')->where('id', $userId)->update($update);
+            
+            DB::table('user_interfaces')->where('user_id', $userId)->delete();
 
             $userInterfaces = $request->user_interfaces;
             if ($userInterfaces && count($userInterfaces) > 0) {
-                DB::table('user_interfaces')->where('user_id', $userId)->delete();
-
                 $this->createUserInterfaces($userInterfaces, $userId);
             }
 

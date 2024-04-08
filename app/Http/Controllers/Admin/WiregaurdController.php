@@ -206,11 +206,13 @@ class WiregaurdController extends Controller
             $end = $request->end;
             $randoms = explode('-', $request->random);
 
-            // check is wiregaurd is valid
+            // check if wiregaurd is valid
             $interface = DB::table('interfaces')->find($request->wginterface);
             if (! $interface) {
                 return back()->with("message", "Wireguard Interface Not Found")->with("type", "danger");
             }
+
+            // TODO: check if user has access to this interface
             
             $interfaceId = $interface->id;
             $interfaceName = $interface->name;
