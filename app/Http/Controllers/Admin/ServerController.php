@@ -364,6 +364,9 @@ class ServerController extends Controller
         $remoteInterfaces = curl_general('GET',
             $sAddress . '/rest/interface/wireguard'
         );
+        if (!is_array($remoteInterfaces)) {
+            return $this->fail($remoteInterfaces);
+        }
         $remoteInterfaceNames = array_column($remoteInterfaces, 'name');
         
         foreach ($localInterfaces as $localInterface) {

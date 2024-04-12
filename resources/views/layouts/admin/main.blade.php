@@ -207,7 +207,7 @@
             });
         }
 
-        $('#dataTable').DataTable({ order: false, pageLength: 100 });
+        $('#dataTable').DataTable({ pageLength: 100 });
 
         $('select:not(select[name=DataTables_Table_0_length])').selectize({
             sortField: 'text'
@@ -300,6 +300,12 @@
         }
         });
         xhr.send(params.formData);
+    }
+
+    function checkAll() {
+        $('.chk-row:checkbox').prop('checked', $('#chk-all').prop('checked'));
+        var x = $('.chk-row:checkbox:checked');
+        document.getElementById('number-of-selected-items').innerHTML = x.length;
     }
 </script>
 </body>

@@ -23,7 +23,7 @@ class WiregaurdController extends Controller
         
         $messageDuration = 10000;
 
-        return view('admin.WGCreate', compact('interfaces', 'messageDuration'));
+        return view('admin.peers.create', compact('interfaces', 'messageDuration'));
     }
 
     // This function returns list of peers based on the accesibility of the user
@@ -97,7 +97,7 @@ class WiregaurdController extends Controller
             ->pluck('name', 'interface_id')->toArray();
         
         $messageDuration = 10000;
-        return view('admin.WGPeers', compact('peers', 'interface', 'comment', 'enabled', 'sortBy', 'interfaces', 'messageDuration'));
+        return view('admin.peers.list', compact('peers', 'interface', 'comment', 'enabled', 'sortBy', 'interfaces', 'messageDuration'));
     }
 
     // This function adds peer to local database
@@ -195,7 +195,7 @@ class WiregaurdController extends Controller
     public function createWG(Request $request)
     {
         try {
-            // check user has access
+            // check user has access to this interface
             $userInterfaces = DB::table('user_interfaces')->where('user_id', auth()->user()->id)->where('interface_id', $request->wginterface);
             if ($userInterfaces->count() == 0) {
                 return back()->with('message', 'You do not have access to this interface.')->with('type', 'danger');
@@ -211,8 +211,6 @@ class WiregaurdController extends Controller
             if (! $interface) {
                 return back()->with("message", "Wireguard Interface Not Found")->with("type", "danger");
             }
-
-            // TODO: check if user has access to this interface
             
             $interfaceId = $interface->id;
             $interfaceName = $interface->name;
@@ -461,7 +459,7 @@ class WiregaurdController extends Controller
     {
         try {
             DB::table('server_peers')->where('peer_id', $id)->delete();
-            
+
             // delete associated conf and qr file
             $peer = DB::table('peers')->find($id);
             if ($peer->conf_file && file_exists($peer->conf_file)) {
@@ -615,11 +613,18 @@ class WiregaurdController extends Controller
         
         if ($request->comment != $peer->comment) {
             $newComment = $request->comment;
+
+            // check if comment is not in use
+            $existingComment = DB::table('peers')->where('interface_id', $peer->interface_id)->where('comment', $newComment)->count();
+            if ($existingComment > 0) {
+                return back()->with('message', 'This comment is already in use!')->with('type', 'danger');
+            }
+
             // update comment on local
             DB::table('peers')->where('id', $request->id)->update([
                 'comment' => $newComment
             ]);
-            // update on remote as well
+
             // loop on all servers to update on remote
             $server_peers = DB::table('server_peers')
                 ->where('peer_id', $request->id)
@@ -767,6 +772,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // remove expired limited peers
     public function removeExpiredLimitedPeers($request_token)
     {
         try {
@@ -830,10 +836,14 @@ class WiregaurdController extends Controller
         }
     }
 
+    // this function checks for peers that are violating maximum allowed number of connections
+    // and pu them to suspect list
+    // after a defined violation count, system blocks those peers
     public function blockPeers($request_token)
     {
         try {
             if ($request_token == env('LOOK_FOR_VIOLATIONS_TOKEN')) {
+                $should_block = DB::table('settings')->where('setting_key', 'IS_BLOCK_UNBLOCK_ACTIVE')->first()->setting_value;
                 $now = date('Y-m-d H:i:s', time());
                 $suspected = [];
                 $blocked = [];
@@ -862,7 +872,7 @@ class WiregaurdController extends Controller
                         }
                     }
                     $max = $peer->max_allowed_connections ?? 1;
-                    if ($number_of_active_connections > $max) {
+                    if ($max != -1 && $number_of_active_connections > $max) { // $max: -1 => unlimited
                         // add peer to suspect list
                         DB::table('suspect_list')->insert([
                             'peer_id' => $peerId,
@@ -875,12 +885,18 @@ class WiregaurdController extends Controller
 
                         if ($cnt > $max_number_of_violations) {
                             // make peer disable
-                            // for test // $this->toggleEnable($peerId, 0);
+                            if ($should_block && ($should_block=='true' || $should_block=='yes')) {
+                                $this->toggleEnable($peerId, 0);
+                            }
+
                             DB::table('block_list')->insert([
                                 'peer_id' => $peerId,
                                 'created_at' => $now
                             ]);
-                            
+
+                            // remove from suspect_list
+                            DB::table('suspect_list')->where('peer_id', $peerId)->delete();
+                                
                             array_push($blocked, $peer->comment);
                         }
                     }
@@ -913,10 +929,12 @@ class WiregaurdController extends Controller
         }
     }
 
+    // unblocks blocked peers after a certain defined amount of time
     public function unblockViolatedPeers($request_token)
     {
         try {
             if ($request_token == env('UNBLOCK_PEERS_TOKEN')) {
+                $should_unblock = DB::table('settings')->where('setting_key', 'IS_BLOCK_UNBLOCK_ACTIVE')->first()->setting_value;
                 $blocked = DB::table('block_list')->get();
                 $unblock_after = DB::table('settings')->where('setting_key', 'UNBLOCK_AFTER_MINUTES')->first()->setting_value;
                 $now = time();
@@ -929,10 +947,9 @@ class WiregaurdController extends Controller
                         $peer = DB::table('peers')->find($peerId);
                         
                         // make peer enable
-                        // for test // $this->toggleEnable($peerId , 1);
-                        
-                        // remove from suspect_list
-                        DB::table('suspect_list')->where('peer_id', $peerId)->delete();
+                        if ($should_unblock && ($should_unblock=='true' || $should_unblock=='yes')) {
+                            $this->toggleEnable($peerId, 1);
+                        }
                         
                         // remove from block_list
                         DB::table('block_list')->where('peer_id', $peerId)->delete();
@@ -959,6 +976,161 @@ class WiregaurdController extends Controller
             $message = $exception->getMessage();
             saveCronResult('unblock-peers', $message);
             return $message;
+        }
+    }
+
+    // returns the list of suspected peers
+    public function suspectList()
+    {
+        $list = DB::table('suspect_list')
+            ->join('peers', 'peers.id', '=', 'suspect_list.peer_id')
+            ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
+            ->selectRaw('count(*) as number_of_violations, suspect_list.peer_id, peers.comment, interfaces.name')
+            ->groupBy('suspect_list.peer_id')
+            ->get();
+        
+        return view('admin.violations.suspect', compact('list'));
+    }
+
+    // returns the list of blocked peers
+    public function blockList()
+    {
+        $list = DB::table('block_list')
+            ->join('peers', 'peers.id', '=', 'block_list.peer_id')
+            ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
+            ->select(['block_list.*', 'peers.comment', 'interfaces.name'])
+            ->get();
+        
+        return view('admin.violations.block', compact('list'));
+    }
+
+    // manually extracts a peer from suspect list
+    public function removeFromSuspectList(Request $request)
+    {
+        try {
+            $peerId = $request->id;
+            DB::table('suspect_list')->where('peer_id', $peerId)->delete();
+
+            return $this->success('Removed from suspect list!');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
+        }
+    }
+
+    // manually extracts a peer from block list
+    public function removeFromBlockList(Request $request)
+    {
+        try {
+            $should_unblock = DB::table('settings')->where('setting_key', 'IS_BLOCK_UNBLOCK_ACTIVE')->first()->setting_value;
+            $peerId = $request->id;
+            DB::table('block_list')->where('peer_id', $peerId)->delete();
+
+            // enable peer
+            if ($should_unblock && ($should_unblock=='true' || $should_unblock=='yes')) {
+                $this->toggleEnable($peerId, 1);
+            }
+
+            return $this->success('Removed from block list!');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
+        }
+    }
+
+    // returns a view for doing actions on peers
+    public function actions()
+    {
+        $interfaces = DB::table('user_interfaces')
+            ->where('user_id', auth()->user()->id)
+            ->join('interfaces', 'interfaces.id', '=', 'user_interfaces.interface_id')
+            ->pluck('name', 'interface_id')->toArray();
+
+        return view('admin.peers.actions', compact('interfaces'));
+    }
+
+    // this function pre-handles different actions on peers
+    public function postActions(Request $request)
+    {
+        try {
+            // check user has access to this interface
+            $userInterfaces = DB::table('user_interfaces')->where('user_id', auth()->user()->id)->where('interface_id', $request->interface);
+            if ($userInterfaces->count() == 0) {
+                return back()->with('message', 'You do not have access to this interface.')->with('type', 'danger');
+            }
+
+            $comment = $request->comment;
+            $start = $request->start;
+            $end = $request->end;
+            $randoms = explode('-', $request->random);
+            $action = $request->action;
+
+            // check if wiregaurd is valid
+            $interface = DB::table('interfaces')->find($request->interface);
+            if (! $interface) {
+                return back()->with('message', 'Wireguard Interface Not Found')->with('type', 'danger');
+            }
+            
+            $interfaceId = $interface->id;
+            $time = time();
+
+            if ($request->type == 'batch') {
+                for ($i = $start; $i <= $end; $i++)
+                {
+                    $commentApply = $comment . '-' . $i;
+                    $this->performActionOnPeer($interfaceId, $commentApply, $action, $time);
+                }
+            } else {
+                foreach ($randoms as $i)
+                {
+                    $commentApply = $comment . '-' . $i;
+                    $this->performActionOnPeer($interfaceId, $commentApply, $action, $time);
+                }
+            }
+
+            if ($action=='regenerate') {
+                $today = date('Y-m-d', $time);
+                $zipResult = createZip(resource_path("confs/$today/$time/"), $time);
+                    
+                if ($zipResult['status'] == 1) {
+                    return redirect(route('wiregaurd.peers.getDownloadLink', ['date' => $today, 'file' => $time]));
+                } else {
+                    return back()->with('message', $zipResult['message'])->with('type', 'danger');
+                }
+            }
+
+            return back()->with('message', 'success!')->with('type', 'success');
+        } catch (\Exception $exception) {
+            return back()->with('message', $exception->getLine() . ': ' . $exception->getMessage())->with('type', 'danger');
+        }
+    }
+
+    // this function handles different actions on peers
+    public function performActionOnPeer($interfaceId, $comment, $action, $time)
+    {
+        $peer = DB::table('peers')
+            ->where('interface_id', $interfaceId)
+            ->where('comment', $comment)
+            ->first();
+
+        if ($peer) {
+            $peerId = $peer->id;
+            switch ($action) {
+                case 'enable':
+                    $this->toggleEnable($peerId, 1);
+                    break;
+                case 'disable':
+                    $this->toggleEnable($peerId, 0);
+                    break;
+                case 'regenerate':
+                    $this->regenerate($peerId, $time);
+                    break;
+                case 'remove':
+                    $this->removeRemote($peerId);
+                    $this->removeLocal($peerId);
+                    break;
+                default:
+                    # code...
+                    break;
+            }
         }
     }
 }

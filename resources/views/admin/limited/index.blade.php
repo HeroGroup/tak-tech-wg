@@ -1,4 +1,4 @@
-@extends('layouts.admin.main', ['pageTitle' => 'Limited Peers (Last update: ' . $lastUpdate . ')', 'active' => 'limited-peers'])
+@extends('layouts.admin.main', ['pageTitle' => 'Limited Peers (Last update: ' . $lastUpdate . ')', 'active' => 'peers'])
 @section('content')
 
 <x-loader/>
@@ -185,11 +185,13 @@
               </a>
               <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink" x-placement="bottom-end" style="position: absolute; transform: translate3d(-158px, 19px, 0px); top: 0px; left: 0px; will-change: transform;">
                   <div class="dropdown-header">Actions</div>
-                  
-                  <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="edit">
+                  <a href="{{route('wiregaurd.peers.limited.usageStatistics', $peer->id)}}" target="_blank" class="dropdown-item text-warning">
+                    <i class="fa fa-fw fa-chart-line"></i> Usage Statistics
+                  </a>
+                  <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}">
                     <i class="fa fa-fw fa-pen"></i> Edit
                   </a>
-                  <a href="#" onclick="regenerateSingle('{{$peer->id}}')" class="dropdown-item text-primary" title="regenerate">
+                  <a href="#" onclick="regenerateSingle('{{$peer->id}}')" class="dropdown-item text-primary">
                     <i class="fa fa-fw fa-sync"></i> Regenerate
                   </a>
                   @if(auth()->user()->is_admin)

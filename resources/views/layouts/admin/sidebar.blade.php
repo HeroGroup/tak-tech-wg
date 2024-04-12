@@ -4,7 +4,7 @@
     }
 </style>
 <!-- Sidebar -->
-<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion toggled" id="accordionSidebar">
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
     <!-- <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/"> -->
@@ -34,7 +34,7 @@
             <i class="fas fa-fw fa-database"></i>
             <span>Interfaces</span>
         </a>
-        <div id="collapseInterfaces" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar" style="">
+        <div id="collapseInterfaces" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="{{route('admin.wiregaurd.interfaces')}}">
                     <i class="fas fa-fw fa-database"></i>
@@ -48,27 +48,54 @@
         </div>
     </li>
     @endif
+
     <li class="nav-item" id="peers">
-        <a class="nav-link" href="{{route('wiregaurd.peers.index')}}">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePeers" aria-expanded="false" aria-controls="collapsePeers">
             <i class="fas fa-fw fa-sliders-h"></i>
-            <span>Peers List</span>
+            <span>Peers</span>
         </a>
-    </li>
-    <li class="nav-item" id="create_peers">
-        <a class="nav-link" href="{{route('wiregaurd.peers.create')}}">
-            <i class="fas fa-fw fa-plus"></i>
-            <span>Create Peers</span>
-        </a>
-    </li>
-    
-    <li class="nav-item" id="limited-peers">
-        <a class="nav-link" href="{{route('wiregaurd.peers.limited.list')}}">
-            <i class="fas fa-fw fa-list-ul"></i>
-            <span>Limited Peers</span>
-        </a>
+        <div id="collapsePeers" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{route('wiregaurd.peers.index')}}">
+                    <i class="fas fa-fw fa-sliders-h"></i>
+                    <span>List</span>
+                </a>
+                <a class="collapse-item" href="{{route('wiregaurd.peers.limited.list')}}">
+                    <i class="fas fa-fw fa-list-ul"></i>
+                    <span>Limited Peers</span>
+                </a>
+                <a class="collapse-item" href="{{route('wiregaurd.peers.create')}}">
+                    <i class="fas fa-fw fa-plus"></i>
+                    <span>Create Peers</span>
+                </a>
+                <a class="collapse-item" href="{{route('wiregaurd.peers.actions')}}">
+                    <i class="fas fa-fw fa-tools"></i>
+                    <span>Peers Actions</span>
+                </a>
+            </div>
+        </div>
     </li>
     
     @if(auth()->user()->isAdmin)
+    <li class="nav-item" id="violations">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseviolations" aria-expanded="false" aria-controls="collapseviolations">
+            <i class="fas fa-fw fa-exclamation"></i>
+            <span>Violations</span>
+        </a>
+        <div id="collapseviolations" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{route('admin.violations.suspect.list')}}">
+                    <i class="fas fa-fw fa-exclamation"></i>
+                    <span>Suspect List</span>
+                </a>
+                <a class="collapse-item" href="{{route('admin.violations.block.list')}}">
+                    <i class="fas fa-fw fa-times"></i>
+                    <span>Block List</span>
+                </a>
+            </div>
+        </div>
+    </li>
+
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseServers" aria-expanded="false" aria-controls="collapseServers">
             <i class="fas fa-fw fa-server"></i>

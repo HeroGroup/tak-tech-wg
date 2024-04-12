@@ -398,11 +398,6 @@
     sendRequest(params);
     
   }
-  function checkAll() {
-    $('.chk-row:checkbox').prop('checked', $('#chk-all').prop('checked'));
-    var x = $('.chk-row:checkbox:checked');
-    document.getElementById('number-of-selected-items').innerHTML = x.length;
-  }
   function checkedItems() {
     var ids = [];
     var x = $('.chk-row:checkbox:checked');

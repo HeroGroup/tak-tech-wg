@@ -1,4 +1,4 @@
-@extends('layouts.admin.main', ['pageTitle' => 'Create Wiregaurd Peers', 'active' => 'create_peers'])
+@extends('layouts.admin.main', ['pageTitle' => 'Create Wiregaurd Peers', 'active' => 'peers'])
 @section('content')
 
 <x-loader/>
@@ -93,7 +93,7 @@
 
         <div class="form-group row">
           <div class="col-md-12 text-right">
-            <button type="submit" class="btn btn-primary">Create Wireguard  Peers</button>
+            <button type="submit" class="btn btn-primary">Create Wireguard Peers</button>
           </div>
         </div>
       </div>

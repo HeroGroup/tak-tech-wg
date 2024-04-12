@@ -69,7 +69,7 @@ class LimitedPeerController extends Controller
                         ->where('server_id', $sId)
                         ->where('server_peer_id', $server_peer->server_peer_id)
                         ->orderBy('id', 'desc')
-                        ->first ();
+                        ->first();
                     $sum_tx += $record->tx ?? 0;
                     $sum_rx += $record->rx ?? 0;
                 }
@@ -176,11 +176,10 @@ class LimitedPeerController extends Controller
                                 'last_handshake' => $limitedPeer["last-handshake"] ?? null,
                                 'created_at' => $now
                             ]);
-
                         }
 
+                        // store last-handshake for all peers not only limited ones
                         foreach ($remotePeers as $remotePeer) {
-                            // store last-handshake for all peers
                             DB::table('server_peers')
                                 ->where('server_id', $sId)
                                 ->where('server_peer_id', $remotePeer[".id"])
@@ -208,5 +207,45 @@ class LimitedPeerController extends Controller
             saveCronResult('store-peers-usages', $resultMessage);
             return $resultMessage;
         }
+    }
+
+    public function usageStatistics($peerId)
+    {
+        $peer = DB::table('peers')->find($peerId);
+        if (! $peer) {
+            return back()->with('message', 'invalid peer')->with('type', 'danger');
+        }
+
+        $server_peers = DB::table('server_peers')->where('peer_id', $peer->id)->get();
+        $result = [];
+        $days = [];
+        foreach($server_peers as $server_peer) {
+            $res = DB::table('server_peer_usages')
+                ->where('server_id', $server_peer->server_id)
+                ->where('server_peer_id', $server_peer->server_peer_id)
+                ->selectRaw('(MAX(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) - MIN(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) + MAX(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) - MIN(CAST(`server_peer_usages`.`rx` AS UNSIGNED))) / 1073741824 AS TOTAL_USAGE, SUBSTR(`server_peer_usages`.`created_at`, 1, 10) AS DAY')
+                ->groupByRaw('DAY')
+                ->get();
+
+            $days = array_merge($days, array_column($res->toArray(), 'DAY'));
+            $result[$server_peer->id] = $res;
+        }
+
+        $peer_usages = [];
+        foreach ($days as $day) {
+            $sum_day = 0;
+            foreach ($result as $key => $value) {
+                foreach ($value as $elm) {
+                    if ($elm->DAY == $day) {
+                        $sum_day += $elm->TOTAL_USAGE;
+                    }
+                }
+            }
+            $peer_usages[$day] = $sum_day;
+        }
+
+        $peer_usages = json_encode($peer_usages);
+
+        return view('admin.limited.usageStatistics', compact('peer', 'peer_usages'));
     }
 }

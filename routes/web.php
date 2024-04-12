@@ -34,6 +34,8 @@ Route::middleware(['auth', 'active'])->group(function() {
     Route::get('/wiregaurd/peers/create', [WiregaurdController::class, 'create'])->name('create');
     Route::post('/wiregaurd/peers', [WiregaurdController::class, 'createWG'])->name('post.create');
     Route::put('/wiregaurd/peers', [WiregaurdController::class, 'updatePeerSingle'])->name('update');
+    Route::get('/wiregaurd/peers/actions', [WiregaurdController::class, 'actions'])->name('actions');
+    Route::post('/wiregaurd/peers/actions', [WiregaurdController::class, 'postActions'])->name('actions.post');
     
     Route::put('/wiregaurd/peers/toggleEnable', [WiregaurdController::class, 'toggleEnableSingle'])->name('toggleEnable');
     Route::post('/wiregaurd/peers/regenerate', [WiregaurdController::class, 'regenerateSingle'])->name('regenerate');
@@ -49,6 +51,7 @@ Route::middleware(['auth', 'active'])->group(function() {
 
     Route::prefix('wiregaurd/peers/limited')->group(function () {
       Route::get('/list', [LimitedPeerController::class, 'index'])->name('limited.list');
+      Route::get('/usageStatistics/{peerId}', [LimitedPeerController::class, 'usageStatistics'])->name('limited.usageStatistics');
     });
   });
 });
@@ -91,6 +94,11 @@ Route::prefix('admin')->group(function () {
       Route::post('/servers/syncPeers', [ServerController::class, 'syncPeers'])->name('settings.servers.syncPeers');
 
       Route::get('/logs/cronJobs', [LogController::class, 'cronJobs'])->name('logs.cronJobs');
+      
+      Route::get('/violations/suspect/list', [WiregaurdController::class, 'suspectList'])->name('violations.suspect.list');
+      Route::get('/violations/block/list', [WiregaurdController::class, 'blockList'])->name('violations.block.list');
+      Route::delete('/violations/suspect/remove', [WiregaurdController::class, 'removeFromSuspectList'])->name('violations.suspect.remove');
+      Route::delete('/violations/block/remove', [WiregaurdController::class, 'removeFromBlockList'])->name('violations.block.remove');
     });
   });
 });
