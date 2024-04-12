@@ -241,7 +241,9 @@ class LimitedPeerController extends Controller
                     }
                 }
             }
-            $peer_usages[$day] = $sum_day;
+            if ($sum_day > 0) {
+                $peer_usages[$day] = $sum_day;
+            }
         }
 
         $peer_usages = json_encode($peer_usages);
