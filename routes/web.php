@@ -61,6 +61,7 @@ Route::prefix('admin')->group(function () {
     Route::middleware(['auth', 'admin', 'active'])->group(function() {
 
       Route::get('/users', [UserController::class, 'index'])->name('users');
+      Route::get('/users/{id}/privileges', [UserController::class, 'privileges'])->name('users.privileges');
       Route::post('/users', [UserController::class, 'store'])->name('users.store');
       Route::put('/users/toggleActive', [UserController::class, 'toggleActive'])->name('users.toggleActive');
       Route::put('/users', [UserController::class, 'update'])->name('users.update');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Privileges;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -19,8 +20,9 @@ class UserController extends Controller
             $users = User::all(); // DB::table('users')->get();
             $interfaces = DB::table('interfaces')->pluck('name', 'id')->toArray();
             $userTypes = UserType::forSelect();
+            $privileges = array_column(Privileges::cases(), 'name', 'value');
 
-            return view('admin.users.index', compact('users', 'interfaces', 'userTypes'));
+            return view('admin.users.index', compact('users', 'interfaces', 'userTypes', 'privileges'));
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage())->with('type', 'danger');
         }
@@ -31,7 +33,7 @@ class UserController extends Controller
     {
         try {
             $now = date('Y-m-d H:i:s');
-            $userId = DB::table('users')->insertGetId([
+            $userId = User::insertGetId([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
@@ -43,6 +45,11 @@ class UserController extends Controller
             $userInterfaces = $request->interfaces;
             if ($userInterfaces && count($userInterfaces) > 0) {
                 $this->createUserInterfaces($userInterfaces, $userId);
+            }
+
+            $userPrivileges = $request->privileges;
+            if ($userPrivileges && count($userPrivileges) > 0) {
+                $this->createUserPrivileges($userPrivileges, $userId);
             }
 
             return back()->with('message', 'User was created successfully.')->with('type', 'success');
@@ -66,13 +73,19 @@ class UserController extends Controller
                 $update['password'] = Hash::make($request->password);
             }
 
-            DB::table('users')->where('id', $userId)->update($update);
+            User::find($userId)->update($update);
             
             DB::table('user_interfaces')->where('user_id', $userId)->delete();
+            DB::table('user_privileges')->where('user_id', $userId)->delete();
 
             $userInterfaces = $request->user_interfaces;
             if ($userInterfaces && count($userInterfaces) > 0) {
                 $this->createUserInterfaces($userInterfaces, $userId);
+            }
+
+            $userPrivileges = $request->privileges;
+            if ($userPrivileges && count($userPrivileges) > 0) {
+                $this->createUserPrivileges($userPrivileges, $userId);
             }
 
             return back()->with('message', 'User updated successfully.')->with('type', 'success');
@@ -94,6 +107,17 @@ class UserController extends Controller
         }
     }
 
+    // connect user to accessed privileges
+    protected function createUserPrivileges($userPrivileges, $userId)
+    {
+        foreach($userPrivileges as $key => $value) {
+            DB::table('user_privileges')->insert([
+                'user_id' => $userId,
+                'action' => $value,
+            ]);
+        }
+    }
+
     // makes user active or inactive
     public function toggleActive(Request $request)
     {
@@ -106,6 +130,7 @@ class UserController extends Controller
         }
     }
 
+    // soft deletes user
     public function remove(Request $request)
     {
         try {
@@ -115,5 +140,22 @@ class UserController extends Controller
         } catch (\Exception $exception) {
             return $this->fail($exception->getMessage());
         }
+    }
+
+    public function privileges($id)
+    {
+        $user = User::find($id);
+        $privileges = array_column(Privileges::cases(), 'value', 'name');
+        $user_privileges = DB::table('user_privileges')->where('user_id', $id)->pluck('action')->toArray();
+        
+        $peers = DB::table('peers')
+            ->join('user_interfaces', 'user_interfaces.interface_id', '=', 'peers.interface_id')
+            ->where('user_interfaces.user_id', $id)
+            ->select(['peers.*'])
+            ->get();
+
+        $user_peers = DB::table('user_peers')->where('user_id', $id)->pluck('peer_id')->toArray();
+
+        return view('admin.users.privileges', compact('user', 'privileges', 'user_privileges', 'peers', 'user_peers'));
     }
 }

@@ -27,6 +27,7 @@
         <?php 
           $userInterfaces = \Illuminate\Support\Facades\DB::table('user_interfaces')->where('user_id', $user->id)->join('interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')->get();
           $x = array_column($userInterfaces->toArray(), 'interface_id');
+          $user_privileges = DB::table('user_privileges')->where('user_id', $user->id)->pluck('action')->toArray();
         ?>
         <td>{{$user->name}}</td>
         <td>{{$user->email}}</td>
@@ -53,9 +54,6 @@
           <a href="#" class="text-info" data-toggle="modal" data-target="#edit-user-modal-{{$user->id}}" title="Edit">
             <i class="fa fa-fw fa-pen"></i>
           </a>
-          <a href="#" class="text-success" title="Access">
-                <i class="fa fa-fw fa-key"></i>
-          </a>
           <a href="#" onclick="destroy('{{route('admin.users.delete')}}','{{$user->id}}','{{$user->id}}')" class="text-danger" title="Remove">
                 <i class="fa fa-fw fa-trash"></i>
             </a>
@@ -75,34 +73,29 @@
                               <input type="hidden" name="_method" value="PUT">
                               <input type="hidden" name="id" value="{{$user->id}}">
                               <div class="form-group row mb-4">
-                                  <div class="col-md-12">
+                                  <div class="col-md-6">
                                       <label for="name">Name</label>
                                       <input class="form-control" name="name" value="{{$user->name}}" required>
                                   </div>
-                              </div>
-                              <div class="form-group row mb-4">
-                                  <div class="col-md-12">
+                                  <div class="col-md-6">
                                       <label for="email">Email</label>
                                       <input class="form-control" name="email" value="{{$user->email}}" required>
                                   </div>
                               </div>
                               <div class="form-group row mb-4">
-                                  <div class="col-md-12">
+                                  <div class="col-md-6">
                                       <label for="password">Password</label>
                                       <input class="form-control" name="password">
                                   </div>
+                                  <div class="col-md-6">
+                                    <label for="user_type">User Type</label>
+                                    <select name="user_type" class="form-control">
+                                      @foreach ($userTypes as $key => $value)
+                                      <option value="{{$key}}" @if($user->user_type==$key) selected @endif>{{$value}}</option>
+                                      @endforeach
+                                    </select>  
+                                  </div>
                               </div>
-                              <div class="form-group row mb-4">
-                                <div class="col-md-12">
-                                  <label for="user_type">User Type</label>
-                                  <select name="user_type" class="form-control">
-                                    @foreach ($userTypes as $key => $value)
-                                    <option value="{{$key}}" @if($user->user_type==$key) selected @endif>{{$value}}</option>
-                                    @endforeach
-                                  </select>  
-                                </div>
-                              </div>
-
                               <div class="form-group row mb-4">
                                 <div class="col-md-12">
                                   <label for="user_interfaces">Access Interfaces</label>
@@ -114,12 +107,19 @@
                                 </div>
                               </div>
                               <div class="form-group row mb-4">
+                                <div class="col-md-12">
+                                  <label>Priviliges</label>
+                                  <br>
+                                  @foreach ($privileges as $key => $value)
+                                    <input type="checkbox" name="privileges[]" value="{{$key}}" @if(in_array($key, $user_privileges)) checked="checked" @endif/> {{$value}} &nbsp;
+                                  @endforeach
+                                </div>
+                              </div>
+                              <div class="form-group row mb-4">
                                   <div class="col-md-12 text-center">
                                       <input type="submit" class="btn btn-success" value="Save and close" />
                                   </div>
                               </div>
-                              
-
                           </form>
                       </div>
                   </div>
@@ -144,31 +144,27 @@
                 <form method="post" action="{{route('admin.users.store')}}" onsubmit="turnOnLoader()">
                     @csrf
                     <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="name">Name</label>
                             <input type="text" class="form-control" name="name" value="{{old('name')}}" required>
                         </div>
-                    </div>
-                    <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="email">Email</label>
                             <input type="email" class="form-control" name="email" value="{{old('email')}}" required>
                         </div>
                     </div>
                     <div class="form-group row mb-4">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label for="password">Password</label>
                             <input type="password" class="form-control" name="password" required>
                         </div>
-                    </div>
-                    <div class="form-group row mb-4">
-                        <div class="col-md-12">
-                        <label for="user_type">User Type</label>
-                        <select name="user_type" id="user_type" class="form-control">
-                          @foreach ($userTypes as $key => $value)
-                          <option value="{{$key}}">{{$value}}</option> <!--  @if($user->user_type==$key) selected @endif -->
-                          @endforeach
-                        </select>  
+                        <div class="col-md-6">
+                          <label for="user_type">User Type</label>
+                          <select name="user_type" id="user_type" class="form-control">
+                            @foreach ($userTypes as $key => $value)
+                            <option value="{{$key}}">{{$value}}</option> <!--  @if($user->user_type==$key) selected @endif -->
+                            @endforeach
+                          </select>  
                         </div>
                     </div>
                     <div class="form-group row mb-4">
@@ -180,6 +176,15 @@
                           @endforeach
                         </select>  
                         </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                      <div class="col-md-12">
+                        <label>Priviliges</label>
+                        <br>
+                        @foreach ($privileges as $key => $value)
+                          <input type="checkbox" name="privileges[]" value="{{$key}}" /> {{$value}} &nbsp;
+                        @endforeach
+                      </div>
                     </div>
                     <div class="form-group row mb-4">
                         <div class="col-md-12" style="text-align:center;">
