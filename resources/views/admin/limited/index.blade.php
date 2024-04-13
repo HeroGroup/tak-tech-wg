@@ -91,7 +91,7 @@
 </div>
 
 <div class="table-responsive">
-  <table class="table table-striped">
+  <table class="table table-striped" id="dataTable">
     <thead>
       <th>
         <input type="checkbox" id="chk-all" onclick="checkAll()">
@@ -169,11 +169,11 @@
             $max = $peer->peer_allowed_traffic_GB ?? $peer->allowed_traffic_GB;
           ?>
           @if($total >= $max)
-            <span class="text-danger">{{$total}}</span>
+            <span class="badge badge-danger">{{$total}}</span>
           @elseif($total >= $max*0.75)
-            <span class="text-warning">{{$total}}</span>
+            <span class="badge badge-warning">{{$total}}</span>
           @else
-            <span class="text-info">{{$total}}</span>
+            <span class="badge badge-info">{{$total}}</span>
           @endif
         </td>
         <td>{{$max}}</td>
@@ -416,30 +416,6 @@
 
     sendRequest(params);
     
-  }
-  function checkAll() {
-    $('.chk-row:checkbox').prop('checked', $('#chk-all').prop('checked'));
-    var x = $('.chk-row:checkbox:checked');
-    document.getElementById('number-of-selected-items').innerHTML = x.length;
-  }
-  function checkedItems() {
-    var ids = [];
-    var x = $('.chk-row:checkbox:checked');
-    for (var i=0; i<x.length;i++) {
-      ids.push(x[i].parentElement.parentElement.id);
-    }
-    
-    if (ids.length == 0) {
-      Swal.fire({
-          position: 'top-end',
-          icon: 'warning',
-          title: 'No items are selected',
-          showConfirmButton: false,
-          timer: 1500
-        });
-    }
-
-    return ids;
   }
   function massDelete() {
     var ids = checkedItems();

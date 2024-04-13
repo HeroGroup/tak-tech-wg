@@ -307,6 +307,26 @@
         var x = $('.chk-row:checkbox:checked');
         document.getElementById('number-of-selected-items').innerHTML = x.length;
     }
+
+    function checkedItems() {
+        var ids = [];
+        var x = $('.chk-row:checkbox:checked');
+        for (var i=0; i<x.length;i++) {
+            ids.push(x[i].parentElement.parentElement.id);
+        }
+        
+        if (ids.length == 0) {
+            Swal.fire({
+                position: 'top-end',
+                icon: 'warning',
+                title: 'No items are selected',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+
+        return ids;
+    }
 </script>
 </body>
 </html>

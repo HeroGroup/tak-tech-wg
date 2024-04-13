@@ -98,7 +98,9 @@ Route::prefix('admin')->group(function () {
       Route::get('/violations/suspect/list', [WiregaurdController::class, 'suspectList'])->name('violations.suspect.list');
       Route::get('/violations/block/list', [WiregaurdController::class, 'blockList'])->name('violations.block.list');
       Route::delete('/violations/suspect/remove', [WiregaurdController::class, 'removeFromSuspectList'])->name('violations.suspect.remove');
+      Route::delete('/violations/suspect/remove/mass', [WiregaurdController::class, 'removeFromSuspectListMass'])->name('violations.suspect.remove.mass');
       Route::delete('/violations/block/remove', [WiregaurdController::class, 'removeFromBlockList'])->name('violations.block.remove');
+      Route::delete('/violations/block/remove/mass', [WiregaurdController::class, 'removeFromBlockListMass'])->name('violations.block.remove.mass');
     });
   });
 });

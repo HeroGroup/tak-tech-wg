@@ -1017,6 +1017,18 @@ class WiregaurdController extends Controller
         }
     }
 
+    public function removeFromSuspectListMass(Request $request)
+    {
+        try {
+            $ids = json_decode($request->ids);
+            DB::table('suspect_list')->whereIn('peer_id', $ids)->delete();
+            return $this->success('Selected items were removed successfully from suspect list.');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
+        }
+        
+    }
+
     // manually extracts a peer from block list
     public function removeFromBlockList(Request $request)
     {
@@ -1034,6 +1046,26 @@ class WiregaurdController extends Controller
         } catch (\Exception $exception) {
             return $this->fail($exception->getMessage());
         }
+    }
+
+    public function removeFromBlockListMass(Request $request)
+    {
+        try {
+            $should_unblock = DB::table('settings')->where('setting_key', 'IS_BLOCK_UNBLOCK_ACTIVE')->first()->setting_value;
+            $ids = json_decode($request->ids);
+            DB::table('block_list')->whereIn('peer_id', $ids)->delete();
+
+            if ($should_unblock && ($should_unblock=='true' || $should_unblock=='yes')) {
+                foreach ($ids as $peerId) {
+                    $this->toggleEnable($peerId, 1);
+                }
+            }
+
+            return $this->success('Selected items were removed successfully from block list.');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
+        }
+        
     }
 
     // returns a view for doing actions on peers
