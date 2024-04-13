@@ -2,14 +2,14 @@
 @section('content')
 
 <x-loader/>
-
+@if(auth()->user()->can_create)
 <a href="{{route('wiregaurd.peers.create')}}" class="btn btn-primary btn-icon-split mb-4">
     <span class="icon text-white-50">
         <i class="fas fa-plus"></i>
     </span>
     <span class="text">Create Wiregaurd Peers</span>
 </a>
-
+@endif
 <div class="row mb-4">
   <div class="col-sm-2">
     <select name="wginterface" class="form-control" onchange="searchInterface(this.value)">
@@ -57,26 +57,34 @@
 </div>
 
 <div class="mb-4">
+  @if(auth()->user()->can_edit)
   <a href="#" data-toggle="modal" data-target="#edit-peers-mass-modal" title="Edit" class="text-info" style="text-decoration:none;">
     <i class="fa fa-fw fa-pen"></i>
     <span>Edit</span>
   </a>
   &nbsp; &nbsp; &nbsp; &nbsp;
+  @endif
+  @if(auth()->user()->can_enable)
   <a href="#" onclick="toggleEnableMass(1)" title="Enable" class="text-success" style="text-decoration:none;">
     <i class="fa fa-fw fa-toggle-on"></i>
     <span>Enable</span>
   </a>
   &nbsp; &nbsp; &nbsp; &nbsp;
+  @endif
+  @if(auth()->user()->can_disable)
   <a href="#" onclick="toggleEnableMass(0)" title="Disable" class="text-warning" style="text-decoration:none;">
     <i class="fa fa-fw fa-toggle-off"></i>
     <span>Disable</span>
   </a>
   &nbsp; &nbsp; &nbsp; &nbsp;
+  @endif
+  @if(auth()->user()->can_regenerate)
   <a href="#" onclick="regenerateMass()" title="regenerate" class="text-info" style="text-decoration:none;">
     <i class="fa fa-fw fa-sync"></i>
     <span>regenerate</span>
   </a>
-  @if(auth()->user()->is_admin)
+  @endif
+  @if(auth()->user()->can_remove)
   &nbsp; &nbsp; &nbsp; &nbsp;
   <a href="#" onclick="massDelete()" class="text-danger" style="text-decoration:none;">
     <i class="fas fa-trash"></i>
@@ -157,12 +165,14 @@
           @endif
         </td>
         <td>
+            @if(auth()->user()->can_enable && auth()->user()->can_disable)
             <!-- <span> Disable </span> -->
             <label class="switch">
                 <input type="checkbox" name="Enabled" id="enabled_{{$peer->id}}" @if($peer->is_enabled) checked @endif onchange="toggleEnable('{{$peer->id}}', '{{$peer->comment}}', this.checked)">
                 <span class="slider round"></span>
             </label>
             <!-- <span> Enable </span> -->
+            @endif
         </td>
         <td>
           <button class="btn">
@@ -172,14 +182,17 @@
             </a>
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink" x-placement="bottom-end" style="position: absolute; transform: translate3d(-158px, 19px, 0px); top: 0px; left: 0px; will-change: transform;">
                 <div class="dropdown-header">Actions</div>
-                
+                @if(auth()->user()->can_edit)
                 <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}">
                   <i class="fa fa-fw fa-pen"></i> Edit
                 </a>
+                @endif
+                @if(auth()->user()->can_regenerate)
                 <a href="#" onclick="regenerateSingle('{{$peer->id}}')" class="dropdown-item text-primary">
                   <i class="fa fa-fw fa-sync"></i> Regenerate
                 </a>
-                @if(auth()->user()->is_admin)
+                @endif
+                @if(auth()->user()->can_remove)
                 <a href="#" class="dropdown-item text-danger" onclick="destroy('{{route('admin.wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
                   <i class="fas fa-trash"></i> Remove
                 </a>

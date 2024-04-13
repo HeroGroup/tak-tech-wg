@@ -64,10 +64,12 @@
                     <i class="fas fa-fw fa-list-ul"></i>
                     <span>Limited Peers</span>
                 </a>
+                @if(auth()->user()->can_create)
                 <a class="collapse-item" href="{{route('wiregaurd.peers.create')}}">
                     <i class="fas fa-fw fa-plus"></i>
                     <span>Create Peers</span>
                 </a>
+                @endif
                 <a class="collapse-item" href="{{route('wiregaurd.peers.actions')}}">
                     <i class="fas fa-fw fa-tools"></i>
                     <span>Peers Actions</span>
