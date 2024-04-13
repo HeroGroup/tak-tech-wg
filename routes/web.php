@@ -64,6 +64,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/users', [UserController::class, 'store'])->name('users.store');
       Route::put('/users/toggleActive', [UserController::class, 'toggleActive'])->name('users.toggleActive');
       Route::put('/users', [UserController::class, 'update'])->name('users.update');
+      Route::delete('/users', [UserController::class, 'remove'])->name('users.delete');
       
       Route::get('/wiregaurd/interfaces', [InterfaceController::class, 'interfaces'])->name('wiregaurd.interfaces');
       Route::post('/wiregaurd/interfaces', [InterfaceController::class, 'addInterface'])->name('wiregaurd.interfaces.add');
@@ -74,7 +75,6 @@ Route::prefix('admin')->group(function () {
       
       Route::delete('/wiregaurd/peers/remove', [WiregaurdController::class, 'removeSingle'])->name('wiregaurd.peers.remove');
       Route::delete('/wiregaurd/peers/removeMass', [WiregaurdController::class, 'removeMass'])->name('wiregaurd.peers.remove.mass');
-  
       
       Route::get('/settings', [SettingController::class, 'index'])->name('settings');
       Route::post('/settings/add', [SettingController::class, 'addSetting'])->name('settings.add');

@@ -105,4 +105,15 @@ class UserController extends Controller
             return $this->fail($exception->getMessage());
         }
     }
+
+    public function remove(Request $request)
+    {
+        try {
+            User::where('id', $request->id)->delete();
+    
+            return $this->success('User deleted successfully.');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
+        }
+    }
 }

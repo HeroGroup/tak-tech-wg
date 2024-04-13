@@ -23,7 +23,7 @@
     </thead>
     <tbody>
       @foreach($users as $user)
-      <tr>
+      <tr id="{{$user->id}}">
         <?php 
           $userInterfaces = \Illuminate\Support\Facades\DB::table('user_interfaces')->where('user_id', $user->id)->join('interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')->get();
           $x = array_column($userInterfaces->toArray(), 'interface_id');
@@ -52,7 +52,13 @@
         <td>
           <a href="#" class="text-info" data-toggle="modal" data-target="#edit-user-modal-{{$user->id}}">
             <i class="fa fa-fw fa-pen"></i> Edit
-          </a>
+          </a>&nbsp;
+          <a href="#" class="text-success">
+                <i class="fa fa-key"></i> Access
+            </a>&nbsp;
+          <a href="#" onclick="destroy('{{route('admin.users.delete')}}','{{$user->id}}','{{$user->id}}')" class="text-danger">
+                <i class="fa fa-trash"></i> Remove
+            </a>
           <!-- Edit user Modal -->
           <div class="modal fade" id="edit-user-modal-{{$user->id}}" tabindex="-1" role="dialog" aria-labelledby="edituserModalLabel" aria-hidden="true">
               <div class="modal-dialog modal-lg" role="document">
