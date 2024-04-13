@@ -168,7 +168,13 @@
             $total = $peer->total_usage; 
             $max = $peer->peer_allowed_traffic_GB ?? $peer->allowed_traffic_GB;
           ?>
-            <span @if($total >= $max) class="text-danger" @endif>{{$total}}</span>
+          @if($total >= $max)
+            <span class="text-danger">{{$total}}</span>
+          @elseif($total >= $max*0.75)
+            <span class="text-warning">{{$total}}</span>
+          @else
+            <span class="text-info">{{$total}}</span>
+          @endif
         </td>
         <td>{{$max}}</td>
         <td style="font-size: 10px;">
