@@ -54,10 +54,10 @@
             <i class="fa fa-fw fa-pen"></i>
           </a>
           <a href="#" class="text-success" title="Access">
-                <i class="fa fa-key"></i>
-            </a>
+                <i class="fa fa-fw fa-key"></i>
+          </a>
           <a href="#" onclick="destroy('{{route('admin.users.delete')}}','{{$user->id}}','{{$user->id}}')" class="text-danger" title="Remove">
-                <i class="fa fa-trash"></i>
+                <i class="fa fa-fw fa-trash"></i>
             </a>
           <!-- Edit user Modal -->
           <div class="modal fade" id="edit-user-modal-{{$user->id}}" tabindex="-1" role="dialog" aria-labelledby="edituserModalLabel" aria-hidden="true">
