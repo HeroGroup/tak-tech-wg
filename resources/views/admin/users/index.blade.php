@@ -50,14 +50,14 @@
           </label>
         </td>
         <td>
-          <a href="#" class="text-info" data-toggle="modal" data-target="#edit-user-modal-{{$user->id}}">
-            <i class="fa fa-fw fa-pen"></i> Edit
-          </a>&nbsp;
-          <a href="#" class="text-success">
-                <i class="fa fa-key"></i> Access
-            </a>&nbsp;
-          <a href="#" onclick="destroy('{{route('admin.users.delete')}}','{{$user->id}}','{{$user->id}}')" class="text-danger">
-                <i class="fa fa-trash"></i> Remove
+          <a href="#" class="text-info" data-toggle="modal" data-target="#edit-user-modal-{{$user->id}}" title="Edit">
+            <i class="fa fa-fw fa-pen"></i>
+          </a>
+          <a href="#" class="text-success" title="Access">
+                <i class="fa fa-key"></i>
+            </a>
+          <a href="#" onclick="destroy('{{route('admin.users.delete')}}','{{$user->id}}','{{$user->id}}')" class="text-danger" title="Remove">
+                <i class="fa fa-trash"></i>
             </a>
           <!-- Edit user Modal -->
           <div class="modal fade" id="edit-user-modal-{{$user->id}}" tabindex="-1" role="dialog" aria-labelledby="edituserModalLabel" aria-hidden="true">

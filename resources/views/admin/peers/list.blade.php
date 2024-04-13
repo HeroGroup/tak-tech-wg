@@ -173,14 +173,14 @@
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink" x-placement="bottom-end" style="position: absolute; transform: translate3d(-158px, 19px, 0px); top: 0px; left: 0px; will-change: transform;">
                 <div class="dropdown-header">Actions</div>
                 
-                <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}" title="edit">
+                <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-peer-modal-{{$peer->id}}">
                   <i class="fa fa-fw fa-pen"></i> Edit
                 </a>
-                <a href="#" onclick="regenerateSingle('{{$peer->id}}')" class="dropdown-item text-primary" title="regenerate">
+                <a href="#" onclick="regenerateSingle('{{$peer->id}}')" class="dropdown-item text-primary">
                   <i class="fa fa-fw fa-sync"></i> Regenerate
                 </a>
                 @if(auth()->user()->is_admin)
-                <a href="#" class="dropdown-item text-danger" title="Delete" onclick="destroy('{{route('admin.wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
+                <a href="#" class="dropdown-item text-danger" onclick="destroy('{{route('admin.wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
                   <i class="fas fa-trash"></i> Remove
                 </a>
                 @endif
