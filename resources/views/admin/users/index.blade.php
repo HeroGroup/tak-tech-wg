@@ -11,7 +11,7 @@
 </a>
 
 <div class="table-responsive">
-  <table class="table table-striped">
+  <table class="table table-striped" id="dataTable">
     <thead>
       <th>Name</th>
       <th>Email</th>
