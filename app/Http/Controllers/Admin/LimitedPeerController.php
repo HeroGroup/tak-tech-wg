@@ -190,6 +190,12 @@ class LimitedPeerController extends Controller
                         }
                         array_push($message, "$sAddress: fetch successfull!");
                     } else {
+                        DB::table('server_peers')
+                            ->where('server_id', $sId)
+                            ->update([
+                                'last_handshake' => null,
+                                'last_handshake_updated_at' => $now
+                            ]);
                         array_push($message, "$sAddress: $remotePeers");
                     }
                 }
@@ -209,6 +215,7 @@ class LimitedPeerController extends Controller
         }
     }
 
+    // this functions shows usage of a peer daily
     public function usageStatistics($peerId)
     {
         $peer = DB::table('peers')->find($peerId);

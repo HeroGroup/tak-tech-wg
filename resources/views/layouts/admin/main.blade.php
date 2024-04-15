@@ -207,7 +207,7 @@
             });
         }
 
-        $('#dataTable').DataTable({ pageLength: 100 });
+        $('#dataTable').DataTable({ pageLength: 100, sort: false });
 
         $('select:not(select[name=DataTables_Table_0_length])').selectize({
             sortField: 'text'
