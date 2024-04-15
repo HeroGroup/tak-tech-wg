@@ -53,6 +53,7 @@ class User extends Authenticatable
         'can_disable' => 'boolean',
         'can_regenerate' => 'boolean',
         'can_remove' => 'boolean',
+        'access_violations' => 'boolean'
     ];
 
     protected function isAdmin(): Attribute
@@ -101,6 +102,13 @@ class User extends Authenticatable
     {
         return Attribute::make(
             get: fn () => DB::table('user_privileges')->where('user_id', $this->id)->where('action', Privileges::REMOVE->value)->count() > 0,
+        );
+    }
+
+    protected function accessViolations(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => DB::table('user_privileges')->where('user_id', $this->id)->where('action', Privileges::VIOLATIONS->value)->count() > 0,
         );
     }
 }

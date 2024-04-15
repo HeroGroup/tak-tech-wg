@@ -14,5 +14,6 @@ enum Privileges: string
   case DISABLE = 'disable';
   case REGENERATE = 'regenerate';
   case REMOVE = 'remove';
+  case VIOLATIONS = 'violations';
 
 }

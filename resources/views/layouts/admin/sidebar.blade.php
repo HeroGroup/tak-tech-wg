@@ -78,7 +78,7 @@
         </div>
     </li>
     
-    @if(auth()->user()->isAdmin)
+    @if(auth()->user()->access_violations)
     <li class="nav-item" id="violations">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseviolations" aria-expanded="false" aria-controls="collapseviolations">
             <i class="fas fa-fw fa-exclamation"></i>
@@ -86,18 +86,23 @@
         </a>
         <div id="collapseviolations" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="{{route('admin.violations.suspect.list')}}">
+                <a class="collapse-item" href="{{route('violations.suspect.list')}}">
                     <i class="fas fa-fw fa-exclamation"></i>
                     <span>Suspect List</span>
                 </a>
-                <a class="collapse-item" href="{{route('admin.violations.block.list')}}">
+                <a class="collapse-item" href="{{route('violations.block.list')}}">
                     <i class="fas fa-fw fa-times"></i>
                     <span>Block List</span>
+                </a>
+                <a class="collapse-item" href="{{route('violations.block.history')}}">
+                    <i class="fas fa-fw fa-history"></i>
+                    <span>Block History</span>
                 </a>
             </div>
         </div>
     </li>
-
+    @endif
+    @if(auth()->user()->isAdmin)
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseServers" aria-expanded="false" aria-controls="collapseServers">
             <i class="fas fa-fw fa-server"></i>

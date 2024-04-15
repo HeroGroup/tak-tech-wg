@@ -20,8 +20,9 @@
         <input type="checkbox" id="chk-all" onclick="checkAll()">
       </th>
       <th>row</th>
-      <th>Peer</th>
       <th>Interface</th>
+      <th>Peer</th>
+      <th>Address</th>
       <th>Number Of Violations</th>
       <th>Actions</th>
     </thead>
@@ -33,11 +34,12 @@
           <input type="checkbox" class="chk-row">
         </td>
         <td>{{++$row}}</td>
-        <td>{{$item->comment}}</td>
         <td>{{$item->name}}</td>
+        <td>{{$item->comment}}</td>
+        <td>{{$item->client_address}}</td>
         <td>{{$item->number_of_violations}}</td>
         <td>
-            <a href="#" onclick="destroy('{{route('admin.violations.suspect.remove')}}','{{$item->peer_id}}','{{$item->peer_id}}')" class="text-danger">
+            <a href="#" onclick="destroy('{{route('violations.suspect.remove')}}','{{$item->peer_id}}','{{$item->peer_id}}')" class="text-danger">
                 <i class="fa fa-times"></i> Remove From list
             </a>
         </td>
@@ -64,7 +66,7 @@
     
     var params = {
       method: 'POST',
-      route: "{{route('admin.violations.suspect.remove.mass')}}",
+      route: "{{route('violations.suspect.remove.mass')}}",
       formData,
       successCallback: function() {
         ids.forEach(element => {

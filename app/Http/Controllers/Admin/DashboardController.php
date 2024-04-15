@@ -21,6 +21,12 @@ class DashboardController extends Controller
             ->join('interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')
             ->join('peers', 'interfaces.id', '=', 'peers.interface_id')
             ->where('interfaces.iType', 'unlimited')
+            ->where(function($query) {
+                $query->whereRaw(
+                    'user_interfaces.privilege="full" OR (user_interfaces.privilege="partial" AND peers.id IN (SELECT peer_id FROM user_peers where user_id=?))',
+                    [auth()->user()->id]
+                );
+            })
             ->count();
             
         
@@ -29,6 +35,12 @@ class DashboardController extends Controller
             ->join('interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')
             ->join('peers', 'interfaces.id', '=', 'peers.interface_id')
             ->where('interfaces.iType', 'limited')
+            ->where(function($query) {
+                $query->whereRaw(
+                    'user_interfaces.privilege="full" OR (user_interfaces.privilege="partial" AND peers.id IN (SELECT peer_id FROM user_peers where user_id=?))',
+                    [auth()->user()->id]
+                );
+            })
             ->count();
         
         $interfaces = DB::table('interfaces')->get();

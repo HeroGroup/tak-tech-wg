@@ -26,7 +26,18 @@
       <tr id="{{$user->id}}">
         <?php 
           $userInterfaces = \Illuminate\Support\Facades\DB::table('user_interfaces')->where('user_id', $user->id)->join('interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')->get();
-          $x = array_column($userInterfaces->toArray(), 'interface_id');
+          $user_interfaces_ids = array_column($userInterfaces->toArray(), 'interface_id');
+          $number_of_accessed_peers = \Illuminate\Support\Facades\DB::table('user_interfaces')
+                ->where('user_id', $user->id)
+                ->join('interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')
+                ->join('peers', 'interfaces.id', '=', 'peers.interface_id')
+                ->where(function($query) use ($user) {
+                  $query->whereRaw(
+                      'user_interfaces.privilege="full" OR (user_interfaces.privilege="partial" AND peers.id IN (SELECT peer_id FROM user_peers where user_id=?))',
+                      [$user->id]
+                  );
+              })
+                ->count();
           $user_privileges = DB::table('user_privileges')->where('user_id', $user->id)->pluck('action')->toArray();
         ?>
         <td>{{$user->name}}</td>
@@ -43,7 +54,7 @@
           </ul>
           @endif
         </td>
-        <td>{{\Illuminate\Support\Facades\DB::table('peers')->whereIn('interface_id', array_unique($x))->count()}}</td>
+        <td>{{$number_of_accessed_peers}}</td>
         <td>
           <label class="switch">
             <input type="checkbox" name="is_active_{{$user->id}}" id="is_active_{{$user->id}}" @if($user->is_active) checked @endif onchange="toggleActive('{{$user->id}}', this.checked)">
@@ -54,9 +65,12 @@
           <a href="#" class="text-info" data-toggle="modal" data-target="#edit-user-modal-{{$user->id}}" title="Edit">
             <i class="fa fa-fw fa-pen"></i>
           </a>
+          <a href="{{route('admin.users.privileges',$user->id)}}" class="text-success" title="peers access">
+            <i class="fa fa-fw fa-key"></i>
+          </a>
           <a href="#" onclick="destroy('{{route('admin.users.delete')}}','{{$user->id}}','{{$user->id}}')" class="text-danger" title="Remove">
                 <i class="fa fa-fw fa-trash"></i>
-            </a>
+          </a>
           <!-- Edit user Modal -->
           <div class="modal fade" id="edit-user-modal-{{$user->id}}" tabindex="-1" role="dialog" aria-labelledby="edituserModalLabel" aria-hidden="true">
               <div class="modal-dialog modal-lg" role="document">

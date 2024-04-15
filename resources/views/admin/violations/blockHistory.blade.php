@@ -1,13 +1,5 @@
-@extends('layouts.admin.main', ['pageTitle' => 'Block List', 'active' => 'violations'])
+@extends('layouts.admin.main', ['pageTitle' => 'Block History', 'active' => 'violations'])
 @section('content')
-
-<x-loader/>
-
-<div>
-  <a href="#" onclick="massDelete()" class="text-danger" style="text-decoration:none;">
-    <i class="fa fa-times"></i> Remove From list
-  </a>
-</div>
 
 <div style="font-size: 14px;">
   <span id="number-of-selected-items">0</span> items are selected.
@@ -24,7 +16,7 @@
       <th>Peer</th>
       <th>Address</th>
       <th>Blocked Time</th>
-      <th>Actions</th>
+      <th>Unblocked Time</th>
     </thead>
     <tbody>
       <?php $row = 0; $now = time(); ?>
@@ -60,45 +52,30 @@
           {{$time_passed}}
         </td>
         <td>
-            <a href="#" onclick="destroy('{{route('violations.block.remove')}}','{{$item->peer_id}}','{{$item->peer_id}}')" class="text-danger">
-                <i class="fa fa-times"></i> Remove From list
-            </a>
+        <?php
+            $diff = $now - strtotime($item->unblocked_at);
+            $days_passed = $diff / 86400;
+            $hours_passed = $diff / 3600;
+            $minutes_passed = $diff / 60;
+            $time_passed = "";
+            if ((int) $days_passed > 0) {
+              $days_passed_round = round($days_passed);
+              $time_passed = "$days_passed_round days ago";
+            } else if ((int) $hours_passed > 0) {
+              $hours_passed_round = round($hours_passed);
+              $time_passed = "$hours_passed_round hours ago";
+            } else if ((int) $minutes_passed > 0) {
+              $minutes_passed_round = round($minutes_passed);
+              $time_passed = "$minutes_passed_round minutes ago";
+            } else {
+              $time_passed = "$diff seconds ago";
+            }
+          ?>
+          {{$time_passed}}
         </td>
       </tr>
       @endforeach
     </tbody>
   </table>
 </div>
-
-<script>
-    function massDelete() {
-    var ids = checkedItems();
-    if (ids.length == 0) {
-      return;
-    }
-
-    turnOnLoader();
-    
-    var formData = createFormData({
-      '_token': '{{csrf_token()}}',
-      '_method': 'DELETE',
-      'ids': JSON.stringify(ids)
-    });
-    
-    var params = {
-      method: 'POST',
-      route: "{{route('violations.block.remove.mass')}}",
-      formData,
-      successCallback: function() {
-        ids.forEach(element => {
-          document.getElementById(element).remove();
-        });
-        turnOffLoader();
-      },
-      failCallback: turnOffLoader,
-    };
-
-    sendRequest(params);
-  }
-</script>
 @endsection

@@ -54,6 +54,15 @@ Route::middleware(['auth', 'active'])->group(function() {
       Route::get('/usageStatistics/{peerId}', [LimitedPeerController::class, 'usageStatistics'])->name('limited.usageStatistics');
     });
   });
+
+  Route::get('/violations/suspect/list', [WiregaurdController::class, 'suspectList'])->name('violations.suspect.list');
+  Route::get('/violations/block/list', [WiregaurdController::class, 'blockList'])->name('violations.block.list');
+  Route::get('/violations/block/history', [WiregaurdController::class, 'blockHistoryList'])->name('violations.block.history');
+  Route::delete('/violations/suspect/remove', [WiregaurdController::class, 'removeFromSuspectList'])->name('violations.suspect.remove');
+  Route::delete('/violations/suspect/remove/mass', [WiregaurdController::class, 'removeFromSuspectListMass'])->name('violations.suspect.remove.mass');
+  Route::delete('/violations/block/remove', [WiregaurdController::class, 'removeFromBlockList'])->name('violations.block.remove');
+  Route::delete('/violations/block/remove/mass', [WiregaurdController::class, 'removeFromBlockListMass'])->name('violations.block.remove.mass');
+
 });
 
 Route::prefix('admin')->group(function () {
@@ -62,6 +71,8 @@ Route::prefix('admin')->group(function () {
 
       Route::get('/users', [UserController::class, 'index'])->name('users');
       Route::get('/users/{id}/privileges', [UserController::class, 'privileges'])->name('users.privileges');
+      Route::put('/users/updatePrivileges', [UserController::class, 'updatePrivileges'])->name('users.updatePrivileges');
+      Route::put('/users/updatePeers', [UserController::class, 'updatePeers'])->name('users.updatePeers');
       Route::post('/users', [UserController::class, 'store'])->name('users.store');
       Route::put('/users/toggleActive', [UserController::class, 'toggleActive'])->name('users.toggleActive');
       Route::put('/users', [UserController::class, 'update'])->name('users.update');
@@ -96,12 +107,6 @@ Route::prefix('admin')->group(function () {
 
       Route::get('/logs/cronJobs', [LogController::class, 'cronJobs'])->name('logs.cronJobs');
       
-      Route::get('/violations/suspect/list', [WiregaurdController::class, 'suspectList'])->name('violations.suspect.list');
-      Route::get('/violations/block/list', [WiregaurdController::class, 'blockList'])->name('violations.block.list');
-      Route::delete('/violations/suspect/remove', [WiregaurdController::class, 'removeFromSuspectList'])->name('violations.suspect.remove');
-      Route::delete('/violations/suspect/remove/mass', [WiregaurdController::class, 'removeFromSuspectListMass'])->name('violations.suspect.remove.mass');
-      Route::delete('/violations/block/remove', [WiregaurdController::class, 'removeFromBlockList'])->name('violations.block.remove');
-      Route::delete('/violations/block/remove/mass', [WiregaurdController::class, 'removeFromBlockListMass'])->name('violations.block.remove.mass');
     });
   });
 });

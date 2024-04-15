@@ -34,7 +34,13 @@ class WiregaurdController extends Controller
             ->join('user_interfaces', 'peers.interface_id', '=', 'user_interfaces.interface_id')
             ->join('interfaces', 'peers.interface_id', '=', 'interfaces.id')
             ->select(['peers.*', 'interfaces.name'])
-            ->where('user_interfaces.user_id', auth()->user()->id);
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->where(function($query) {
+                $query->whereRaw(
+                    'user_interfaces.privilege="full" OR (user_interfaces.privilege="partial" AND peers.id IN (SELECT peer_id FROM user_peers where user_id=?))',
+                    [auth()->user()->id]
+                );
+            });
         
         $interface = $request->query('wiregaurd');
         if ($interface && $interface != 'all' && $peers && $peers->count() > 0) {
@@ -101,7 +107,7 @@ class WiregaurdController extends Controller
     }
 
     // This function adds peer to local database
-    public function addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $commentApply, $time)
+    public function addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $commentApply, $time, $oldId=0)
     {
         // check not repetetive
         $caddress32 = "$caddress/32";
@@ -144,6 +150,15 @@ class WiregaurdController extends Controller
             'updated_at' => $now,
             'created_by' => auth()->user()->id
         ]);
+
+        if ($oldId > 0) {
+            DB::table('user_peers')
+                ->where('peer_id', $oldId)
+                ->update([
+                    'peer_id' => $newLocalPeerId,
+                    'created_at' => $now,
+                ]);
+        }
 
         return [
             'id' => $newLocalPeerId,
@@ -267,9 +282,9 @@ class WiregaurdController extends Controller
     }
 
     // This function perfomrs the add action on all remote routers
-    private function performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $comment, $time)
+    private function performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $comment, $time, $oldId=0)
     {
-        $newLocalPeer = $this->addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $comment, $time);
+        $newLocalPeer = $this->addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $comment, $time, $oldId);
         
         if ($newLocalPeer['id'] > 0) { // local successfull
             $message = "Local inserted successfully.\r\n";
@@ -323,7 +338,7 @@ class WiregaurdController extends Controller
             $message .= $removeResult ? "Local removed successfully\r\n" : "Unable to remove local peer $commentApply. \r\n";
             
 
-            $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $commentApply, $time);
+            $result = $this->performOnAllServers($caddress, $interfaceId, $interfaceName, $interfacePublicKey, $interfaceListenPort, $range, $cdns, $wgserveraddress, $commentApply, $time, $id);
             $message .= $result['message'];
             
             return $this->success($message);
@@ -853,6 +868,7 @@ class WiregaurdController extends Controller
                     ->where('is_enabled', 1)
                     ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
                     ->where('interfaces.iType', 'unlimited')
+                    ->where('interfaces.exclude_from_block', 0)
                     ->select(['peers.*'])
                     ->get();
 
@@ -935,9 +951,10 @@ class WiregaurdController extends Controller
         try {
             if ($request_token == env('UNBLOCK_PEERS_TOKEN')) {
                 $should_unblock = DB::table('settings')->where('setting_key', 'IS_BLOCK_UNBLOCK_ACTIVE')->first()->setting_value;
-                $blocked = DB::table('block_list')->get();
+                $blocked = DB::table('block_list')->whereNull('unblocked_at')->get();
                 $unblock_after = DB::table('settings')->where('setting_key', 'UNBLOCK_AFTER_MINUTES')->first()->setting_value;
                 $now = time();
+                $unblocked_at = date('Y-m-d H:i:s', $now);
                 $unblocked = [];
                 foreach($blocked as $item) {
                     $diff = $now - strtotime($item->created_at. " + $unblock_after minutes");
@@ -952,7 +969,11 @@ class WiregaurdController extends Controller
                         }
                         
                         // remove from block_list
-                        DB::table('block_list')->where('peer_id', $peerId)->delete();
+                        DB::table('block_list')
+                            ->where('peer_id', $peerId)
+                            ->update([
+                                'unblocked_at' => $unblocked_at
+                            ]);
                         
                         array_push($unblocked, $peer->comment);
                     }
@@ -982,10 +1003,18 @@ class WiregaurdController extends Controller
     // returns the list of suspected peers
     public function suspectList()
     {
-        $list = DB::table('suspect_list')
-            ->join('peers', 'peers.id', '=', 'suspect_list.peer_id')
-            ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
-            ->selectRaw('count(*) as number_of_violations, suspect_list.peer_id, peers.comment, interfaces.name')
+        $list = DB::table('peers')
+            ->join('user_interfaces', 'peers.interface_id', '=', 'user_interfaces.interface_id')
+            ->join('interfaces', 'peers.interface_id', '=', 'interfaces.id')
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->where(function($query) {
+                $query->whereRaw(
+                    'user_interfaces.privilege="full" OR (user_interfaces.privilege="partial" AND peers.id IN (SELECT peer_id FROM user_peers where user_id=?))',
+                    [auth()->user()->id]
+                );
+            })
+            ->join('suspect_list', 'suspect_list.peer_id', '=', 'peers.id')
+            ->selectRaw('count(*) as number_of_violations, suspect_list.peer_id, peers.comment, peers.client_address, interfaces.name')
             ->groupBy('suspect_list.peer_id')
             ->get();
         
@@ -995,13 +1024,43 @@ class WiregaurdController extends Controller
     // returns the list of blocked peers
     public function blockList()
     {
-        $list = DB::table('block_list')
-            ->join('peers', 'peers.id', '=', 'block_list.peer_id')
-            ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
-            ->select(['block_list.*', 'peers.comment', 'interfaces.name'])
+        $list = DB::table('peers')
+            ->join('user_interfaces', 'peers.interface_id', '=', 'user_interfaces.interface_id')
+            ->join('interfaces', 'peers.interface_id', '=', 'interfaces.id')
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->where(function($query) {
+                $query->whereRaw(
+                    'user_interfaces.privilege="full" OR (user_interfaces.privilege="partial" AND peers.id IN (SELECT peer_id FROM user_peers where user_id=?))',
+                    [auth()->user()->id]
+                );
+            })
+            ->join('block_list', 'block_list.peer_id', '=', 'peers.id')
+            ->whereNull('block_list.unblocked_at')
+            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'interfaces.name'])
             ->get();
         
         return view('admin.violations.block', compact('list'));
+    }
+    
+    // returns the history of blocked peers
+    public function blockHistoryList()
+    {
+        $list = DB::table('peers')
+            ->join('user_interfaces', 'peers.interface_id', '=', 'user_interfaces.interface_id')
+            ->join('interfaces', 'peers.interface_id', '=', 'interfaces.id')
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->where(function($query) {
+                $query->whereRaw(
+                    'user_interfaces.privilege="full" OR (user_interfaces.privilege="partial" AND peers.id IN (SELECT peer_id FROM user_peers where user_id=?))',
+                    [auth()->user()->id]
+                );
+            })
+            ->join('block_list', 'block_list.peer_id', '=', 'peers.id')
+            ->whereNotNull('block_list.unblocked_at')
+            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'interfaces.name'])
+            ->get();
+        
+        return view('admin.violations.blockHistory', compact('list'));
     }
 
     // manually extracts a peer from suspect list
@@ -1035,7 +1094,11 @@ class WiregaurdController extends Controller
         try {
             $should_unblock = DB::table('settings')->where('setting_key', 'IS_BLOCK_UNBLOCK_ACTIVE')->first()->setting_value;
             $peerId = $request->id;
-            DB::table('block_list')->where('peer_id', $peerId)->delete();
+            DB::table('block_list')
+                ->where('peer_id', $peerId)
+                ->update([
+                    'unblocked_at' => date('Y-m-d H:i:s', time())
+                ]);
 
             // enable peer
             if ($should_unblock && ($should_unblock=='true' || $should_unblock=='yes')) {
@@ -1053,7 +1116,11 @@ class WiregaurdController extends Controller
         try {
             $should_unblock = DB::table('settings')->where('setting_key', 'IS_BLOCK_UNBLOCK_ACTIVE')->first()->setting_value;
             $ids = json_decode($request->ids);
-            DB::table('block_list')->whereIn('peer_id', $ids)->delete();
+            DB::table('block_list')
+                ->whereIn('peer_id', $ids)
+                ->update([
+                    'unblocked_at' => date('Y-m-d H:i:s', time())
+                ]);
 
             if ($should_unblock && ($should_unblock=='true' || $should_unblock=='yes')) {
                 foreach ($ids as $peerId) {
@@ -1073,6 +1140,7 @@ class WiregaurdController extends Controller
     {
         $interfaces = DB::table('user_interfaces')
             ->where('user_id', auth()->user()->id)
+            ->where('privilege', 'full')
             ->join('interfaces', 'interfaces.id', '=', 'user_interfaces.interface_id')
             ->pluck('name', 'interface_id')->toArray();
 

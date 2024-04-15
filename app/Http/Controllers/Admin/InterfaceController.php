@@ -35,7 +35,7 @@ class InterfaceController extends Controller
             $now = date('Y-m-d H:i:s');
 
             // insert on local DB
-            $newInterfaceId = DB::table('interfaces')->insertGetId([
+            $new = [
                 'name' => $request->name,
                 'default_endpoint_address' => $request->default_endpoint_address,
                 'dns' => $request->dns,
@@ -44,11 +44,18 @@ class InterfaceController extends Controller
                 'listen_port' => $request->listen_port,
                 'iType' => $request->iType,
                 'allowed_traffic_GB' => $request->allowed_traffic_GB,
+                'exclude_from_block' => $request->exclude_from_block,
                 'public_key' => $publicKey,
                 'private_key' => $privateKey,
                 'created_at' => $now,
                 'updated_at' => $now
-            ]);
+            ];
+
+            if ($request->exclude_from_block) {
+                $new['exclude_from_block'] = 1;
+            }
+            
+            $newInterfaceId = DB::table('interfaces')->insertGetId($new);
 
             $message = `Local: OK!\r\n`;
 
@@ -112,7 +119,7 @@ class InterfaceController extends Controller
     public function updateInterface(Request $request)
     {
         try {
-            DB::table('interfaces')->where('id', $request->id)->update([
+            $update = [
                 'name' => $request->name,
                 'default_endpoint_address' => $request->default_endpoint_address,
                 'dns' => $request->dns,
@@ -121,7 +128,13 @@ class InterfaceController extends Controller
                 'listen_port' => $request->listen_port,
                 'iType' => $request->iType,
                 'allowed_traffic_GB' => $request->allowed_traffic_GB,
-            ]);
+            ];
+
+            if ($request->exclude_from_block) {
+                $update['exclude_from_block'] = 1;
+            }
+
+            DB::table('interfaces')->where('id', $request->id)->update($update);
 
             // update on remote (name, mtu, listen_port)
             $server_interfaces = DB::table('server_interfaces')

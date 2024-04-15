@@ -145,17 +145,73 @@ class UserController extends Controller
     public function privileges($id)
     {
         $user = User::find($id);
-        $privileges = array_column(Privileges::cases(), 'value', 'name');
+        $privileges = array_column(Privileges::cases(), 'name', 'value');
         $user_privileges = DB::table('user_privileges')->where('user_id', $id)->pluck('action')->toArray();
         
         $peers = DB::table('peers')
             ->join('user_interfaces', 'user_interfaces.interface_id', '=', 'peers.interface_id')
             ->where('user_interfaces.user_id', $id)
-            ->select(['peers.*'])
+            ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
+            ->select(['peers.*', 'interfaces.name'])
             ->get();
 
         $user_peers = DB::table('user_peers')->where('user_id', $id)->pluck('peer_id')->toArray();
 
         return view('admin.users.privileges', compact('user', 'privileges', 'user_privileges', 'peers', 'user_peers'));
+    }
+
+    public function updatePrivileges(Request $request)
+    {
+        try {
+            DB::table('user_privileges')->where('user_id', $request->user_id)->delete();
+            $privileges = $request->privileges;
+            $now = date('Y-m-d H:i:s');
+
+            foreach($privileges as $privilege) {
+                DB::table('user_privileges')->insert([
+                    'user_id' => $request->user_id,
+                    'action' => $privilege,
+                    'created_at' => $now,
+                ]);
+            }
+
+            return back()->with('message', 'User privileges updated successfully.')->with('type', 'success');
+        } catch (\Exception $exception) {
+            return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
+    }
+
+    public function updatePeers(Request $request)
+    {
+        try {
+            $userId = $request->user_id;
+            DB::table('user_peers')->where('user_id', $userId)->delete();
+            $peers = $request->user_peers;
+            $now = date('Y-m-d H:i:s');
+            
+            foreach($peers as $peer) {
+                DB::table('user_peers')->insert([
+                    'user_id' => $userId,
+                    'peer_id' => $peer,
+                    'created_at' => $now,
+                ]);
+            }
+
+            $interfaces = DB::table('peers')
+                ->whereIn('id', $request->user_peers)
+                ->pluck('interface_id')
+                ->toArray();
+            $interfaces = array_unique($interfaces);
+            DB::table('user_interfaces')
+                ->where('user_id', $userId)
+                ->whereIn('interface_id', $interfaces)
+                ->update([
+                    'privilege' => 'partial'
+                ]);
+
+            return back()->with('message', 'User peers updated successfully.')->with('type', 'success');
+        } catch (\Exception $exception) {
+            return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
     }
 }

@@ -106,6 +106,12 @@
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
+                                    <div class="col-md-6">
+                                        <input type="checkbox" name="exclude_from_block" id="exclude_from_block" @if($interface->exclude_from_block) checked="checked" @endif>
+                                        <label for="exclude_from_block">Exclude From Blocking Peers</label>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-4">
                                     <div class="col-md-12" style="text-align:center;">
                                         <input type="submit" class="btn btn-success" value="Save and close" />
                                     </div>
@@ -179,6 +185,12 @@
                         <div class="col-md-6">
                             <label for="allowed_traffic_GB">Allowed Traffic (GB)</label>
                             <input type="number" class="form-control" name="allowed_traffic_GB" step="0.5">
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <input type="checkbox" name="exclude_from_block" id="exclude_from_block" >
+                            <label for="exclude_from_block">Exclude From Blocking Peers</label>
                         </div>
                     </div>
                     <div class="form-group row mb-4">
