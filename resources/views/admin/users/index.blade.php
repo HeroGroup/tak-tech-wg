@@ -176,7 +176,7 @@
                           <label for="user_type">User Type</label>
                           <select name="user_type" id="user_type" class="form-control">
                             @foreach ($userTypes as $key => $value)
-                            <option value="{{$key}}">{{$value}}</option> <!--  @if($user->user_type==$key) selected @endif -->
+                            <option value="{{$key}}">{{$value}}</option>
                             @endforeach
                           </select>  
                         </div>
