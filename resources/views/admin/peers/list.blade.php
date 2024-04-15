@@ -98,7 +98,7 @@
 </div>
 
 <div class="table-responsive">
-  <table class="table table-striped" id="dataTable">
+  <table class="table table-striped">
     <thead>
       <th>
         <input type="checkbox" id="chk-all" onclick="checkAll()">
