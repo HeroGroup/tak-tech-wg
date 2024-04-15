@@ -12,7 +12,7 @@
           @csrf
           <input type="hidden" name="_method" value="PUT">
           <input type="hidden" name="user_id" value="{{$user->id}}">
-          <table id="dataTable" class="table table-striped">
+          <table class="table table-striped">
             <thead>
               <th></th>
               <th>interface</th>
