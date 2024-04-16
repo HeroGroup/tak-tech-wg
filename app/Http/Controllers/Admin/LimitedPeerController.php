@@ -204,8 +204,6 @@ class LimitedPeerController extends Controller
     {
         try {
             if ($request_token == env('STORE_PEERS_LAST_HANDSHAKES_TOKEN')) {
-                // set_time_limit(600); // 10 minutes
-                ini_set('max_execution_time', 300); // 5 minutes
                 $message = [];
                 $now = date('Y-m-d H:i:s', time());
                 
@@ -230,9 +228,9 @@ class LimitedPeerController extends Controller
                         for ($i=0; $i<$remote_peers_count; $i++) {
                             DB::table('server_peers')
                                 ->where('server_id', $sId)
-                                ->where('server_peer_id', $remotePeers[$i][".id"])
+                                ->where('server_peer_id', $unlimitedPeers[$i][".id"])
                                 ->update([
-                                    'last_handshake' => $remotePeers[$i]["last-handshake"] ?? null,
+                                    'last_handshake' => $unlimitedPeers[$i]["last-handshake"] ?? null,
                                     'last_handshake_updated_at' => $now
                                 ]);
                         }
