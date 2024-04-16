@@ -120,11 +120,12 @@ class LimitedPeerController extends Controller
         return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'lastUpdate', 'comment', 'enabled', 'sortBy'));
     }
 
-    // This functions runs periodically and stores tx, rx of to every limited peer
+    // This functions runs periodically and stores last_handshake for all peers and tx, rx of limited peers
     public function storeUsages($request_token)
     {
         try {
             if ($request_token == env('STORE_PEERS_USAGES_TOKEN')) {
+                set_time_limit(300); // 5 minutes
                 $message = [];
                 $now = date('Y-m-d H:i:s', time());
                 $limitedInterfaces = DB::table('interfaces')
