@@ -207,7 +207,7 @@ class LimitedPeerController extends Controller
                 $message = [];
                 $now = date('Y-m-d H:i:s', time());
                 
-                DB::table('server_peers')->update(['last_handshake' => null, 'last_handshake_updated_at' => $now]);
+                // DB::table('server_peers')->update(['last_handshake' => null, 'last_handshake_updated_at' => $now]);
                 $servers = DB::table('servers')->get();
                 foreach($servers as $server) {
                     $sId = $server->id;
@@ -215,11 +215,15 @@ class LimitedPeerController extends Controller
                     $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
                     if (is_array($remotePeers) && count($remotePeers) > 0) {
                         // store last-handshake for all peers not only limited ones
-                        foreach ($remotePeers as $remotePeer) {
+                        $remote_peers_count = count($remotePeers);
+                        for ($i=0; $i<$remote_peers_count; $i++) {
                             DB::table('server_peers')
                                 ->where('server_id', $sId)
-                                ->where('server_peer_id', $remotePeer[".id"])
-                                ->update(['last_handshake' => $remotePeer["last-handshake"] ?? null]);
+                                ->where('server_peer_id', $remotePeers[$i][".id"])
+                                ->update([
+                                    'last_handshake' => $remotePeers[$i]["last-handshake"] ?? null,
+                                    'last_handshake_updated_at' => $now
+                                ]);
                         }
 
                         array_push($message, "$sAddress: last handshakes fetched successfully!");
