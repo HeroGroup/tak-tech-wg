@@ -193,11 +193,21 @@ class WiregaurdController extends Controller
         );
 
         if (is_array($newRemotePeer) && count($newRemotePeer) > 0 && $newRemotePeer['ret']) {
-            DB::table('server_peers')->insert([
-                'server_id' => $sId,
-                'peer_id' => $localPeerId,
-                'server_peer_id' => $newRemotePeer['ret']
-            ]);
+            // DB::table('server_peers')->insert([
+            //     'server_id' => $sId,
+            //     'peer_id' => $localPeerId,
+            //     'server_peer_id' => $newRemotePeer['ret']
+            // ]);
+
+            DB::table('server_peers')->upsert(
+                [
+                    'server_id' => $sId,
+                    'peer_id' => $localPeerId,
+                    'server_peer_id' => $newRemotePeer['ret']
+                ],
+                ['server_id', 'peer_id'],
+                ['server_peer_id']
+            );
 
             return true;
         } else {
