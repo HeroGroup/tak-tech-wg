@@ -6,6 +6,7 @@
             <option value="all" @if($type=="all") selected @endif>All cron jobs</option>
             <option value="store-interfaces-usages" @if($type=="store-interfaces-usages") selected @endif>store interfaces usages</option>
             <option value="store-peers-usages" @if($type=="store-peers-usages") selected @endif>store peers usages</option>
+            <option value="store-peers-last-handshakes" @if($type=="store-peers-last-handshakes") selected @endif>store peers last handshakes</option>
             <option value="syncAll" @if($type=="syncAll") selected @endif>sync all</option>
             <option value="disable-expired-peers" @if($type=="disable-expired-peers") selected @endif>disable expired peers</option>
             <option value="remove-expired-limited-peers" @if($type=="remove-expired-limited-peers") selected @endif>remove limited expired peers</option>

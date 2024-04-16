@@ -125,7 +125,6 @@ class LimitedPeerController extends Controller
     {
         try {
             if ($request_token == env('STORE_PEERS_USAGES_TOKEN')) {
-                set_time_limit(300); // 5 minutes
                 $message = [];
                 $now = date('Y-m-d H:i:s', time());
                 $limitedInterfaces = DB::table('interfaces')
@@ -133,21 +132,12 @@ class LimitedPeerController extends Controller
                     ->pluck('name', 'id')
                     ->toArray();
                 
-                DB::table('server_peers')->update(['last_handshake' => null, 'last_handshake_updated_at' => $now]);
                 $servers = DB::table('servers')->get();
                 foreach($servers as $server) {
                     $sId = $server->id;
                     $sAddress = $server->server_address;
                     $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
                     if (is_array($remotePeers) && count($remotePeers) > 0) {
-                        // store last-handshake for all peers not only limited ones
-                        foreach ($remotePeers as $remotePeer) {
-                            DB::table('server_peers')
-                                ->where('server_id', $sId)
-                                ->where('server_peer_id', $remotePeer[".id"])
-                                ->update(['last_handshake' => $remotePeer["last-handshake"] ?? null]);
-                        }
-
                         // filter limited interfaces
                         $limitedPeers = array_filter($remotePeers, function($elm) use ($limitedInterfaces) {
                             return in_array($elm['interface'], $limitedInterfaces);
@@ -205,6 +195,50 @@ class LimitedPeerController extends Controller
         } catch (\Exception $exception) {
             $resultMessage = $exception->getMessage();
             saveCronResult('store-peers-usages', $resultMessage);
+            return $resultMessage;
+        }
+    }
+
+    public function storeLastHandshakes($request_token) 
+    {
+        try {
+            if ($request_token == env('STORE_PEERS_LAST_HANDSHAKES_TOKEN')) {
+                set_time_limit(300); // 5 minutes
+                $message = [];
+                $now = date('Y-m-d H:i:s', time());
+                
+                DB::table('server_peers')->update(['last_handshake' => null, 'last_handshake_updated_at' => $now]);
+                $servers = DB::table('servers')->get();
+                foreach($servers as $server) {
+                    $sId = $server->id;
+                    $sAddress = $server->server_address;
+                    $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
+                    if (is_array($remotePeers) && count($remotePeers) > 0) {
+                        // store last-handshake for all peers not only limited ones
+                        foreach ($remotePeers as $remotePeer) {
+                            DB::table('server_peers')
+                                ->where('server_id', $sId)
+                                ->where('server_peer_id', $remotePeer[".id"])
+                                ->update(['last_handshake' => $remotePeer["last-handshake"] ?? null]);
+                        }
+
+                        array_push($message, "$sAddress: last handshakes fetched successfully!");
+                    } else {
+                        array_push($message, "$sAddress: $remotePeers");
+                    }
+                }
+
+                $resultMessage = implode("\r\n", $message);
+                saveCronResult('store-peers-last-handshakes', $resultMessage);
+                return $resultMessage;
+            }
+
+            $resultMessage = 'token mismatch!';
+            saveCronResult('store-peers-last-handshakes', $resultMessage);
+            return $resultMessage;
+        } catch (\Exception $exception) {
+            $resultMessage = $exception->getMessage();
+            saveCronResult('store-peers-last-handshakes', $resultMessage);
             return $resultMessage;
         }
     }
