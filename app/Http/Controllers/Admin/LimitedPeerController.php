@@ -224,8 +224,8 @@ class LimitedPeerController extends Controller
                         });
 
                         // store last-handshake for all unlimited peers
-                        $remote_peers_count = count($unlimitedPeers);
-                        for ($i=0; $i<$remote_peers_count; $i++) {
+                        $remote_unlimited_peers_count = count($unlimitedPeers);
+                        for ($i=0; $i<$remote_unlimited_peers_count; $i++) {
                             DB::table('server_peers')
                                 ->where('server_id', $sId)
                                 ->where('server_peer_id', $unlimitedPeers[$i][".id"])
@@ -250,7 +250,7 @@ class LimitedPeerController extends Controller
             saveCronResult('store-peers-last-handshakes', $resultMessage);
             return $resultMessage;
         } catch (\Exception $exception) {
-            $resultMessage = $exception->getMessage();
+            $resultMessage = $exception->getLine() . ': ' . $exception->getMessage();
             saveCronResult('store-peers-last-handshakes', $resultMessage);
             return $resultMessage;
         }
