@@ -120,7 +120,7 @@ class LimitedPeerController extends Controller
         return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'lastUpdate', 'comment', 'enabled', 'sortBy'));
     }
 
-    // This functions runs periodically and stores last_handshake for all peers and tx, rx of limited peers
+    // This functions runs periodically and stores tx, rx and last-handshake of limited peers only
     public function storeUsages($request_token)
     {
         try {
@@ -199,6 +199,7 @@ class LimitedPeerController extends Controller
         }
     }
 
+    // This functions runs periodically and stores last_handshake for unlimited peers only
     public function storeLastHandshakes($request_token) 
     {
         try {
@@ -207,15 +208,24 @@ class LimitedPeerController extends Controller
                 $message = [];
                 $now = date('Y-m-d H:i:s', time());
                 
-                // DB::table('server_peers')->update(['last_handshake' => null, 'last_handshake_updated_at' => $now]);
+                $unlimitedInterfaces = DB::table('interfaces')
+                    ->where('iType', 'unlimited')
+                    ->pluck('name', 'id')
+                    ->toArray();
+
                 $servers = DB::table('servers')->get();
                 foreach($servers as $server) {
                     $sId = $server->id;
                     $sAddress = $server->server_address;
                     $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
                     if (is_array($remotePeers) && count($remotePeers) > 0) {
-                        // store last-handshake for all peers not only limited ones
-                        $remote_peers_count = count($remotePeers);
+                        // filter unlimited interfaces
+                        $unlimitedPeers = array_filter($remotePeers, function($elm) use ($unlimitedInterfaces) {
+                            return in_array($elm['interface'], $unlimitedInterfaces);
+                        });
+
+                        // store last-handshake for all unlimited peers
+                        $remote_peers_count = count($unlimitedPeers);
                         for ($i=0; $i<$remote_peers_count; $i++) {
                             DB::table('server_peers')
                                 ->where('server_id', $sId)
