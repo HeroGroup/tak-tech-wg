@@ -212,6 +212,11 @@ class LimitedPeerController extends Controller
                     ->pluck('name', 'id')
                     ->toArray();
 
+                DB::table('server_peers')->update([
+                    'last_handshake' => null,
+                    'last_handshake_updated_at' => $now
+                ]);
+
                 $servers = DB::table('servers')->get();
                 foreach($servers as $server) {
                     $sId = $server->id;
@@ -223,9 +228,10 @@ class LimitedPeerController extends Controller
                             return in_array($elm['interface'], $unlimitedInterfaces);
                         });
 
+                        // $remote_unlimited_peers_count = count($unlimitedPeers);
+                        // for ($i=0; $i<$remote_unlimited_peers_count; $i++) {}
+                        
                         // store last-handshake for all unlimited peers
-                        $remote_unlimited_peers_count = count($unlimitedPeers);
-                        // for ($i=0; $i<$remote_unlimited_peers_count; $i++) {
                         foreach ($unlimitedPeers as $unlimitedPeer) {
                             DB::table('server_peers')
                                 ->where('server_id', $sId)
