@@ -217,7 +217,7 @@ class LimitedPeerController extends Controller
                     $sId = $server->id;
                     $sAddress = $server->server_address;
                     $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
-                    if (is_array($remotePeers) && count($remotePeers) > 0) {
+                    if (is_array($remotePeers)) {
                         // filter unlimited interfaces
                         $unlimitedPeers = array_filter($remotePeers, function($elm) use ($unlimitedInterfaces) {
                             return in_array($elm['interface'], $unlimitedInterfaces);
@@ -235,7 +235,7 @@ class LimitedPeerController extends Controller
                                 ]);
                         }
 
-                        array_push($message, "$sAddress: last handshakes fetched successfully!");
+                        array_push($message, "$sAddress: $remote_unlimited_peers_count last handshakes fetched successfully!");
                     } else {
                         array_push($message, "$sAddress: $remotePeers");
                     }
