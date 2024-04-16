@@ -228,7 +228,7 @@ class LimitedPeerController extends Controller
                             return in_array($elm['interface'], $unlimitedInterfaces);
                         });
 
-                        // $remote_unlimited_peers_count = count($unlimitedPeers);
+                        $remote_unlimited_peers_count = count($unlimitedPeers);
                         // for ($i=0; $i<$remote_unlimited_peers_count; $i++) {}
                         
                         // store last-handshake for all unlimited peers
