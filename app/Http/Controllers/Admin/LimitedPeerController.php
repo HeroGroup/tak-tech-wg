@@ -225,12 +225,13 @@ class LimitedPeerController extends Controller
 
                         // store last-handshake for all unlimited peers
                         $remote_unlimited_peers_count = count($unlimitedPeers);
-                        for ($i=0; $i<$remote_unlimited_peers_count; $i++) {
+                        // for ($i=0; $i<$remote_unlimited_peers_count; $i++) {
+                        foreach ($unlimitedPeers as $unlimitedPeer) {
                             DB::table('server_peers')
                                 ->where('server_id', $sId)
-                                ->where('server_peer_id', $unlimitedPeers[$i][".id"])
+                                ->where('server_peer_id', $unlimitedPeer[".id"])
                                 ->update([
-                                    'last_handshake' => $unlimitedPeers[$i]["last-handshake"] ?? null,
+                                    'last_handshake' => $unlimitedPeer["last-handshake"] ?? null,
                                     'last_handshake_updated_at' => $now
                                 ]);
                         }
