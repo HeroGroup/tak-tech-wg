@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\StoreLastHandshakes;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 require_once app_path('Helpers/utils.php');
