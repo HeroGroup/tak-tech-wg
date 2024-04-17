@@ -219,6 +219,7 @@ class LimitedPeerController extends Controller
 
                 $servers = DB::table('servers')->get();
                 foreach($servers as $server) {
+                    set_time_limit(60);
                     $sId = $server->id;
                     $sAddress = $server->server_address;
                     $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
