@@ -222,12 +222,13 @@ class LimitedPeerController extends Controller
                 foreach($servers as $server) {
                     $sId = $server->id;
                     $sAddress = $server->server_address;
-                    StoreLastHandshakes::dispatchSync($sId, $sAddress, $unlimitedInterfaces);
+                    StoreLastHandshakes::dispatch($sId, $sAddress, $unlimitedInterfaces);
                     array_push($message, "Job sent to queue for server $sAddress");
                 }
 
                 $resultMessage = implode("\r\n", $message);
                 saveCronResult('store-peers-last-handshakes', $resultMessage);
+                Artisan::call('queue:work --stop-when-empty');
                 return $resultMessage;
             }
 
