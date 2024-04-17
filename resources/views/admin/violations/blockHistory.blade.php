@@ -29,50 +29,8 @@
         <td>{{$item->name}}</td>
         <td>{{$item->comment}}</td>
         <td>{{$item->client_address}}</td>
-        <td>
-          <?php
-            $diff = $now - strtotime($item->created_at);
-            $days_passed = $diff / 86400;
-            $hours_passed = $diff / 3600;
-            $minutes_passed = $diff / 60;
-            $time_passed = "";
-            if ((int) $days_passed > 0) {
-              $days_passed_round = round($days_passed);
-              $time_passed = "$days_passed_round days ago";
-            } else if ((int) $hours_passed > 0) {
-              $hours_passed_round = round($hours_passed);
-              $time_passed = "$hours_passed_round hours ago";
-            } else if ((int) $minutes_passed > 0) {
-              $minutes_passed_round = round($minutes_passed);
-              $time_passed = "$minutes_passed_round minutes ago";
-            } else {
-              $time_passed = "$diff seconds ago";
-            }
-          ?>
-          {{$time_passed}}
-        </td>
-        <td>
-        <?php
-            $diff = $now - strtotime($item->unblocked_at);
-            $days_passed = $diff / 86400;
-            $hours_passed = $diff / 3600;
-            $minutes_passed = $diff / 60;
-            $time_passed = "";
-            if ((int) $days_passed > 0) {
-              $days_passed_round = round($days_passed);
-              $time_passed = "$days_passed_round days ago";
-            } else if ((int) $hours_passed > 0) {
-              $hours_passed_round = round($hours_passed);
-              $time_passed = "$hours_passed_round hours ago";
-            } else if ((int) $minutes_passed > 0) {
-              $minutes_passed_round = round($minutes_passed);
-              $time_passed = "$minutes_passed_round minutes ago";
-            } else {
-              $time_passed = "$diff seconds ago";
-            }
-          ?>
-          {{$time_passed}}
-        </td>
+        <td>{{substr($item->created_at, 0, 16)}}</td>
+        <td>{{substr($item->unblocked_at, 0, 16)}}</td>
       </tr>
       @endforeach
     </tbody>
