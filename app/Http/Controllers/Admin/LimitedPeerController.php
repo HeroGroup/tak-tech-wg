@@ -8,8 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 require_once app_path('Helpers/utils.php');
-// set_time_limit(300);
-ini_set('max_execution_time', 300);
 
 // This class handles limited peers actions
 class LimitedPeerController extends Controller
