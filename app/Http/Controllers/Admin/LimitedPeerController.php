@@ -222,7 +222,7 @@ class LimitedPeerController extends Controller
                 foreach($servers as $server) {
                     $sId = $server->id;
                     $sAddress = $server->server_address;
-                    StoreLastHandshakes::dispatch($sId, $sAddress, $unlimitedInterfaces);
+                    StoreLastHandshakes::dispatchSync($sId, $sAddress, $unlimitedInterfaces);
                     array_push($message, "Job sent to queue for server $sAddress");
                 }
 
