@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\StoreLastHandshakes;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -221,31 +222,8 @@ class LimitedPeerController extends Controller
                 foreach($servers as $server) {
                     $sId = $server->id;
                     $sAddress = $server->server_address;
-                    $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
-                    if (is_array($remotePeers)) {
-                        // filter unlimited interfaces
-                        $unlimitedPeers = array_filter($remotePeers, function($elm) use ($unlimitedInterfaces) {
-                            return in_array($elm['interface'], $unlimitedInterfaces);
-                        });
-
-                        $remote_unlimited_peers_count = count($unlimitedPeers);
-                        // for ($i=0; $i<$remote_unlimited_peers_count; $i++) {}
-                        
-                        // store last-handshake for all unlimited peers
-                        foreach ($unlimitedPeers as $unlimitedPeer) {
-                            DB::table('server_peers')
-                                ->where('server_id', $sId)
-                                ->where('server_peer_id', $unlimitedPeer[".id"])
-                                ->update([
-                                    'last_handshake' => $unlimitedPeer["last-handshake"] ?? null,
-                                    'last_handshake_updated_at' => $now
-                                ]);
-                        }
-
-                        array_push($message, "$sAddress: $remote_unlimited_peers_count last handshakes fetched successfully!");
-                    } else {
-                        array_push($message, "$sAddress: $remotePeers");
-                    }
+                    StoreLastHandshakes::dispatch($sId, $sAddress, $unlimitedInterfaces);
+                    array_push($message, "Job sent to queue for server $sAddress");
                 }
 
                 $resultMessage = implode("\r\n", $message);
