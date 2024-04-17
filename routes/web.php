@@ -22,7 +22,6 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/servers/syncAll/{token}', [ServerController::class, 'syncAll'])->name('servers.syncPeers');
 Route::get('/wiregaurd/peers/disableExpired/{token}', [WiregaurdController::class, 'disableExpiredPeers'])->name('disableExpiredPeers');
 Route::get('/wiregaurd/peers/removeExpiredLimitedPeers/{token}', [WiregaurdController::class, 'removeExpiredLimitedPeers'])->name('removeExpiredLimitedPeers');
-Route::get('/wiregaurd/peers/getLastHandshakes/{token}', [LimitedPeerController::class, 'storeLastHandshakes'])->name('wiregaurd.peers.storeLastHandshakes');
 Route::get('/wiregaurd/peers/limited/getUsages/{token}', [LimitedPeerController::class, 'storeUsages'])->name('wiregaurd.peers.limited.storeUsages');
 Route::get('/wiregaurd/interfaces/getUsages/{token}', [InterfaceController::class, 'storeInterfacesUsages'])->name('wiregaurd.interfaces.storeUsages');
 Route::get('/wiregaurd/interfaces/peers/block/{token}', [WiregaurdController::class, 'blockPeers'])->name('wiregaurd.interfaces.peers.block');
