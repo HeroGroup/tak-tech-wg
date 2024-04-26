@@ -283,6 +283,7 @@ class ServerController extends Controller
             $messages = [];
             $numberOfNewlyCreatedPeers = 0;
             $numberOfUpdatedPeers = 0;
+            $now = date('Y-m-d H:i:s');
     
             $remotePeers = curl_general('GET', $request->server_address . '/rest/interface/wireguard/peers', '', false, 30);
     
@@ -305,8 +306,8 @@ class ServerController extends Controller
                             'comment' => $remotePeer['comment'] ?? '-',
                             'is_enabled' => $remotePeer['disabled'] == "false" ? 1 : 0,
                             'public_key' => $remotePeer['public-key'],
-                            'created_at' => date('Y-m-d H:i:s'),
-                            'updated_at' => date('Y-m-d H:i:s')
+                            'created_at' => $now,
+                            'updated_at' => $now
                         ]);
         
                         $numberOfNewlyCreatedPeers++;
@@ -336,7 +337,8 @@ class ServerController extends Controller
                         DB::table('server_peers')->insert([
                             'server_id' => $request->id,
                             'peer_id' => $localPeerId,
-                            'server_peer_id' => $remotePeer['.id']
+                            'server_peer_id' => $remotePeer['.id'],
+                            'created_at' => $now
                         ]);
                     }
                 }
@@ -449,6 +451,7 @@ class ServerController extends Controller
         // TODO: depend on server version, add method is different
         try {
             $messages = [];
+            $now = date('Y-m-d H:i:s');
             $localPeers = DB::table('peers')->get();
 
             $remotePeers = curl_general('GET',
@@ -517,7 +520,8 @@ class ServerController extends Controller
                             DB::table('server_peers')->insert([
                                 'server_id' => $sId,
                                 'peer_id' => $localPeer->id,
-                                'server_peer_id' => $remotePeerId
+                                'server_peer_id' => $remotePeerId,
+                                'created_at' => $now
                             ]);
                         }
 

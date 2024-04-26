@@ -169,6 +169,7 @@ class WiregaurdController extends Controller
     // This function creates peer on remote router
     public function addRemotePeer($sId, $saddress, $caddress, $interfaceName, $cdns, $wgserveraddress, $commentApply, $publicKey, $localPeerId, $enabled=1)
     {
+        $now = date('Y-m-d H:i:s');
         $data = [
 			'interface' => $interfaceName,
 			'allowed-address' => $caddress.'/32',
@@ -203,7 +204,8 @@ class WiregaurdController extends Controller
                 [
                     'server_id' => $sId,
                     'peer_id' => $localPeerId,
-                    'server_peer_id' => $newRemotePeer['ret']
+                    'server_peer_id' => $newRemotePeer['ret'],
+                    'created_at' => $now
                 ],
                 ['server_id', 'peer_id'],
                 ['server_peer_id']
@@ -1003,7 +1005,7 @@ class WiregaurdController extends Controller
                 saveCronResult('unblock-peers', $message);
                 return $message;
             }
-        } catch (\Exception $exeption) {
+        } catch (\Exception $exception) {
             $message = $exception->getMessage();
             saveCronResult('unblock-peers', $message);
             return $message;
