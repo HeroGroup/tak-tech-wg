@@ -78,15 +78,15 @@ class ServerController extends Controller
         try {
             $servers = DB::table('servers')->get();
 
-            $infos = [];
-            foreach ($servers as $server) {
-                $sId = $server->id;
-                $sAddress = $server->server_address;
-                $infos[$sId]['address'] = $sAddress;
-                $infos[$sId]['router_os_version'] = $server->router_os_version;
-            }
+            // $infos = [];
+            // foreach ($servers as $server) {
+            //     $sId = $server->id;
+            //     $sAddress = $server->server_address;
+            //     $infos[$sId]['address'] = $sAddress;
+            //     $infos[$sId]['router_os_version'] = $server->router_os_version;
+            // }
         
-            return view('admin.servers.list', compact('infos'));
+            return view('admin.servers.list', compact('servers'));
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage())->with('type', 'danger');
         }
@@ -144,6 +144,7 @@ class ServerController extends Controller
             DB::table('servers')->insert([
                 'server_address' => $newAddress,
                 'router_os_version' => $request->router_os_version,
+                'alias' => $request->alias,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ]);
@@ -172,6 +173,7 @@ class ServerController extends Controller
             DB::table('servers')->where('id', $request->id)->update([
                 'server_address' => $newAddress,
                 'router_os_version' => $request->router_os_version,
+                'alias' => $request->alias,
                 'updated_at' => date('Y-m-d H:i:s')
             ]);
     
@@ -505,15 +507,16 @@ class ServerController extends Controller
                         // check id is correct
                         $server_peer = DB::table('server_peers')
                                         ->where('server_id', $sId)
-                                        ->where('peer_id', $localPeer->id);
+                                        ->where('peer_id', $localPeer->id)
+                                        ->first();
 
-                        if ($server_peer->count() > 0) { // server_peer exists
-                            if ($server_peer->first()->server_peer_id != $remotePeerId) {
+                        if ($server_peer) { // server_peer exists
+                            if ($server_peer->server_peer_id != $remotePeerId) {
                                 // .id is wrong in local DB
                                 DB::table('server_peers')
                                     ->where('server_id', $sId)
                                     ->where('peer_id', $localPeer->id)
-                                    ->update(['server_peer_id' => $remotePeerId]);
+                                    ->update(['server_peer_id' => $remotePeerId, 'updated_at' => $now]);
                             }
                         } else {
                             // create new server_peer

@@ -15,26 +15,28 @@
     <thead>
       <th>Server Address</th>
       <th>Router OS Version</th>
+      <th>Alias</th>
       <th>Actions</th>
     </thead>
     <tbody>
-      @foreach($infos as $id => $server)
-      <tr id="{{$id}}">
-        <td>{{$server['address']}}</td>
-        <td>{{$server['router_os_version']}}</td>
+      @foreach($servers as $server)
+      <tr id="{{$server->id}}">
+        <td>{{$server->server_address}}</td>
+        <td>{{$server->router_os_version}}</td>
+        <td>{{$server->alias}}</td>
         <td>
-            <a href="#" class="text-info" data-toggle="modal" data-target="#edit-server-modal-{{$id}}">
+            <a href="#" class="text-info" data-toggle="modal" data-target="#edit-server-modal-{{$server->id}}">
                 <i class="fa fa-pen"></i> Edit
             </a>&nbsp;
-            <a href="{{route('admin.settings.servers.info',$id)}}" class="text-warning">
+            <a href="{{route('admin.settings.servers.info',$server->id)}}" class="text-warning">
                 <i class="fa fa-info-circle"></i> Server Details
             </a>&nbsp;
-            <a href="#" onclick="destroy('{{route('admin.settings.servers.delete')}}','{{$id}}','{{$id}}')" class="text-danger">
+            <a href="#" onclick="destroy('{{route('admin.settings.servers.delete')}}','{{$server->id}}','{{$server->id}}')" class="text-danger">
                 <i class="fa fa-trash"></i> Remove
             </a>
         
             <!-- Edit server Modal -->
-            <div class="modal fade" id="edit-server-modal-{{$id}}" tabindex="-1" role="dialog" aria-labelledby="editserverModalLabel" aria-hidden="true">
+            <div class="modal fade" id="edit-server-modal-{{$server->id}}" tabindex="-1" role="dialog" aria-labelledby="editserverModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -47,17 +49,23 @@
                             <form method="post" action="{{route('admin.settings.servers.update')}}" onsubmit="turnOnLoader()">
                                 @csrf
                                 <input type="hidden" name="_method" value="PUT">
-                                <input type="hidden" name="id" value="{{$id}}">
+                                <input type="hidden" name="id" value="{{$server->id}}">
                                 <div class="form-group row mb-4">
                                     <div class="col-md-12">
                                         <label for="server_address">Server Address</label>
-                                        <input class="form-control" name="server_address" value="{{$server['address']}}" placeholder="217.60.254.2" required>
+                                        <input class="form-control" name="server_address" value="{{$server->server_address}}" placeholder="217.60.254.2" required>
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
                                     <div class="col-md-12">
                                         <label for="router_os_version">Router OS Version</label>
-                                        <input class="form-control" name="router_os_version" value="{{$server['router_os_version']}}" placeholder="7.12beta" required>
+                                        <input class="form-control" name="router_os_version" value="{{$server->router_os_version}}" placeholder="7.12beta" required>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-4">
+                                    <div class="col-md-12">
+                                        <label for="alias">Alias</label>
+                                        <input class="form-control" name="alias" value="{{$server->alias}}">
                                     </div>
                                 </div>
                                 <div class="form-group row mb-4">
@@ -99,6 +107,12 @@
                         <div class="col-md-12">
                             <label for="router_os_version">Router Version</label>
                             <input class="form-control" name="router_os_version" value="{{old('router_os_version')}}" placeholder="7.12beta" required>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-12">
+                            <label for="alias">Alias</label>
+                            <input class="form-control" name="alias" value="{{old('alias')}}">
                         </div>
                     </div>
                     <div class="form-group row mb-4">
