@@ -376,7 +376,8 @@ class InterfaceController extends Controller
                 });
             }
 
-            $peers = $peers->simplePaginate(25);
+            // $peers = $peers->simplePaginate(25);
+            $peers = $peers->get();
             
             foreach($peers as $peer) {
                 if($peer->monitor) {
