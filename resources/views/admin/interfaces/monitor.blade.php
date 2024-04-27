@@ -91,8 +91,13 @@
   }
   function monitorAll(checked) {
     turnOnLoader();
-    checkAll();
-    var ids = checkedItems();
+    if (checked) {
+      checkAll();
+      var ids = checkedItems();
+    } else {
+      var ids = checkedItems();
+      checkAll();
+    }
     
     var formData = createFormData({
       '_token': '{{csrf_token()}}',

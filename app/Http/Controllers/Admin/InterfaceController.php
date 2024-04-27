@@ -376,7 +376,7 @@ class InterfaceController extends Controller
                 });
             }
 
-            $peers = $peers->simplePaginate(15);
+            $peers = $peers->simplePaginate(25);
             
             foreach($peers as $peer) {
                 $pId = $peer->id;
