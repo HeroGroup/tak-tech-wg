@@ -49,9 +49,9 @@
             </thead>
             <tbody>
               @foreach($peers as $peer)
-              <tr>
+              <tr id="{{$peer->id}}">
                 <td>
-                  <input id="{{$peer->id}}" type="checkbox" onclick="monitorPeer('{{$peer->id}}', this.checked)" class="chk-row" @if($peer->monitor) checked="checked" @endif>
+                  <input id="peer_{{$peer->id}}" type="checkbox" onclick="monitorPeer('{{$peer->id}}', this.checked)" class="chk-row" @if($peer->monitor) checked="checked" @endif>
                 </td>
                 <td>{{$peer->comment}}</td>
                 <td>{{$peer->client_address}}</td>
@@ -90,13 +90,14 @@
     sendRequest(params);
   }
   function monitorAll(checked) {
-    checkAll();
     turnOnLoader();
+    checkAll();
+    var ids = checkedItems();
     
     var formData = createFormData({
       '_token': '{{csrf_token()}}',
       '_method': 'POST',
-      'interfaceId': '{{$id}}',
+      'ids': JSON.stringify(ids),
       'checked': checked,
     });
 
@@ -115,26 +116,24 @@
   }
   function rollback(peerId, checked) {
     turnOffLoader();
-    $(`#${peerId}`).prop('checked', !checked);
+    $(`#peer_${peerId}`).prop('checked', !checked);
   }
   function search() {
     var queryString = window.location.search;
     var urlParams = new URLSearchParams(queryString);
     var sortBy = urlParams.get('sortBy');
-    var search = document.getElementById("search").innerHTML;
+    var searchParam = document.getElementById("search").innerHTML;
     
     window.location.href = "{{route('admin.wiregaurd.interfaces.usages.monitor',$id)}}" + 
-                `?search=${search || ''}` +  
-                `&sortBy=${sortBy || ''}`;
+                `?search=${searchParam}&sortBy=${sortBy || ''}`;
   }
   function sortResult(sortBy) {
     var queryString = window.location.search;
     var urlParams = new URLSearchParams(queryString);
-    var search = urlParams.get('search');
+    var searchParam = urlParams.get('search');
     
     window.location.href = "{{route('admin.wiregaurd.interfaces.usages.monitor',$id)}}" + 
-                `?search=${search || ''}` +  
-                `&sortBy=${sortBy}`;
+                `?search=${searchParam || ''}&sortBy=${sortBy}`;
   }
 </script>
 @endsection

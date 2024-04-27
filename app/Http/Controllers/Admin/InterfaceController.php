@@ -420,8 +420,9 @@ class InterfaceController extends Controller
             }
 
             $selected_peers_count = $peers->where('monitor', 1)->count();
+            $messageDuration = 1000;
             
-            return view('admin.interfaces.monitor', compact('id', 'interfaceName', 'peers', 'search', 'sortBy', 'selected_peers_count'));
+            return view('admin.interfaces.monitor', compact('id', 'interfaceName', 'peers', 'search', 'sortBy', 'selected_peers_count', 'messageDuration'));
         } else {
             return back()->with('message', 'invalid interface')->with('type', 'danger');
         }
@@ -439,9 +440,10 @@ class InterfaceController extends Controller
 
                 return $this->success('success');
 
-            } else if ($request->interfaceId){ // monitor whole interface
+            } else if ($request->ids){ // monitor whole interface
+                $ids = json_decode($request->ids);
                 DB::table('peers')
-                    ->where('interface_id', (int) $request->interfaceId)
+                    ->whereIn('id', $ids)
                     ->update([
                         'monitor' => $request->checked == "true" ? 1 : 0
                     ]);
