@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -354,6 +355,103 @@ class InterfaceController extends Controller
             return view('admin.interfaces.usageDetails', compact('interfaceName', 'output', 'output_json'));
         } else {
             return back()->with('message', 'invalid interface')->with('type', 'danger');
+        }
+    }
+
+    public function monitor(Request $request, $id)
+    {
+        $interface = DB::table('interfaces')->find($id);
+        if ($interface) {
+            $interfaceName = $interface->name;
+            
+            $servers = DB::table('servers')->get();
+            $peers = DB::table('peers')->where('interface_id', $id);
+
+            $search = $request->query('search');
+            if ($search && $peers && $peers->count() > 0) {
+                $peers = $peers->where(function (Builder $query) use ($search) {
+                    $query->where('comment', 'like', '%'.$search.'%')
+                        ->orWhere('client_address', 'like', '%'.$search.'%')
+                        ->orWhere('note', 'like', '%'.$search.'%');
+                })->get();
+            } else {
+                $peers = $peers->get();
+            }
+            foreach($peers as $peer) {
+                $pId = $peer->id;
+                $sum_tx = 0;
+                $sum_rx = 0;
+                foreach ($servers as $server) {
+                    $sId = $server->id;
+                    $server_peer = DB::table('server_peers')
+                        ->where('server_id', $sId)
+                        ->where('peer_id', $pId)
+                        ->first();
+                    if ($server_peer) {
+                        $record = DB::table('server_peer_usages')
+                            ->where('server_id', $sId)
+                            ->where('server_peer_id', $server_peer->server_peer_id)
+                            ->orderBy('id', 'desc')
+                            ->first();
+                        $sum_tx += $record->tx ?? 0;
+                        $sum_rx += $record->rx ?? 0;
+                    }
+                    
+                }
+                
+                $peer->tx = round(($sum_tx / 1073741824), 2);
+                $peer->rx = round(($sum_rx / 1073741824), 2);
+                $peer->total_usage = $peer->tx + $peer->rx;
+            }
+
+            $sortBy = $request->query('sortBy');
+            if ($sortBy && $peers && $peers->count() > 0) {
+                $by = substr($sortBy, 0, strrpos($sortBy, '_'));
+                $type = substr($sortBy, strrpos($sortBy, '_')+1);
+
+                $peers = $peers->sortBy($by, SORT_NATURAL);
+                
+                if ($type == "desc") {
+                    $peers = $peers->reverse();
+                }
+            } else {
+                $sortBy = "client_address_asc";
+                $peers = $peers->sortBy('client_address', SORT_NATURAL);
+            }
+
+            $selected_peers_count = DB::table('peers')->where('interface_id', $id)->where('monitor', 1)->count();
+            
+            return view('admin.interfaces.monitor', compact('id', 'interfaceName', 'peers', 'search', 'sortBy', 'selected_peers_count'));
+        } else {
+            return back()->with('message', 'invalid interface')->with('type', 'danger');
+        }
+    }
+
+    public function saveMonitor(Request $request)
+    {
+        try {
+            if ($request->peerId) { // monitor single peer
+                DB::table('peers')
+                    ->where('id', (int) $request->peerId)
+                    ->update([
+                        'monitor' => $request->checked == "true" ? 1 : 0
+                    ]);
+
+                return $this->success('success');
+
+            } else if ($request->interfaceId){ // monitor whole interface
+                DB::table('peers')
+                    ->where('interface_id', (int) $request->interfaceId)
+                    ->update([
+                        'monitor' => $request->checked == "true" ? 1 : 0
+                    ]);
+                
+                return $this->success('success');
+            }
+
+            return $this->success('fail');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
         }
     }
 }

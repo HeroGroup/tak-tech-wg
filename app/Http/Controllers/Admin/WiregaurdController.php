@@ -95,6 +95,7 @@ class WiregaurdController extends Controller
             }
         } else {
             $sortBy = "client_address_asc";
+            $peers = $peers->sortBy('client_address', SORT_NATURAL);
         }
         
         $interfaces = DB::table('user_interfaces')

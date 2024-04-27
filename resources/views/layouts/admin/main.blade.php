@@ -183,6 +183,11 @@
 
 <script>
     $(document).ready(function() {
+        $('.chk-row:checkbox').click(function() {
+            var x = $('.chk-row:checkbox:checked');
+            document.getElementById('number-of-selected-items').innerHTML = x.length;
+        });
+        
         document.getElementById("current-year").innerHTML = getYear();
 
         if("{{\Illuminate\Support\Facades\Session::has('message')}}" === "1") {

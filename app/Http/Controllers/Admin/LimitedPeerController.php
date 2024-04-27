@@ -149,10 +149,17 @@ class LimitedPeerController extends Controller
                     $sAddress = $server->server_address;
                     StoreLastHandshakes::dispatch($sId, $sAddress, $unlimitedInterfaces);
                     $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
+                    $peersToMonitor = DB::table('peers')
+                        ->where('monitor', 1)
+                        ->join('server_peers', 'server_peers.peer_id', '=', 'peers.id')
+                        ->where('server_id', $sId)
+                        ->pluck('server_peer_id')
+                        ->toArray();
+                    
                     if (is_array($remotePeers) && count($remotePeers) > 0) {
                         // filter limited interfaces
-                        $limitedPeers = array_filter($remotePeers, function($elm) use ($limitedInterfaces) {
-                            return in_array($elm['interface'], $limitedInterfaces);
+                        $limitedPeers = array_filter($remotePeers, function($elm) use ($limitedInterfaces, $peersToMonitor) {
+                            return in_array($elm['interface'], $limitedInterfaces) || in_array($elm['.id'], $peersToMonitor);
                         });
 
                         foreach ($limitedPeers as $limitedPeer) {

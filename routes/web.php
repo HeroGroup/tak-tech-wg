@@ -88,6 +88,8 @@ Route::prefix('admin')->group(function () {
       Route::delete('/wiregaurd/interfaces', [InterfaceController::class, 'deleteInterface'])->name('wiregaurd.interfaces.delete');
       Route::get('/wiregaurd/interfaces/usages', [InterfaceController::class, 'usages'])->name('wiregaurd.interfaces.usages');
       Route::get('/wiregaurd/interfaces/usage/details/{interface}', [InterfaceController::class, 'usageDetails'])->name('wiregaurd.interfaces.usages.details');
+      Route::get('/wiregaurd/interfaces/usage/monitor/{interface}', [InterfaceController::class, 'monitor'])->name('wiregaurd.interfaces.usages.monitor');
+      Route::post('/wiregaurd/interfaces/usage/monitor', [InterfaceController::class, 'saveMonitor'])->name('wiregaurd.interfaces.usages.monitor.save');
       
       Route::delete('/wiregaurd/peers/remove', [WiregaurdController::class, 'removeSingle'])->name('wiregaurd.peers.remove');
       Route::delete('/wiregaurd/peers/removeMass', [WiregaurdController::class, 'removeMass'])->name('wiregaurd.peers.remove.mass');

@@ -17,7 +17,7 @@
                         aria-labelledby="dropdownMenuLink">
                         <div class="dropdown-header">Actions</div>
                         <a class="dropdown-item" href="{{route('admin.wiregaurd.interfaces.usages.details',$interface->id)}}">Details</a>
-                        <a class="dropdown-item" href="#">Monitor</a>
+                        <a class="dropdown-item" href="{{route('admin.wiregaurd.interfaces.usages.monitor',$interface->id)}}">Monitor</a>
                     </div>
                 </div>
             </div>

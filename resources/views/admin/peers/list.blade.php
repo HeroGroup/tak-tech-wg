@@ -331,12 +331,6 @@
 </div>
 
 <script>
-  $(document).ready(function() {
-    $('.chk-row:checkbox').click(function() {
-      var x = $('.chk-row:checkbox:checked');
-      document.getElementById('number-of-selected-items').innerHTML = x.length;
-    });
-  });
   function clearAllFilters() {
     window.location.href = "{{route('wiregaurd.peers.index')}}";
   }
@@ -498,7 +492,6 @@
       method: 'POST',
       route: "{{route('wiregaurd.peers.regenerate.mass')}}",
       formData,
-      // successCallback: reloadWithTimeout,
       failCallback: turnOffLoader,
 
     };
