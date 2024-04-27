@@ -122,7 +122,7 @@
     var queryString = window.location.search;
     var urlParams = new URLSearchParams(queryString);
     var sortBy = urlParams.get('sortBy');
-    var searchParam = document.getElementById("search").innerHTML;
+    var searchParam = document.getElementById("search").value;
     
     window.location.href = "{{route('admin.wiregaurd.interfaces.usages.monitor',$id)}}" + 
                 `?search=${searchParam}&sortBy=${sortBy || ''}`;
