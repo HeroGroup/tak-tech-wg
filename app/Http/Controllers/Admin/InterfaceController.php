@@ -379,29 +379,35 @@ class InterfaceController extends Controller
             $peers = $peers->simplePaginate(25);
             
             foreach($peers as $peer) {
-                $pId = $peer->id;
-                $sum_tx = 0;
-                $sum_rx = 0;
-                foreach ($servers as $server) {
-                    $sId = $server->id;
-                    $server_peer = DB::table('server_peers')
-                        ->where('server_id', $sId)
-                        ->where('peer_id', $pId)
-                        ->first();
-                    if ($server_peer) {
-                        $record = DB::table('server_peer_usages')
+                if($peer->monitor) {
+                    $pId = $peer->id;
+                    $sum_tx = 0;
+                    $sum_rx = 0;
+                    foreach ($servers as $server) {
+                        $sId = $server->id;
+                        $server_peer = DB::table('server_peers')
                             ->where('server_id', $sId)
-                            ->where('server_peer_id', $server_peer->server_peer_id)
-                            ->orderBy('id', 'desc')
+                            ->where('peer_id', $pId)
                             ->first();
-                        $sum_tx += $record->tx ?? 0;
-                        $sum_rx += $record->rx ?? 0;
+                        if ($server_peer) {
+                            $record = DB::table('server_peer_usages')
+                                ->where('server_id', $sId)
+                                ->where('server_peer_id', $server_peer->server_peer_id)
+                                ->orderBy('id', 'desc')
+                                ->first();
+                            $sum_tx += $record->tx ?? 0;
+                            $sum_rx += $record->rx ?? 0;
+                        }
                     }
+                    
+                    $peer->tx = round(($sum_tx / 1073741824), 2);
+                    $peer->rx = round(($sum_rx / 1073741824), 2);
+                    $peer->total_usage = $peer->tx + $peer->rx;
+                } else {
+                    $peer->tx = 0;
+                    $peer->rx = 0;
+                    $peer->total_usage = 0;
                 }
-                
-                $peer->tx = round(($sum_tx / 1073741824), 2);
-                $peer->rx = round(($sum_rx / 1073741824), 2);
-                $peer->total_usage = $peer->tx + $peer->rx;
             }
 
             $sortBy = $request->query('sortBy');
