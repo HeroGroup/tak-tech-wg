@@ -373,10 +373,11 @@ class InterfaceController extends Controller
                     $query->where('comment', 'like', '%'.$search.'%')
                         ->orWhere('client_address', 'like', '%'.$search.'%')
                         ->orWhere('note', 'like', '%'.$search.'%');
-                })->get();
-            } else {
-                $peers = $peers->get();
+                });
             }
+
+            $peers = $peers->simplePaginate(15);
+            
             foreach($peers as $peer) {
                 $pId = $peer->id;
                 $sum_tx = 0;
@@ -396,7 +397,6 @@ class InterfaceController extends Controller
                         $sum_tx += $record->tx ?? 0;
                         $sum_rx += $record->rx ?? 0;
                     }
-                    
                 }
                 
                 $peer->tx = round(($sum_tx / 1073741824), 2);
@@ -419,7 +419,7 @@ class InterfaceController extends Controller
                 $peers = $peers->sortBy('client_address', SORT_NATURAL);
             }
 
-            $selected_peers_count = DB::table('peers')->where('interface_id', $id)->where('monitor', 1)->count();
+            $selected_peers_count = $peers->where('monitor', 1)->count();
             
             return view('admin.interfaces.monitor', compact('id', 'interfaceName', 'peers', 'search', 'sortBy', 'selected_peers_count'));
         } else {
