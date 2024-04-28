@@ -51,8 +51,18 @@ class LimitedPeerController extends Controller
             $limitedPeers = $limitedPeers->where('is_enabled', (int)$enabled);
         }
 
-        $limitedPeers = $limitedPeers->get();
-
+        // $limitedPeers = $limitedPeers->get();
+        $page = $request->query('page', 1);
+        $take = $request->query('take', 50);
+        if ($take == 'all') {
+            $limitedPeers = $limitedPeers->get();
+            $isLastPage = true;
+        } else {
+            $skip = ($page - 1) * $take;
+            $limitedPeers = $limitedPeers->skip($skip)->take($take)->get();
+            $isLastPage = (count($limitedPeers) < $take) ? true : false;
+        }
+        
         $servers = DB::table('servers')->get();
         $now = time();
         foreach($limitedPeers as $peer) {
@@ -118,7 +128,7 @@ class LimitedPeerController extends Controller
             }
         }
 
-        return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'lastUpdate', 'comment', 'enabled', 'sortBy'));
+        return view('admin.limited.index', compact('limitedInterfaces', 'interface', 'limitedPeers', 'lastUpdate', 'comment', 'enabled', 'sortBy', 'isLastPage'));
     }
 
     // This functions runs periodically and stores tx, rx and last-handshake of limited peers only

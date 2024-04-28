@@ -110,6 +110,25 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .pagination-btn {
+            border: 1px solid lightgray; 
+            border-radius: 3px; 
+            color: #222; 
+            padding: 0 5px;
+        }
+        .pagination-btn:hover {
+            text-decoration: none;
+        }
+        .pagination-btn.active {
+            color: white;
+            background-color: #4e73df;
+            border-color: #4e73df;
+        }
+        a.disabled {
+            color: lightgray;
+            cursor: default;
+            pointer-events: none;
+        }
     </style>
 
     <!-- Bootstrap core JavaScript-->
@@ -187,6 +206,45 @@
             var x = $('.chk-row:checkbox:checked');
             document.getElementById('number-of-selected-items').innerHTML = x.length;
         });
+
+        var queryString = window.location.search;
+        var urlParams = new URLSearchParams(queryString);
+        var page = urlParams.get('page');
+        var take = urlParams.get('take');
+
+        if (page) {
+            document.getElementById("page-number").innerHTML = page;
+            
+            if (page === '1') {
+                document.getElementById('previous-page-btn').classList.add('disabled');
+            } else {
+                document.getElementById('previous-page-btn').classList.remove('disabled');
+            }
+        }
+
+        if (take) {
+            document.getElementById('take-btn-50').classList.remove('active');
+            document.getElementById(`take-btn-${take}`).classList.add('active');
+        }
+
+        var isLastPage = "{{isset($isLastPage) ? $isLastPage : 'undefined'}}";
+        if (isLastPage != 'undefined') {
+            if (isLastPage==='1') {
+                document.getElementById('next-page-btn').classList.add('disabled');
+            } else {
+                document.getElementById('next-page-btn').classList.remove('disabled');
+            }
+        }
+
+        var showType = document.getElementById('show-type');
+        if (showType) {
+            var monitoring = "{{isset($monitoring) ? $monitoring : 'false'}}";
+            if (monitoring === 'true') {
+                showType.innerHTML = 'show all';
+            } else {
+                showType.innerHTML = 'show only monitoring';
+            }
+        }
         
         document.getElementById("current-year").innerHTML = getYear();
 

@@ -67,7 +67,18 @@ class WiregaurdController extends Controller
             $peers = $peers->where('is_enabled', (int)$enabled);
         }
 
-        $peers = $peers->get();
+        // $peers = $peers->get();
+        $page = $request->query('page', 1);
+        $take = $request->query('take', 50);
+        if ($take == 'all') {
+            $peers = $peers->get();
+            $isLastPage = true;
+        } else {
+            $skip = ($page - 1) * $take;
+            $peers = $peers->skip($skip)->take($take)->get();
+            $isLastPage = (count($peers) < $take) ? true : false;
+        }
+
         $now = time();
         foreach ($peers as $peer) {
             $peer->expires_in = '-1';
@@ -104,7 +115,7 @@ class WiregaurdController extends Controller
             ->pluck('name', 'interface_id')->toArray();
         
         $messageDuration = 10000;
-        return view('admin.peers.list', compact('peers', 'interface', 'comment', 'enabled', 'sortBy', 'interfaces', 'messageDuration'));
+        return view('admin.peers.list', compact('peers', 'interface', 'comment', 'enabled', 'sortBy', 'interfaces', 'isLastPage', 'messageDuration'));
     }
 
     // This function adds peer to local database

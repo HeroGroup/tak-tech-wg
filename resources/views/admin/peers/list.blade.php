@@ -93,9 +93,7 @@
   @endif
 </div>
 
-<div style="font-size: 14px;">
-  <span id="number-of-selected-items">0</span> items are selected.
-</div>
+<x-paginator :route="route('wiregaurd.peers.index')" :selectedCount="0" :isLastPage="$isLastPage" />
 
 <div class="table-responsive">
   <table class="table table-striped">

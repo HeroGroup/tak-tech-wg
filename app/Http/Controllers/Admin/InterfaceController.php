@@ -376,8 +376,21 @@ class InterfaceController extends Controller
                 });
             }
 
-            // $peers = $peers->simplePaginate(25);
-            $peers = $peers->get();
+            $monitoring = $request->query('monitoring', 'false');
+            if ($monitoring=='true' && $peers && $peers->count() > 0) {
+                $peers = $peers->where('monitor', 1);
+            }
+
+            $page = $request->query('page', 1);
+            $take = $request->query('take', 50);
+            if ($take == 'all') {
+                $peers = $peers->get();
+                $isLastPage = true;
+            } else {
+                $skip = ($page - 1) * $take;
+                $peers = $peers->skip($skip)->take($take)->get();
+                $isLastPage = (count($peers) < $take) ? true : false;
+            }
             
             foreach($peers as $peer) {
                 if($peer->monitor) {
@@ -428,8 +441,17 @@ class InterfaceController extends Controller
 
             $selected_peers_count = $peers->where('monitor', 1)->count();
             $messageDuration = 1000;
+            $lastUpdate = '';
+            if (isset($record)) {
+                if(date('Y-m-d', time()) == substr($record->created_at, 0, 10)) {
+                    $time = substr($record->created_at, 11, 5);
+                    $lastUpdate = "Today $time";
+                } else {
+                    $lastUpdate = substr($record->created_at, 0, 16);
+                }
+            }
             
-            return view('admin.interfaces.monitor', compact('id', 'interfaceName', 'peers', 'search', 'sortBy', 'selected_peers_count', 'messageDuration'));
+            return view('admin.interfaces.monitor', compact('id', 'interfaceName', 'peers', 'search', 'sortBy', 'monitoring', 'selected_peers_count', 'isLastPage', 'messageDuration', 'lastUpdate'));
         } else {
             return back()->with('message', 'invalid interface')->with('type', 'danger');
         }
@@ -445,6 +467,8 @@ class InterfaceController extends Controller
                         'monitor' => $request->checked == "true" ? 1 : 0
                     ]);
 
+                // TODO: if $request->checked is false, remove usage data
+
                 return $this->success('success');
 
             } else if ($request->ids){ // monitor whole interface
@@ -454,6 +478,8 @@ class InterfaceController extends Controller
                     ->update([
                         'monitor' => $request->checked == "true" ? 1 : 0
                     ]);
+
+                // TODO: if $request->checked is false, remove usage data
                 
                 return $this->success('success');
             }
