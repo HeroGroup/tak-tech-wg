@@ -3,6 +3,8 @@
 
 <x-loader/>
 
+<x-search :route="route('violations.block.list')" :search="$search" />
+
 <div>
   <a href="#" onclick="massDelete()" class="text-danger" style="text-decoration:none;">
     <i class="fa fa-times"></i> Remove From list

@@ -1,6 +1,8 @@
 @extends('layouts.admin.main', ['pageTitle' => 'Block History', 'active' => 'violations'])
 @section('content')
 
+<x-search :route="route('violations.block.history')" :search="$search" />
+
 <x-paginator :route="route('violations.block.history')" :selectedCount="0" :isLastPage="$isLastPage" />
 
 <div class="table-responsive">
@@ -34,16 +36,4 @@
     </tbody>
   </table>
 </div>
-
-<script>
-  var baseRoute = "{{route('violations.block.history')}}";
-  function search() {
-    var queryString = window.location.search;
-    var urlParams = new URLSearchParams(queryString);
-    urlParams.set('search', document.getElementById("search").value);
-    urlParams.delete('page');
-
-    window.location.href = `${baseRoute}?${urlParams.toString()}`;
-  }
-</script>
 @endsection
