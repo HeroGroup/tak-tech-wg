@@ -24,21 +24,7 @@
           </div>
         </div>
 
-        <div class="row mb-4">
-          <div class="col-sm-12">
-            <div class="card">
-              <div class="card-body" style="padding:5px 10px;">
-                <label>Sort By: </label>
-                <a href="#" onclick="sortResult('comment_asc')" class="btn sort-btn @if($sortBy=='comment_asc') btn-dark @endif" id="sort_comment_asc">Comment <i class="fa fa-sort-amount-down-alt"></i></a>
-                <a href="#" onclick="sortResult('comment_desc')" class="btn sort-btn @if($sortBy=='comment_desc') btn-dark @endif" id="sort_comment_desc">Comment <i class="fa fa-sort-amount-down"></i></a>
-                <a href="#" onclick="sortResult('client_address_asc')" class="btn sort-btn @if($sortBy=='client_address_asc') btn-dark @endif" id="sort_client_address_asc">Address <i class="fa fa-sort-amount-down-alt"></i></a>
-                <a href="#" onclick="sortResult('client_address_desc')" class="btn sort-btn @if($sortBy=='client_address_desc') btn-dark @endif" id="sort_client_address_desc">Address <i class="fa fa-sort-amount-down"></i></a>
-                <a href="#" onclick="sortResult('total_usage_asc')" class="btn sort-btn @if($sortBy=='total_usage_asc') btn-dark @endif" id="sort_total_usage_asc">Total Usage <i class="fa fa-sort-amount-down-alt"></i></a>
-                <a href="#" onclick="sortResult('total_usage_desc')" class="btn sort-btn @if($sortBy=='total_usage_desc') btn-dark @endif" id="sort_total_usage_desc">Total Usage <i class="fa fa-sort-amount-down"></i></a>
-              </div>
-            </div>
-          </div>
-        </div>
+        <x-sort :route="route('wiregaurd.interfaces.usages.monitor',$id)" :sorts="['comment' => 'Comment', 'client_address' => 'Client Address', 'total_usage' => 'Total Usage']" :sortBy="$sortBy" />
         
         <x-paginator :route="route('wiregaurd.interfaces.usages.monitor',$id)" :selectedCount="$selected_peers_count" :isLastPage="$isLastPage" />
 
@@ -145,14 +131,6 @@
     var queryString = window.location.search;
     var urlParams = new URLSearchParams(queryString);
     urlParams.set('search', document.getElementById("search").value);
-    urlParams.delete('page');
-
-    window.location.href = `${baseRoute}?${urlParams.toString()}`;
-  }
-  function sortResult(sortBy) {
-    var queryString = window.location.search;
-    var urlParams = new URLSearchParams(queryString);
-    urlParams.set('sortBy', sortBy);
     urlParams.delete('page');
 
     window.location.href = `${baseRoute}?${urlParams.toString()}`;

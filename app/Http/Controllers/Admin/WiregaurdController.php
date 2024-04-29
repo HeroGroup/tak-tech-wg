@@ -1051,18 +1051,35 @@ class WiregaurdController extends Controller
             });
         }
 
+        $list = $list->get();
+
+        $sortBy = $request->query('sortBy');
+        if ($sortBy && $list && $list->count() > 0) {
+            $by = substr($sortBy, 0, strrpos($sortBy, '_'));
+            $type = substr($sortBy, strrpos($sortBy, '_')+1);
+
+            $list = $list->sortBy($by, SORT_NATURAL);
+                
+            if ($type == "desc") {
+                $list = $list->reverse();
+            }
+        } else {
+            $sortBy = "client_address_asc";
+            $list = $list->sortBy('client_address', SORT_NATURAL);
+        }
+
         $page = $request->query('page', 1);
         $take = $request->query('take', 50);
         if ($take == 'all') {
-            $list = $list->get();
+            // $list = $list->get();
             $isLastPage = true;
         } else {
             $skip = ($page - 1) * $take;
-            $list = $list->skip($skip)->take($take)->get();
+            $list = $list->skip($skip)->take($take);
             $isLastPage = (count($list) < $take) ? true : false;
         }
         
-        return view('admin.violations.suspect', compact('list', 'search', 'isLastPage'));
+        return view('admin.violations.suspect', compact('list', 'search', 'sortBy', 'isLastPage'));
     }
 
     // returns the list of blocked peers
@@ -1090,7 +1107,22 @@ class WiregaurdController extends Controller
                     ->orWhere('note', 'like', '%'.$search.'%');
             });
         }
-            
+
+        $sortBy = $request->query('sortBy');
+        if ($sortBy && $list && $list->count() > 0) {
+            $by = substr($sortBy, 0, strrpos($sortBy, '_'));
+            $type = substr($sortBy, strrpos($sortBy, '_')+1);
+
+            $list = $list->sortBy($by, SORT_NATURAL);
+                
+            if ($type == "desc") {
+                $list = $list->reverse();
+            }
+        } else {
+            $sortBy = "client_address_asc";
+            $list = $list->sortBy('client_address', SORT_NATURAL);
+        }     
+
         $page = $request->query('page', 1);
         $take = $request->query('take', 50);
         if ($take == 'all') {
@@ -1102,7 +1134,7 @@ class WiregaurdController extends Controller
             $isLastPage = (count($list) < $take) ? true : false;
         }
 
-        return view('admin.violations.block', compact('list', 'search', 'isLastPage'));
+        return view('admin.violations.block', compact('list', 'search', 'sortBy', 'isLastPage'));
     }
     
     // returns the history of blocked peers
@@ -1131,6 +1163,21 @@ class WiregaurdController extends Controller
             });
         }
 
+        $sortBy = $request->query('sortBy');
+        if ($sortBy && $list && $list->count() > 0) {
+            $by = substr($sortBy, 0, strrpos($sortBy, '_'));
+            $type = substr($sortBy, strrpos($sortBy, '_')+1);
+
+            $list = $list->sortBy($by, SORT_NATURAL);
+                
+            if ($type == "desc") {
+                $list = $list->reverse();
+            }
+        } else {
+            $sortBy = "client_address_asc";
+            $list = $list->sortBy('client_address', SORT_NATURAL);
+        }
+
         $page = $request->query('page', 1);
         $take = $request->query('take', 50);
         if ($take == 'all') {
@@ -1141,7 +1188,7 @@ class WiregaurdController extends Controller
             $list = $list->skip($skip)->take($take)->get();
             $isLastPage = (count($list) < $take) ? true : false;
         }
-        return view('admin.violations.blockHistory', compact('list', 'search', 'isLastPage'));
+        return view('admin.violations.blockHistory', compact('list', 'search', 'sortBy', 'isLastPage'));
     }
 
     // manually extracts a peer from suspect list

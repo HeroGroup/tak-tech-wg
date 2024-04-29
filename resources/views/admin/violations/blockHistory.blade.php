@@ -4,6 +4,7 @@
 <x-search :route="route('violations.block.history')" :search="$search" />
 
 <x-paginator :route="route('violations.block.history')" :selectedCount="0" :isLastPage="$isLastPage" />
+<x-sort :route="route('violations.block.history')" :sorts="['comment' => 'Comment', 'client_address' => 'Client Address']" :sortBy="$sortBy" />
 
 <div class="table-responsive">
   <table class="table table-striped">

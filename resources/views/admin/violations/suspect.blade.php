@@ -4,6 +4,7 @@
 <x-loader/>
 
 <x-search :route="route('violations.suspect.list')" :search="$search" />
+<x-sort :route="route('violations.suspect.list')" :sorts="['comment' => 'Comment', 'client_address' => 'Client Address', 'number_of_violations' => 'Violations']" :sortBy="$sortBy" />
 
 <div>
   <a href="#" onclick="massDelete()" class="text-danger" style="text-decoration:none;">
