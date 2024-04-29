@@ -28,8 +28,14 @@
     <!-- Divider -->
     <!-- <hr class="sidebar-divider my-0"> -->
 
-    @if(auth()->user()->isAdmin)
+
     <li class="nav-item" id="interfaces">
+        <a class="nav-link" href="{{route('wiregaurd.interfaces.usages')}}">
+            <i class="fas fa-fw fa-database"></i>
+            <span>Interfaces</span>
+        </a>
+    </li>
+    <!-- <li class="nav-item" id="interfaces">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseInterfaces" aria-expanded="false" aria-controls="collapseInterfaces">
             <i class="fas fa-fw fa-database"></i>
             <span>Interfaces</span>
@@ -40,14 +46,14 @@
                     <i class="fas fa-fw fa-database"></i>
                     <span>List</span>
                 </a>
-                <a class="collapse-item" href="{{route('admin.wiregaurd.interfaces.usages')}}">
+                <a class="collapse-item" href="{{route('wiregaurd.interfaces.usages')}}">
                     <i class="fas fa-fw fa-list-ul"></i>
                     <span>Interfaces Usages</span>
                 </a>
             </div>
         </div>
-    </li>
-    @endif
+    </li> -->
+
 
     <li class="nav-item" id="peers">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePeers" aria-expanded="false" aria-controls="collapsePeers">

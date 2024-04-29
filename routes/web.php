@@ -33,6 +33,10 @@ Route::middleware(['auth', 'active'])->group(function() {
   Route::get('/users/changePassword', [AuthController::class, 'changePassword'])->name('users.changePassword');
   Route::put('/users/updatePassword', [AuthController::class, 'updatePassword'])->name('users.updatePassword');      
 
+  Route::get('/wiregaurd/interfaces/usages', [InterfaceController::class, 'usages'])->name('wiregaurd.interfaces.usages');
+  Route::get('/wiregaurd/interfaces/usage/monitor/{interface}', [InterfaceController::class, 'monitor'])->name('wiregaurd.interfaces.usages.monitor');
+  Route::post('/wiregaurd/interfaces/usage/monitor', [InterfaceController::class, 'saveMonitor'])->name('wiregaurd.interfaces.usages.monitor.save');
+  
   Route::name('wiregaurd.peers.')->group(function () {
     Route::get('/wiregaurd/peers', [WiregaurdController::class, 'peers'])->name('index');
     Route::get('/wiregaurd/peers/create', [WiregaurdController::class, 'create'])->name('create');
@@ -86,10 +90,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/wiregaurd/interfaces', [InterfaceController::class, 'addInterface'])->name('wiregaurd.interfaces.add');
       Route::put('/wiregaurd/interfaces', [InterfaceController::class, 'updateInterface'])->name('wiregaurd.interfaces.update');
       Route::delete('/wiregaurd/interfaces', [InterfaceController::class, 'deleteInterface'])->name('wiregaurd.interfaces.delete');
-      Route::get('/wiregaurd/interfaces/usages', [InterfaceController::class, 'usages'])->name('wiregaurd.interfaces.usages');
       Route::get('/wiregaurd/interfaces/usage/details/{interface}', [InterfaceController::class, 'usageDetails'])->name('wiregaurd.interfaces.usages.details');
-      Route::get('/wiregaurd/interfaces/usage/monitor/{interface}', [InterfaceController::class, 'monitor'])->name('wiregaurd.interfaces.usages.monitor');
-      Route::post('/wiregaurd/interfaces/usage/monitor', [InterfaceController::class, 'saveMonitor'])->name('wiregaurd.interfaces.usages.monitor.save');
       
       Route::delete('/wiregaurd/peers/remove', [WiregaurdController::class, 'removeSingle'])->name('wiregaurd.peers.remove');
       Route::delete('/wiregaurd/peers/removeMass', [WiregaurdController::class, 'removeMass'])->name('wiregaurd.peers.remove.mass');

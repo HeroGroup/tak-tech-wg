@@ -40,7 +40,7 @@
           </div>
         </div>
         
-        <x-paginator :route="route('admin.wiregaurd.interfaces.usages.monitor',$id)" :selectedCount="$selected_peers_count" :isLastPage="$isLastPage" />
+        <x-paginator :route="route('wiregaurd.interfaces.usages.monitor',$id)" :selectedCount="$selected_peers_count" :isLastPage="$isLastPage" />
 
         <table class="table table-striped">
           <thead>
@@ -83,7 +83,7 @@
   </div>
 </div>
 <script>
-  var baseRoute = "{{route('admin.wiregaurd.interfaces.usages.monitor',$id)}}";
+  var baseRoute = "{{route('wiregaurd.interfaces.usages.monitor',$id)}}";
   function monitorPeer(peerId, checked) {
     turnOnLoader();
     
@@ -97,7 +97,7 @@
 
     var params = {
       method: 'POST',
-      route: "{{route('admin.wiregaurd.interfaces.usages.monitor.save')}}",
+      route: "{{route('wiregaurd.interfaces.usages.monitor.save')}}",
       formData,
       successCallback: turnOffLoader,
       failCallback: () => {
@@ -126,7 +126,7 @@
 
     var params = {
       method: 'POST',
-      route: "{{route('admin.wiregaurd.interfaces.usages.monitor.save')}}",
+      route: "{{route('wiregaurd.interfaces.usages.monitor.save')}}",
       formData,
       successCallback: turnOffLoader,
       failCallback: () => {

@@ -280,7 +280,12 @@ class InterfaceController extends Controller
     public function usages()
     {
         // $interfaces = DB::table('interfaces')->select(['id', 'name'])->get();
-        $interfaces = DB::table('interfaces')->get();
+        $interfaces = DB::table('interfaces')
+            ->join('user_interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->where('user_interfaces.privilege', 'full')
+            ->select(['interfaces.*'])
+            ->get();
         $servers = DB::table('servers')->get();
         foreach($interfaces as $interface) {
             for($i = 0; $i < 6; $i++) {

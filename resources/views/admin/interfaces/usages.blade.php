@@ -16,10 +16,14 @@
                     <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
                         aria-labelledby="dropdownMenuLink">
                         <div class="dropdown-header">Actions</div>
+                        @if(auth()->user()->isAdmin)
                         <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#edit-interface-modal-{{$interface->id}}"><i class="fas fa-pen"></i> Edit</a>
                         <a class="dropdown-item text-warning" href="{{route('admin.wiregaurd.interfaces.usages.details',$interface->id)}}"><i class="fas fa-info-circle"></i> Details</a>
-                        <a class="dropdown-item text-success" href="{{route('admin.wiregaurd.interfaces.usages.monitor',$interface->id)}}"><i class="fas fa-tv"></i> Monitor</a>
+                        @endif
+                        <a class="dropdown-item text-success" href="{{route('wiregaurd.interfaces.usages.monitor',$interface->id)}}"><i class="fas fa-tv"></i> Monitor</a>
+                        @if(auth()->user()->isAdmin)
                         <a class="dropdown-item text-danger" href="#" onclick="destroy('{{route('admin.wiregaurd.interfaces.delete')}}','{{$interface->id}}','{{$interface->id}}')"><i class="fas fa-trash"></i> Remove</a>
+                        @endif
                     </div>
                 </div>
             </div>
