@@ -279,7 +279,8 @@ class InterfaceController extends Controller
 
     public function usages()
     {
-        $interfaces = DB::table('interfaces')->select(['id', 'name'])->get();
+        // $interfaces = DB::table('interfaces')->select(['id', 'name'])->get();
+        $interfaces = DB::table('interfaces')->get();
         $servers = DB::table('servers')->get();
         foreach($interfaces as $interface) {
             for($i = 0; $i < 6; $i++) {
@@ -310,7 +311,7 @@ class InterfaceController extends Controller
                 $interface->usages[$i] = $sum_tx + $sum_rx;
             }
         }
-        $interfaces = $interfaces->toArray();
+        // $interfaces = $interfaces->toArray();
 
         $interfaces_json = json_encode($interfaces);
 

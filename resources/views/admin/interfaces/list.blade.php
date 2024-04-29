@@ -43,9 +43,8 @@
         </td>
         <td>
           <a href="#" class="btn btn-info btn-circle btn-sm" data-toggle="modal" data-target="#edit-interface-modal-{{$interface->id}}" title="Edit">
-                <i class="fas fa-pen"></i>
-            </a>
-            &nbsp;
+            <i class="fas fa-pen"></i>
+          </a>&nbsp;
 
             <!-- Edit interface Modal -->
             <div class="modal fade" id="edit-interface-modal-{{$interface->id}}" tabindex="-1" role="dialog" aria-labelledby="editinterfaceModalLabel" aria-hidden="true">

@@ -2,7 +2,7 @@
 @section('content')
 <div class="row">
   @foreach($interfaces as $interface)
-  <div class="col-lg-6">
+  <div class="col-md-12">
         <div class="card shadow mb-4">
             <!-- Card Header - Dropdown -->
             <div
@@ -16,18 +16,136 @@
                     <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
                         aria-labelledby="dropdownMenuLink">
                         <div class="dropdown-header">Actions</div>
-                        <a class="dropdown-item" href="{{route('admin.wiregaurd.interfaces.usages.details',$interface->id)}}">Details</a>
-                        <a class="dropdown-item" href="{{route('admin.wiregaurd.interfaces.usages.monitor',$interface->id)}}">Monitor</a>
+                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#edit-interface-modal-{{$interface->id}}"><i class="fas fa-pen"></i> Edit</a>
+                        <a class="dropdown-item text-warning" href="{{route('admin.wiregaurd.interfaces.usages.details',$interface->id)}}"><i class="fas fa-info-circle"></i> Details</a>
+                        <a class="dropdown-item text-success" href="{{route('admin.wiregaurd.interfaces.usages.monitor',$interface->id)}}"><i class="fas fa-tv"></i> Monitor</a>
+                        <a class="dropdown-item text-danger" href="#" onclick="destroy('{{route('admin.wiregaurd.interfaces.delete')}}','{{$interface->id}}','{{$interface->id}}')"><i class="fas fa-trash"></i> Remove</a>
                     </div>
                 </div>
             </div>
             <!-- Card Body -->
             <div class="card-body">
-                <div class="chart-area">
-                    <canvas id="{{$interface->name}}-chart"></canvas>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="row mb-3">
+                    <label class="col-sm-6 col-form-label">Default Endpoint</label>
+                    <div class="col-sm-6">
+                      <input class="form-control" type="text" value="{{$interface->default_endpoint_address}}" aria-label="Disabled input" disabled readonly>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label class="col-sm-6 col-form-label">DNS</label>
+                    <div class="col-sm-6">
+                      <input class="form-control" type="text" value="{{$interface->dns}}" aria-label="Disabled input" disabled readonly>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label class="col-sm-6 col-form-label">IP Range</label>
+                    <div class="col-sm-6">
+                      <input class="form-control" type="text" value="{{$interface->ip_range}}" aria-label="Disabled input" disabled readonly>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label class="col-sm-6 col-form-label">Listen port</label>
+                    <div class="col-sm-6">
+                      <input class="form-control" type="text" value="{{$interface->listen_port}}" aria-label="Disabled input" disabled readonly>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label class="col-sm-6 col-form-label">iType</label>
+                    <div class="col-sm-6">
+                      <input class="form-control" type="text" value="{{$interface->iType}}" aria-label="Disabled input" disabled readonly>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <label class="col-sm-6 col-form-label">Allowed Traffic (GB)</label>
+                    <div class="col-sm-6">
+                      <input class="form-control" type="text" value="{{$interface->allowed_traffic_GB}}" aria-label="Disabled input" disabled readonly>
+                    </div>
+                  </div>
                 </div>
+                <div class="col-md-6">
+                  <div class="chart-area">
+                      <canvas id="{{$interface->name}}-chart"></canvas>
+                  </div>
+                </div>
+              </div>
             </div>
         </div>
+    </div>
+    <!-- Edit interface Modal -->
+    <div class="modal fade" id="edit-interface-modal-{{$interface->id}}" tabindex="-1" role="dialog" aria-labelledby="editinterfaceModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editinterfaceModalLabel">Edit interface</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{{route('admin.wiregaurd.interfaces.update')}}" onsubmit="turnOnLoader()">
+                    @csrf
+                    <input type="hidden" name="_method" value="PUT">
+                    <input type="hidden" name="id" value="{{$interface->id}}">
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="name">Name</label>
+                            <input class="form-control" name="name" value="{{$interface->name}}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="default_endpoint_address">Default Endpoint</label>
+                            <input class="form-control" name="default_endpoint_address" value="{{$interface->default_endpoint_address}}" placeholder="s1.yourdomain.com">
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="dns">Wiregaurd DNS</label>
+                            <input class="form-control" name="dns" value="{{$interface->dns}}" placeholder="192.168.200.1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ip_range">IPv4 Address Range</label>
+                            <input class="form-control" name="ip_range" value="{{$interface->ip_range}}" placeholder="192.168.200.">
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="mtu">MTU</label>
+                            <input class="form-control" name="mtu" value="{{$interface->mtu}}" placeholder="1440">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="listen_port">listen port</label>
+                            <input class="form-control" name="listen_port" value="{{$interface->listen_port}}">
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="iType">iType</label>
+                            <select name="iType">
+                                <option key="unlimited" @if($interface->iType=='unlimited') selected @endif>unlimited</option>
+                                <option key="limited" @if($interface->iType=='limited') selected @endif>limited</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allowed_traffic_GB">Allowed Traffic (GB)</label>
+                            <input type="number" class="form-control" name="allowed_traffic_GB" value="{{$interface->allowed_traffic_GB}}" step="0.5">
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <input type="checkbox" name="exclude_from_block" id="exclude_from_block" @if($interface->exclude_from_block) checked="checked" @endif>
+                            <label for="exclude_from_block">Exclude From Blocking Peers</label>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-12" style="text-align:center;">
+                            <input type="submit" class="btn btn-success" value="Save and close" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+      </div>
     </div>
     @endforeach
 </div>
