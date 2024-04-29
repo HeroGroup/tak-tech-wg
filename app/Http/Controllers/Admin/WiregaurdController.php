@@ -1108,6 +1108,8 @@ class WiregaurdController extends Controller
             });
         }
 
+        $list = $list->get();
+
         $sortBy = $request->query('sortBy');
         if ($sortBy && $list && $list->count() > 0) {
             $by = substr($sortBy, 0, strrpos($sortBy, '_'));
@@ -1126,11 +1128,11 @@ class WiregaurdController extends Controller
         $page = $request->query('page', 1);
         $take = $request->query('take', 50);
         if ($take == 'all') {
-            $list = $list->get();
+            // $list = $list->get();
             $isLastPage = true;
         } else {
             $skip = ($page - 1) * $take;
-            $list = $list->skip($skip)->take($take)->get();
+            $list = $list->skip($skip)->take($take);
             $isLastPage = (count($list) < $take) ? true : false;
         }
 
@@ -1163,6 +1165,8 @@ class WiregaurdController extends Controller
             });
         }
 
+        $list = $list->get();
+
         $sortBy = $request->query('sortBy');
         if ($sortBy && $list && $list->count() > 0) {
             $by = substr($sortBy, 0, strrpos($sortBy, '_'));
@@ -1181,11 +1185,11 @@ class WiregaurdController extends Controller
         $page = $request->query('page', 1);
         $take = $request->query('take', 50);
         if ($take == 'all') {
-            $list = $list->get();
+            // $list = $list->get();
             $isLastPage = true;
         } else {
             $skip = ($page - 1) * $take;
-            $list = $list->skip($skip)->take($take)->get();
+            $list = $list->skip($skip)->take($take);
             $isLastPage = (count($list) < $take) ? true : false;
         }
         return view('admin.violations.blockHistory', compact('list', 'search', 'sortBy', 'isLastPage'));
