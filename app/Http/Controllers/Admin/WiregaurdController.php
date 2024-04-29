@@ -1039,8 +1039,17 @@ class WiregaurdController extends Controller
                 );
             })
             ->join('suspect_list', 'suspect_list.peer_id', '=', 'peers.id')
-            ->selectRaw('count(*) as number_of_violations, suspect_list.peer_id, peers.comment, peers.client_address, interfaces.name')
+            ->selectRaw('count(*) as number_of_violations, suspect_list.peer_id, peers.comment, peers.client_address, peers.note, interfaces.name')
             ->groupBy('suspect_list.peer_id');
+
+        $search = $request->query('search');
+        if ($search && $list && $list->count() > 0) {
+            $list = $list->where(function (Builder $query) use ($search) {
+                $query->where('comment', 'like', '%'.$search.'%')
+                    ->orWhere('client_address', 'like', '%'.$search.'%')
+                    ->orWhere('note', 'like', '%'.$search.'%');
+            });
+        }
 
         $page = $request->query('page', 1);
         $take = $request->query('take', 50);
@@ -1053,7 +1062,7 @@ class WiregaurdController extends Controller
             $isLastPage = (count($list) < $take) ? true : false;
         }
         
-        return view('admin.violations.suspect', compact('list', 'isLastPage'));
+        return view('admin.violations.suspect', compact('list', 'search', 'isLastPage'));
     }
 
     // returns the list of blocked peers
@@ -1071,8 +1080,17 @@ class WiregaurdController extends Controller
             })
             ->join('block_list', 'block_list.peer_id', '=', 'peers.id')
             ->whereNull('block_list.unblocked_at')
-            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'interfaces.name']);
+            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'peers.note', 'interfaces.name']);
         
+        $search = $request->query('search');
+        if ($search && $list && $list->count() > 0) {
+            $list = $list->where(function (Builder $query) use ($search) {
+                $query->where('comment', 'like', '%'.$search.'%')
+                    ->orWhere('client_address', 'like', '%'.$search.'%')
+                    ->orWhere('note', 'like', '%'.$search.'%');
+            });
+        }
+            
         $page = $request->query('page', 1);
         $take = $request->query('take', 50);
         if ($take == 'all') {
@@ -1084,7 +1102,7 @@ class WiregaurdController extends Controller
             $isLastPage = (count($list) < $take) ? true : false;
         }
 
-        return view('admin.violations.block', compact('list', 'isLastPage'));
+        return view('admin.violations.block', compact('list', 'search', 'isLastPage'));
     }
     
     // returns the history of blocked peers
@@ -1102,8 +1120,17 @@ class WiregaurdController extends Controller
             })
             ->join('block_list', 'block_list.peer_id', '=', 'peers.id')
             ->whereNotNull('block_list.unblocked_at')
-            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'interfaces.name']);
+            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'peers.note', 'interfaces.name']);
         
+        $search = $request->query('search');
+        if ($search && $list && $list->count() > 0) {
+            $list = $list->where(function (Builder $query) use ($search) {
+                $query->where('comment', 'like', '%'.$search.'%')
+                    ->orWhere('client_address', 'like', '%'.$search.'%')
+                    ->orWhere('note', 'like', '%'.$search.'%');
+            });
+        }
+
         $page = $request->query('page', 1);
         $take = $request->query('take', 50);
         if ($take == 'all') {
@@ -1114,7 +1141,7 @@ class WiregaurdController extends Controller
             $list = $list->skip($skip)->take($take)->get();
             $isLastPage = (count($list) < $take) ? true : false;
         }
-        return view('admin.violations.blockHistory', compact('list', 'isLastPage'));
+        return view('admin.violations.blockHistory', compact('list', 'search', 'isLastPage'));
     }
 
     // manually extracts a peer from suspect list

@@ -69,7 +69,16 @@
 </div>
 
 <script>
-    function massDelete() {
+  var baseRoute = "{{route('violations.block.list')}}";
+  function search() {
+    var queryString = window.location.search;
+    var urlParams = new URLSearchParams(queryString);
+    urlParams.set('search', document.getElementById("search").value);
+    urlParams.delete('page');
+
+    window.location.href = `${baseRoute}?${urlParams.toString()}`;
+  }
+  function massDelete() {
     var ids = checkedItems();
     if (ids.length == 0) {
       return;

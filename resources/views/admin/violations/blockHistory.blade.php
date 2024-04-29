@@ -34,4 +34,16 @@
     </tbody>
   </table>
 </div>
+
+<script>
+  var baseRoute = "{{route('violations.block.history')}}";
+  function search() {
+    var queryString = window.location.search;
+    var urlParams = new URLSearchParams(queryString);
+    urlParams.set('search', document.getElementById("search").value);
+    urlParams.delete('page');
+
+    window.location.href = `${baseRoute}?${urlParams.toString()}`;
+  }
+</script>
 @endsection
