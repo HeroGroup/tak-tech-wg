@@ -67,17 +67,7 @@ class WiregaurdController extends Controller
             $peers = $peers->where('is_enabled', (int)$enabled);
         }
 
-        // $peers = $peers->get();
-        $page = $request->query('page', 1);
-        $take = $request->query('take', 50);
-        if ($take == 'all') {
-            $peers = $peers->get();
-            $isLastPage = true;
-        } else {
-            $skip = ($page - 1) * $take;
-            $peers = $peers->skip($skip)->take($take)->get();
-            $isLastPage = (count($peers) < $take) ? true : false;
-        }
+        $peers = $peers->get();
 
         $now = time();
         foreach ($peers as $peer) {
@@ -113,6 +103,17 @@ class WiregaurdController extends Controller
             ->where('user_id', auth()->user()->id)
             ->join('interfaces', 'interfaces.id', '=', 'user_interfaces.interface_id')
             ->pluck('name', 'interface_id')->toArray();
+        
+        $page = $request->query('page', 1);
+        $take = $request->query('take', 50);
+        if ($take == 'all') {
+            // $peers = $peers->get();
+            $isLastPage = true;
+        } else {
+            $skip = ($page - 1) * $take;
+            $peers = $peers->skip($skip)->take($take);
+            $isLastPage = (count($peers) < $take) ? true : false;
+        }
         
         $messageDuration = 10000;
         return view('admin.peers.list', compact('peers', 'interface', 'comment', 'enabled', 'sortBy', 'interfaces', 'isLastPage', 'messageDuration'));
