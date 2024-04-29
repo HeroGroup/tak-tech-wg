@@ -1026,7 +1026,7 @@ class WiregaurdController extends Controller
     }
 
     // returns the list of suspected peers
-    public function suspectList()
+    public function suspectList(Request $request)
     {
         $list = DB::table('peers')
             ->join('user_interfaces', 'peers.interface_id', '=', 'user_interfaces.interface_id')
@@ -1040,14 +1040,24 @@ class WiregaurdController extends Controller
             })
             ->join('suspect_list', 'suspect_list.peer_id', '=', 'peers.id')
             ->selectRaw('count(*) as number_of_violations, suspect_list.peer_id, peers.comment, peers.client_address, interfaces.name')
-            ->groupBy('suspect_list.peer_id')
-            ->get();
+            ->groupBy('suspect_list.peer_id');
+
+        $page = $request->query('page', 1);
+        $take = $request->query('take', 50);
+        if ($take == 'all') {
+            $list = $list->get();
+            $isLastPage = true;
+        } else {
+            $skip = ($page - 1) * $take;
+            $list = $list->skip($skip)->take($take)->get();
+            $isLastPage = (count($list) < $take) ? true : false;
+        }
         
-        return view('admin.violations.suspect', compact('list'));
+        return view('admin.violations.suspect', compact('list', 'isLastPage'));
     }
 
     // returns the list of blocked peers
-    public function blockList()
+    public function blockList(Request $request)
     {
         $list = DB::table('peers')
             ->join('user_interfaces', 'peers.interface_id', '=', 'user_interfaces.interface_id')
@@ -1061,14 +1071,24 @@ class WiregaurdController extends Controller
             })
             ->join('block_list', 'block_list.peer_id', '=', 'peers.id')
             ->whereNull('block_list.unblocked_at')
-            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'interfaces.name'])
-            ->get();
+            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'interfaces.name']);
         
-        return view('admin.violations.block', compact('list'));
+        $page = $request->query('page', 1);
+        $take = $request->query('take', 50);
+        if ($take == 'all') {
+            $list = $list->get();
+            $isLastPage = true;
+        } else {
+            $skip = ($page - 1) * $take;
+            $list = $list->skip($skip)->take($take)->get();
+            $isLastPage = (count($list) < $take) ? true : false;
+        }
+
+        return view('admin.violations.block', compact('list', 'isLastPage'));
     }
     
     // returns the history of blocked peers
-    public function blockHistoryList()
+    public function blockHistoryList(Request $request)
     {
         $list = DB::table('peers')
             ->join('user_interfaces', 'peers.interface_id', '=', 'user_interfaces.interface_id')
@@ -1082,10 +1102,19 @@ class WiregaurdController extends Controller
             })
             ->join('block_list', 'block_list.peer_id', '=', 'peers.id')
             ->whereNotNull('block_list.unblocked_at')
-            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'interfaces.name'])
-            ->get();
+            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'interfaces.name']);
         
-        return view('admin.violations.blockHistory', compact('list'));
+        $page = $request->query('page', 1);
+        $take = $request->query('take', 50);
+        if ($take == 'all') {
+            $list = $list->get();
+            $isLastPage = true;
+        } else {
+            $skip = ($page - 1) * $take;
+            $list = $list->skip($skip)->take($take)->get();
+            $isLastPage = (count($list) < $take) ? true : false;
+        }
+        return view('admin.violations.blockHistory', compact('list', 'isLastPage'));
     }
 
     // manually extracts a peer from suspect list
