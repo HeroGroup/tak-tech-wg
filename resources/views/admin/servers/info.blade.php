@@ -114,7 +114,7 @@
               <th>Allowed Address</th>
               <th>Interface</th>
               <th>Comment</th>
-              <th>Remove</th>
+              <th></th>
             </thead>
             <tbody>
                 @foreach($duplicates as $duplicate)
