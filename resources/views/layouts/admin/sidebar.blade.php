@@ -108,6 +108,12 @@
         </div>
     </li>
     @endif
+    <li class="nav-item" id="monitor">
+        <a class="nav-link" href="{{route('wiregaurd.interfaces.usages.monitor.only')}}">
+            <i class="fas fa-fw fa-tv"></i>
+            <span>Monitor</span>
+        </a>
+    </li>
     @if(auth()->user()->isAdmin)
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseServers" aria-expanded="false" aria-controls="collapseServers">

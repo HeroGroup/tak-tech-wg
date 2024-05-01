@@ -34,6 +34,7 @@ Route::middleware(['auth', 'active'])->group(function() {
   Route::put('/users/updatePassword', [AuthController::class, 'updatePassword'])->name('users.updatePassword');      
 
   Route::get('/wiregaurd/interfaces/usages', [InterfaceController::class, 'usages'])->name('wiregaurd.interfaces.usages');
+  Route::get('/wiregaurd/interfaces/usage/monitor', [InterfaceController::class, 'monitorOnly'])->name('wiregaurd.interfaces.usages.monitor.only');
   Route::get('/wiregaurd/interfaces/usage/monitor/{interface}', [InterfaceController::class, 'monitor'])->name('wiregaurd.interfaces.usages.monitor');
   Route::post('/wiregaurd/interfaces/usage/monitor', [InterfaceController::class, 'saveMonitor'])->name('wiregaurd.interfaces.usages.monitor.save');
   

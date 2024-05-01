@@ -463,6 +463,108 @@ class InterfaceController extends Controller
         }
     }
 
+    public function monitorOnly(Request $request)
+    {
+        $servers = DB::table('servers')->get();
+        $peers = DB::table('peers')
+            ->where('monitor', 1)
+            ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
+            ->join('user_interfaces', 'user_interfaces.interface_id', '=', 'peers.interface_id')
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->select(['peers.*', 'interfaces.name']);
+            
+        $interfaces = DB::table('interfaces')
+            ->join('user_interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->select(['interfaces.*'])
+            ->pluck('name', 'id')
+            ->toArray();
+
+        $interface = $request->query('interface');
+        if ($interface && $interface != 'all' && $peers && $peers->count() > 0) {
+            $peers = $peers->where('peers.interface_id', $interface);
+        }
+        
+        $search = $request->query('search');
+        if ($search && $peers && $peers->count() > 0) {
+            $peers = $peers->where(function (Builder $query) use ($search) {
+                $query->where('comment', 'like', '%'.$search.'%')
+                    ->orWhere('client_address', 'like', '%'.$search.'%')
+                    ->orWhere('note', 'like', '%'.$search.'%');
+            });
+        }
+
+        $page = $request->query('page', 1);
+        $take = $request->query('take', 50);
+        if ($take == 'all') {
+            $peers = $peers->get();
+            $isLastPage = true;
+        } else {
+            $skip = ($page - 1) * $take;
+            $peers = $peers->skip($skip)->take($take)->get();
+            $isLastPage = (count($peers) < $take) ? true : false;
+        }
+            
+        foreach($peers as $peer) {
+            if($peer->monitor) {
+                $pId = $peer->id;
+                $sum_tx = 0;
+                $sum_rx = 0;
+                foreach ($servers as $server) {
+                    $sId = $server->id;
+                    $server_peer = DB::table('server_peers')
+                        ->where('server_id', $sId)
+                        ->where('peer_id', $pId)
+                        ->first();
+                    if ($server_peer) {
+                        $record = DB::table('server_peer_usages')
+                            ->where('server_id', $sId)
+                            ->where('server_peer_id', $server_peer->server_peer_id)
+                            ->orderBy('id', 'desc')
+                            ->first();
+                        $sum_tx += $record->tx ?? 0;
+                        $sum_rx += $record->rx ?? 0;
+                    }
+                }
+                    
+                $peer->tx = round(($sum_tx / 1073741824), 2);
+                $peer->rx = round(($sum_rx / 1073741824), 2);
+                $peer->total_usage = $peer->tx + $peer->rx;
+            } else {
+                $peer->tx = 0;
+                $peer->rx = 0;
+                $peer->total_usage = 0;
+            }
+        }
+
+        $sortBy = $request->query('sortBy');
+        if ($sortBy && $peers && $peers->count() > 0) {
+            $by = substr($sortBy, 0, strrpos($sortBy, '_'));
+            $type = substr($sortBy, strrpos($sortBy, '_')+1);
+
+            $peers = $peers->sortBy($by, SORT_NATURAL);
+                
+            if ($type == "desc") {
+                $peers = $peers->reverse();
+            }
+        } else {
+            $sortBy = "client_address_asc";
+            $peers = $peers->sortBy('client_address', SORT_NATURAL);
+        }
+
+        $lastUpdate = '';
+        if (isset($record)) {
+            if(date('Y-m-d', time()) == substr($record->created_at, 0, 10)) {
+                $time = substr($record->created_at, 11, 5);
+                $lastUpdate = "Today $time";
+            } else {
+                $lastUpdate = substr($record->created_at, 0, 16);
+            }
+        }
+            
+        return view('admin.interfaces.monitorOnly', compact('interfaces', 'interface', 'peers', 'search', 'sortBy', 'isLastPage', 'lastUpdate'));
+    }
+
     public function saveMonitor(Request $request)
     {
         try {

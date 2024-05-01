@@ -2,13 +2,26 @@
 @section('content')
 
 <x-loader/>
-
-<a href="#" class="btn btn-primary btn-icon-split mb-4" data-toggle="modal" data-target="#new-interface-modal">
-    <span class="icon text-white-50">
+@if(auth()->user()->is_admin)
+<div class="row mb-4">
+  <div class="col-md-6">
+    <a href="{{route('wiregaurd.interfaces.usages')}}" class="btn">
+      <i class="fa fa-fw fa-columns"></i>
+    </a>
+    <a href="#" class="btn btn-dark">
+      <i class="fa fa-fw fa-list"></i>
+    </a>
+  </div>
+  <div class="col-md-6 text-right">
+    <a href="#" class="btn btn-primary btn-icon-split" data-toggle="modal" data-target="#new-interface-modal">
+      <span class="icon text-white-50">
         <i class="fas fa-plus"></i>
-    </span>
-    <span class="text">Add Wiregaurd Interface</span>
-</a>
+      </span>
+      <span class="text">Add Wiregaurd Interface</span>
+    </a>
+  </div>
+</div>
+@endif
 
 <div class="table-responsive">
   <table class="table table-striped">
@@ -42,10 +55,23 @@
             </a>
         </td>
         <td>
-          <a href="#" class="btn btn-info btn-circle btn-sm" data-toggle="modal" data-target="#edit-interface-modal-{{$interface->id}}" title="Edit">
-            <i class="fas fa-pen"></i>
-          </a>&nbsp;
-
+            <div class="dropdown no-arrow show">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    <i class="fas fa-ellipsis-h fa-fw text-gray-700"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink" x-placement="bottom-end" style="position: absolute; transform: translate3d(-158px, 19px, 0px); top: 0px; left: 0px; will-change: transform;">
+                    <div class="dropdown-header">Actions</div>
+                    <a href="#" class="dropdown-item text-info" data-toggle="modal" data-target="#edit-interface-modal-{{$interface->id}}">
+                        <i class="fas fa-pen"></i> Edit
+                    </a>
+                    <a href="{{route('wiregaurd.interfaces.usages.monitor',$interface->id)}}" class="dropdown-item text-success">
+                        <i class="fas fa-tv"></i> Monitor
+                    </a>
+                    <a href="#" class="dropdown-item text-danger" onclick="destroy('{{route('admin.wiregaurd.interfaces.delete')}}','{{$interface->id}}','{{$interface->id}}')">
+                        <i class="fas fa-trash"></i> Remove
+                    </a>
+                </div>
+            </div>
             <!-- Edit interface Modal -->
             <div class="modal fade" id="edit-interface-modal-{{$interface->id}}" tabindex="-1" role="dialog" aria-labelledby="editinterfaceModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg" role="document">
@@ -120,10 +146,6 @@
                     </div>
                 </div>
             </div>
-            <a href="#" class="btn btn-danger btn-circle btn-sm" title="Delete" onclick="destroy('{{route('admin.wiregaurd.interfaces.delete')}}','{{$interface->id}}','{{$interface->id}}')">
-                <i class="fas fa-trash"></i>
-            </a>
-            &nbsp;
         </td>
       </tr>
     @endforeach

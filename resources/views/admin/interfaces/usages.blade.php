@@ -1,5 +1,25 @@
 @extends('layouts.admin.main', ['pageTitle' => 'Interfaces Usages (Last 3 hours)', 'active' => 'interfaces'])
 @section('content')
+@if(auth()->user()->is_admin)
+<div class="row mb-4">
+  <div class="col-md-6">
+    <a href="#" class="btn btn-dark">
+      <i class="fa fa-fw fa-columns"></i>
+    </a>
+    <a href="{{route('admin.wiregaurd.interfaces')}}" class="btn">
+      <i class="fa fa-fw fa-list"></i>
+    </a>
+  </div>
+  <div class="col-md-6 text-right">
+    <a href="#" class="btn btn-primary btn-icon-split" data-toggle="modal" data-target="#new-interface-modal">
+      <span class="icon text-white-50">
+        <i class="fas fa-plus"></i>
+      </span>
+      <span class="text">Add Wiregaurd Interface</span>
+    </a>
+  </div>
+</div>
+@endif
 <div class="row">
   @foreach($interfaces as $interface)
   <div class="col-md-12">
@@ -154,6 +174,77 @@
     @endforeach
 </div>
 
+<div class="modal fade" id="new-interface-modal" tabindex="-1" role="dialog" aria-labelledby="newinterfaceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newinterfaceModalLabel">Add new interface</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{{route('admin.wiregaurd.interfaces.add')}}" onsubmit="turnOnLoader()">
+                    @csrf
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="name">Interface Name</label>
+                            <input class="form-control" name="name" placeholder="WG-S" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="default_endpoint_address">Default Endpoint</label>
+                            <input class="form-control" name="default_endpoint_address" placeholder="s1.yourdomain.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="dns">Wiregaurd DNS</label>
+                            <input class="form-control" name="dns" placeholder="192.168.200.1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ip_range">IPv4 Address Range</label>
+                            <input class="form-control" name="ip_range" placeholder="192.168.200." required>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="mtu">MTU</label>
+                            <input class="form-control" name="mtu" placeholder="1440" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="listen_port">listen port</label>
+                            <input class="form-control" name="listen_port" required>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <label for="iType">iType</label>
+                            <select name="iType">
+                                <option key="unlimited">unlimited</option>
+                                <option key="limited">limited</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allowed_traffic_GB">Allowed Traffic (GB)</label>
+                            <input type="number" class="form-control" name="allowed_traffic_GB" step="0.5">
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-6">
+                            <input type="checkbox" name="exclude_from_block" id="exclude_from_block" >
+                            <label for="exclude_from_block">Exclude From Blocking Peers</label>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                        <div class="col-md-12" style="text-align:center;">
+                            <input type="submit" class="btn btn-success" value="Save and close" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="/vendor/chart.js/Chart.min.js"></script>
 <script>
   var interfacesJson = "{{$interfaces_json}}";
