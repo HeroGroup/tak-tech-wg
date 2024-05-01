@@ -4,7 +4,7 @@
 <x-loader/>
 
 <div class="row">
-  <div class="col-lg-8">
+  <div class="col-lg-6">
     <div class="card shadow mb-4">
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">Server Details</h6>
@@ -101,7 +101,7 @@
       </div>
     </div>
   </div>
-  <div class="col-lg-4">
+  <div class="col-lg-6">
     <div class="card shadow mb-4">
       <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary">Remote Duplicates</h6>
@@ -112,13 +112,22 @@
           <table class="table table-striped">
             <thead>
               <th>Allowed Address</th>
-              <th>count</th>
+              <th>Interface</th>
+              <th>Comment</th>
+              <th>Remove</th>
             </thead>
             <tbody>
-                @foreach($duplicates as $address => $count)
-                  <tr>
-                    <td>{{$address}}</td>
-                    <td>{{$count}}</td>
+                @foreach($duplicates as $duplicate)
+                  <?php $id=$duplicate['.id']; ?>
+                  <tr id="{{$id}}">
+                    <td>{{$duplicate['allowed-address']}}</td>
+                    <td>{{$duplicate['interface']}}</td>
+                    <td>{{$duplicate['comment']}}</td>
+                    <td>
+                      <a href="#" class="text-danger" onclick="destroy('{{route('admin.settings.servers.delete.duplicate')}}','{{$id}}','{{$id}}',{'sAddress':'{{$server->server_address}}'})">
+                        <i class="fa fa-trash"></i>
+                      </a>
+                    </td>
                   </tr>
                 @endforeach
             </tbody>

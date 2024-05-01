@@ -358,7 +358,7 @@ class WiregaurdController extends Controller
             $wgserveraddress = $peer->endpoint_address ?? $interface->default_endpoint_address;
             $commentApply = $peer->comment;
 
-            $removeResult = $this->removeLocal($id);
+            $removeResult = $this->removeLocal($id, 'regenerate');
 
             $message .= $removeResult ? "Local removed successfully\r\n" : "Unable to remove local peer $commentApply. \r\n";
             
@@ -495,23 +495,54 @@ class WiregaurdController extends Controller
     }
 
     // This function removes a peer on our local databse
-    public function removeLocal($id)
+    public function removeLocal($id, $removeReason)
     {
         try {
-            DB::table('server_peers')->where('peer_id', $id)->delete();
-
-            // delete associated conf and qr file
             $peer = DB::table('peers')->find($id);
-            if ($peer->conf_file && file_exists($peer->conf_file)) {
-                unlink($peer->conf_file);
-            }
-            if ($peer->qrcode_file && file_exists($peer->qrcode_file)) {
-                unlink($peer->qrcode_file);
-            }
+            if ($peer) {
+                $now = date('Y-m-d H:i:s', time());
+                $user = auth()->user()->id;
 
-            DB::table('peers')->where('id', $id)->delete();
+                DB::table('removed_peers')->insert([
+                    'peer_id' => $id,
+                    'interface_id' => $peer->interface_id,
+                    'client_address' => $peer->client_address,
+                    'comment' => $peer->comment,
+                    'note' => $peer->note,
+                    'activate_date_time' => $peer->activate_date_time,
+                    'remove_reason' => $removeReason,
+                    'removed_at' => $now,
+                    'removed_by' => $user
+                ]);
 
-            return true;
+                $server_peers = DB::table('server_peers')->where('peer_id', $id)->get();
+                foreach ($server_peers as $server_peer) {
+                    DB::table('removed_server_peers')->insert([
+                        'server_id' => $server_peer->server_id,
+                        'peer_id' => $server_peer->peer_id,
+                        'server_peer_id' => $server_peer->server_peer_id,
+                        'removed_at' => $now,
+                        'removed_by' => $user
+                    ]);
+                }
+
+                // delete server_peers
+                DB::table('server_peers')->where('peer_id', $id)->delete();
+    
+                // delete associated conf and qr file
+                if ($peer->conf_file && file_exists($peer->conf_file)) {
+                    unlink($peer->conf_file);
+                }
+                if ($peer->qrcode_file && file_exists($peer->qrcode_file)) {
+                    unlink($peer->qrcode_file);
+                }
+    
+                DB::table('peers')->where('id', $id)->delete();
+    
+                return true;
+            } else {
+                return false;
+            }
         } catch (\Exception $exception) {
             return false;
         }
@@ -523,7 +554,7 @@ class WiregaurdController extends Controller
         try {
             $peerId = $request->id;
             $message = $this->removeRemote($peerId)['message'] . "\r\n";
-            $message .= $this->removeLocal($peerId) ? "removed from local\r\n" : "failed to remove from local\r\n";
+            $message .= $this->removeLocal($peerId, 'manual-single') ? "removed from local\r\n" : "failed to remove from local\r\n";
             
             return $this->success($message);
         } catch (\Exception $exception) {
@@ -537,7 +568,7 @@ class WiregaurdController extends Controller
         $ids = json_decode($request->ids);
         foreach ($ids as $peerId) {
             $this->removeRemote($peerId);
-            $this->removeLocal($peerId);
+            $this->removeLocal($peerId, 'manual-mass');
         }
 
         return $this->success('Selected items removed successfully.');
@@ -784,7 +815,7 @@ class WiregaurdController extends Controller
                             array_push($disabled, $peer->comment);
                         // } else { // if peer is limited, remove peer
                             // $this->removeRemote($peerId);
-                            // $this->removeLocal($peerId);
+                            // $this->removeLocal($peerId, 'date-expired');
                             // array_push($removed, $peer->comment);
                         // }
                     }
@@ -850,7 +881,7 @@ class WiregaurdController extends Controller
                     if (round(($usage / 1073741824), 2) > $limit) { // GB
                         // remove peer
                         $this->removeRemote($peerId);
-                        $this->removeLocal($peerId);
+                        $this->removeLocal($peerId, 'reach-limit');
                         array_push($removed, $limitedPeer->comment);
                     }
                 }
@@ -1357,7 +1388,7 @@ class WiregaurdController extends Controller
                     break;
                 case 'remove':
                     $this->removeRemote($peerId);
-                    $this->removeLocal($peerId);
+                    $this->removeLocal($peerId, 'manual-batch');
                     break;
                 default:
                     # code...

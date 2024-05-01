@@ -277,7 +277,7 @@
         });
     });
 
-    function destroy(route,id,elementId) {
+    function destroy(route,id,elementId,extra={}) {
         event.preventDefault();
 
         Swal.fire({
@@ -296,7 +296,8 @@
                     formData: createFormData({
                         '_token': '{{csrf_token()}}',
                         '_method': 'DELETE',
-                        'id': id
+                        'id': id,
+                        ...extra
                     }),
                     successCallback: function () {
                         document.getElementById(elementId).remove();

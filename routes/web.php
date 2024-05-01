@@ -107,6 +107,7 @@ Route::prefix('admin')->group(function () {
       Route::get('/servers/{id}/info', [ServerController::class, 'info'])->name('settings.servers.info');
       Route::put('/servers/update', [ServerController::class, 'updateServer'])->name('settings.servers.update');
       Route::delete('/servers/delete', [ServerController::class, 'deleteServer'])->name('settings.servers.delete');
+      Route::delete('/servers/delete/duplicate', [ServerController::class, 'removeDuplicate'])->name('settings.servers.delete.duplicate');
 
       Route::post('/servers/getInterfaces', [ServerController::class, 'getInterfaces'])->name('settings.servers.getInterfaces');
       Route::post('/servers/getPeers', [ServerController::class, 'getPeers'])->name('settings.servers.getPeers');

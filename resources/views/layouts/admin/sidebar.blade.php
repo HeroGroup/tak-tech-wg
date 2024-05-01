@@ -115,7 +115,7 @@
         </a>
     </li>
     @if(auth()->user()->isAdmin)
-    <li class="nav-item">
+    <li class="nav-item" id="servers">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseServers" aria-expanded="false" aria-controls="collapseServers">
             <i class="fas fa-fw fa-server"></i>
             <span>Servers</span>

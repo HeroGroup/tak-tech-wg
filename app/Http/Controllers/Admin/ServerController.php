@@ -36,10 +36,17 @@ class ServerController extends Controller
 
         $duplicates = [];
         if ($remoteCounts['peers'] > 0) {
-            $x = array_count_values(array_column($remotePeers, 'allowed-address'));
-            foreach ($x as $key => $value) 
-                if ($value > 1) 
-                    $duplicates[$key] = $value;
+            $remoteDuplicates = array_count_values(array_column($remotePeers, 'allowed-address'));
+            foreach ($remoteDuplicates as $key => $value) {
+                if ($value > 1) {
+                    array_push(
+                        $duplicates, 
+                        ...array_filter($remotePeers, function($elm) use($key) {
+                            return $key == $elm['allowed-address'];
+                        })
+                    );
+                }
+            }
         }
 
         $disabledArrayCounts = is_array($remotePeers) ? 
@@ -192,6 +199,28 @@ class ServerController extends Controller
             DB::table('servers')->where('id', $request->id)->delete();
     
             return $this->success('Server deleted successfully.');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
+        }
+    }
+
+    public function removeDuplicate(Request $request)
+    {
+        try {
+            $sAddress = $request->sAddress;
+            $id = $request->id;
+            $response = curl_general(
+                'POST',
+                $sAddress . '/rest/interface/wireguard/peers/remove',
+                json_encode([".id" => $id]),
+                true
+            );
+            
+            if($response == []) {
+                return $this->success('success');
+            } else {
+                return $this->fail($responce);
+            }
         } catch (\Exception $exception) {
             return $this->fail($exception->getMessage());
         }
