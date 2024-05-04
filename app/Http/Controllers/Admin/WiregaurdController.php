@@ -545,6 +545,7 @@ class WiregaurdController extends Controller
                 return false;
             }
         } catch (\Exception $exception) {
+            logError($exception);
             return false;
         }
     }
