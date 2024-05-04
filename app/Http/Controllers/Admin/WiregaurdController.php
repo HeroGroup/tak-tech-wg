@@ -490,6 +490,7 @@ class WiregaurdController extends Controller
             
             return ['status' => 1, 'message' => implode("\r\n", $message)];
         } catch (\Exception $exception) {
+            logError($exception);
             return ['status' => -1, 'message' => $exception->getLine() . ': ' . $exception->getMessage()];
         }
     }
