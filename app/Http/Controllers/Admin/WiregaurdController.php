@@ -1421,7 +1421,7 @@ class WiregaurdController extends Controller
 
                 DB::table('allowed_addresses_restrictions')->insert($insert_data);
             }
-            
+
             return 'Complete!';
         } catch (\Exception $exception) {
             return $exception->getMessage();
@@ -1485,6 +1485,22 @@ class WiregaurdController extends Controller
             return back()->with('message', 'success')->with('type', 'success');
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
+    }
+
+    public  function updateRestrictionsMass(Request $request)
+    {
+        try {
+            $ids = json_decode($request->ids);
+            DB::table('allowed_addresses_restrictions')
+                ->whereIn('id', $ids)
+                ->update([
+                    'maximum_allowed' => $request->maximum_allowed
+                ]);
+            
+            return $this->success('success');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getMessage());
         }
     }
 }

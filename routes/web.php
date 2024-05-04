@@ -97,8 +97,9 @@ Route::prefix('admin')->group(function () {
       Route::delete('/wiregaurd/peers/remove', [WiregaurdController::class, 'removeSingle'])->name('wiregaurd.peers.remove');
       Route::delete('/wiregaurd/peers/removeMass', [WiregaurdController::class, 'removeMass'])->name('wiregaurd.peers.remove.mass');
       Route::get('/wiregaurd/peers/restrictions', [WiregaurdController::class, 'restrictions'])->name('wiregaurd.peers.restrictions');
-      Route::get('/wiregaurd/peers/restrictions/fill', [WiregaurdController::class, 'fill'])->name('wiregaurd.peers.restrictions.fill');
+      // Route::get('/wiregaurd/peers/restrictions/fill', [WiregaurdController::class, 'fill'])->name('wiregaurd.peers.restrictions.fill');
       Route::put('/wiregaurd/peers/restrictions', [WiregaurdController::class, 'updateRestrictions'])->name('wiregaurd.peers.restrictions.update');
+      Route::put('/wiregaurd/peers/restrictions/mass', [WiregaurdController::class, 'updateRestrictionsMass'])->name('wiregaurd.peers.restrictions.update.mass');
       
       Route::get('/settings', [SettingController::class, 'index'])->name('settings');
       Route::post('/settings/add', [SettingController::class, 'addSetting'])->name('settings.add');
