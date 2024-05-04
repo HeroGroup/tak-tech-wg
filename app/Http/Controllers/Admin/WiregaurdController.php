@@ -1420,8 +1420,9 @@ class WiregaurdController extends Controller
                 }
 
                 DB::table('allowed_addresses_restrictions')->insert($insert_data);
-                return 'Complete!';
             }
+            
+            return 'Complete!';
         } catch (\Exception $exception) {
             return $exception->getMessage();
         }
