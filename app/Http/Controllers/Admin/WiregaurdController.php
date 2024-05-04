@@ -131,6 +131,15 @@ class WiregaurdController extends Controller
                 'message' => "Peer $caddress already exists."
             ];
         }
+        
+        $x = DB::table('allowed_addresses_restrictions')->where('allowed_address', $caddress)->first();
+        $used_count = $x->used_count ?? 0;
+        if ($x && $x->maximum_allowed <= $x->used_count) {
+            return [
+                'id' => 0,
+                'message' => "Peer $caddress has reached limit!"
+            ];
+        }
 
         $keys = createKeys();
         $privateKey = $keys['private_key'];
@@ -172,6 +181,12 @@ class WiregaurdController extends Controller
                     'created_at' => $now,
                 ]);
         }
+
+        DB::table('allowed_addresses_restrictions')
+            ->where('allowed_address', $caddress)
+            ->update([
+                'used_count' => $used_count+1
+            ]);
 
         return [
             'id' => $newLocalPeerId,
