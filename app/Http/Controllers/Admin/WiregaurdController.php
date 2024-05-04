@@ -1401,4 +1401,14 @@ class WiregaurdController extends Controller
             }
         }
     }
+
+    public function restrictions(Request $request)
+    {
+        //
+    }
+
+    public  function updateRestrictions(Request $request)
+    {
+        //
+    }
 }

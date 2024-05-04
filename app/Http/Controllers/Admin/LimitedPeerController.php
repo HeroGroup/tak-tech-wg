@@ -325,7 +325,7 @@ class LimitedPeerController extends Controller
         $servers = DB::table('servers')->get();
         $now = time();
         foreach($limitedPeers as $peer) {
-            $pId = $peer->id;
+            $pId = $peer->peer_id;
             $sum_tx = 0;
             $sum_rx = 0;
             foreach ($servers as $server) {

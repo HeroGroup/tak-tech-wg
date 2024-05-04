@@ -84,6 +84,12 @@
                     <i class="fas fa-fw fa-database"></i>
                     <span>Limited Database</span>
                 </a>
+                @if(auth()->user()->is_admin)
+                <a class="collapse-item" href="{{route('admin.wiregaurd.peers.restrictions')}}">
+                    <i class="fas fa-fw fa-ban"></i>
+                    <span>Peers Restrictions</span>
+                </a>
+                @endif
             </div>
         </div>
     </li>
