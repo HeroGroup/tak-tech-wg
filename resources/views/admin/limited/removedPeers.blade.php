@@ -54,8 +54,7 @@
       <th>Address</th>
       <th>Note</th>
       <th>Removed</th>
-      <th>TX (GB)</th>
-      <th>RX (GB)</th>
+      <th>Reason</th>
       <th>Total (GB)</th>
       <th>Allowed Traffic (GB)</th>
       <th></th>
@@ -72,48 +71,8 @@
         <td>{{$peer->name}}</td>
         <td>{{$peer->client_address}}</td>
         <td>{{$peer->note}}</td>
-        <td>
-          @if($peer->expire_days && $peer->activate_date_time)
-          <?php 
-            $expire = $peer->expire_days;
-            $diff = strtotime($peer->activate_date_time. " + $expire days") - $nowTime; 
-            if ($diff > 0) {
-              $expires_on = new DateTime($peer->activate_date_time);
-              $expires_on->add(new DateInterval("P$expire"."D"));
-              $time_left = $expires_on->diff($nowDateTime);
-              $days_left = $time_left->m*30 + $time_left->d;
-              $hours_left = $time_left->h;
-              $minutes_left = $time_left->i;
-              // $seconds_left = $time_left->s;
-              $time_left_to_show = "";
-              if ($days_left > 0) {
-                $time_left_to_show .= "$days_left days ";
-              }
-              if ($hours_left > 0) {
-                $time_left_to_show .= "$hours_left hours ";
-              }
-              if ($time_left_to_show == "" && $minutes_left > 0) {
-                $time_left_to_show .= "$minutes_left minutes ";
-              }
-            }
-          ?>
-          @if($diff > 0)
-            @if($days_left > 15)
-            <div class="badge badge-success">{{$time_left_to_show}}</div>
-            @elseif($days_left > 8)
-            <div class="badge badge-info">{{$time_left_to_show}}</div>
-            @else
-            <div class="badge badge-warning">{{$time_left_to_show}}</div>
-            @endif
-          @else
-            <div class="badge badge-danger">expired</div>
-          @endif
-          @else
-          -
-          @endif
-        </td>
-        <td>{{$peer->tx}}</td>
-        <td>{{$peer->rx}}</td>
+        <td>{{$peer->removed_at}}</td>
+        <td>{{$peer->remove_reason}}</td>
         <td>
           <?php 
             $total = $peer->total_usage; 

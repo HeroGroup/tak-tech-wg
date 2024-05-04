@@ -1402,13 +1402,88 @@ class WiregaurdController extends Controller
         }
     }
 
+    public function fill()
+    {
+        try {
+            $limitedInterfaces = DB::table('interfaces')->where('iType', 'limited')->get();
+        
+            foreach ($limitedInterfaces as $interface) {
+                $ip_range = $interface->ip_range;
+                $insert_data = [];
+                for ($i=1; $i<=254; $i++) {
+                    $address = $ip_range.$i;
+                    array_push($insert_data, [
+                        'allowed_address' => $address,
+                        'used_count' => DB::table('peers')->where('client_address', $address.'/32')->count(),
+                        'maximum_allowed' => 1,
+                    ]);
+                }
+
+                DB::table('allowed_addresses_restrictions')->insert($insert_data);
+                return 'Complete!';
+            }
+        } catch (\Exception $exception) {
+            return $exception->getMessage();
+        }
+    }
     public function restrictions(Request $request)
     {
-        //
+        try {
+            $limitedInterfaces = DB::table('interfaces')
+                ->where('iType', 'limited')
+                ->join('user_interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')
+                ->where('user_interfaces.user_id', auth()->user()->id)
+                ->select(['interfaces.*'])
+                ->pluck('name', 'id')
+                ->toArray();
+            
+            $interface = $request->query('interface', 1);
+            $_interface = DB::table('interfaces')->find($interface);
+
+            if (! $_interface) {
+                return back()->with('message', 'invalid interface')->with('type', 'danger');
+            }
+
+            $addresses = DB::table('allowed_addresses_restrictions')
+                ->where('allowed_address', 'like', $_interface->ip_range.'%');
+
+            $search = $request->query('search');
+            if ($search && $addresses && count($addresses) > 0) {
+                $addresses = $addresses->where('allowed_address', '%'.$search.'%');
+            }
+
+            $addresses = $addresses->get();
+        
+            $page = $request->query('page', 1);
+            $take = $request->query('take', 50);
+            if ($take == 'all') {
+                $isLastPage = true;
+            } else {
+                $skip = ($page - 1) * $take;
+                $addresses = $addresses->skip($skip)->take($take);
+                $isLastPage = (count($addresses) < $take) ? true : false;
+            }
+
+            $messageDuration = 1000;
+
+            return view('admin.limited.restrictions', compact('limitedInterfaces', 'interface', 'search', 'addresses', 'isLastPage', 'messageDuration'));
+        } catch (\Exception $exception) {
+            return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
     }
 
     public  function updateRestrictions(Request $request)
     {
-        //
+        try {
+            DB::table('allowed_addresses_restrictions')
+                ->where('id', $request->id)
+                ->update([
+                    'maximum_allowed' => $request->maximum_allowed
+                ]);
+            
+            return back()->with('message', 'success')->with('type', 'success');
+        } catch (\Exception $exception) {
+            return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
     }
 }
