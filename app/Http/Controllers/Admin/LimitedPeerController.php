@@ -241,7 +241,7 @@ class LimitedPeerController extends Controller
 
         $server_peers = DB::table('server_peers')->where('peer_id', $peer->id)->get();
         if (count($server_peers) == 0) {
-            $server_peers = DB::table('removed_server_peers')->where('peer_id', $peer->id)->get();
+            $server_peers = DB::table('removed_server_peers')->where('peer_id', $peer->peer_id)->get();
         }
 
         $result = [];
