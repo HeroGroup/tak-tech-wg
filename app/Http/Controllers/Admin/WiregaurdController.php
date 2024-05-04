@@ -501,7 +501,7 @@ class WiregaurdController extends Controller
             $peer = DB::table('peers')->find($id);
             if ($peer) {
                 $now = date('Y-m-d H:i:s', time());
-                $user = auth()->user()->id;
+                $user = auth()->user()->id ?? 0;
 
                 DB::table('removed_peers')->insert([
                     'peer_id' => $id,
