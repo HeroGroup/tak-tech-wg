@@ -50,6 +50,8 @@
         <a href="#" onclick="sortResult('client_address_desc')" class="btn sort-btn @if($sortBy=='client_address_desc') btn-dark @endif" id="sort_client_address_desc">Address <i class="fa fa-sort-amount-down"></i></a>
         <a href="#" onclick="sortResult('expires_in_asc')" class="btn sort-btn @if($sortBy=='expires_in_asc') btn-dark @endif" id="sort_expires_in_asc">Expire <i class="fa fa-sort-amount-down-alt"></i></a>
         <a href="#" onclick="sortResult('expires_in_desc')" class="btn sort-btn @if($sortBy=='expires_in_desc') btn-dark @endif" id="sort_expires_in_desc">Expire <i class="fa fa-sort-amount-down"></i></a>
+        <a href="#" onclick="sortResult('expires_in_asc')" class="btn sort-btn @if($sortBy=='total_usage_asc') btn-dark @endif" id="sort_total_usage_asc">Usage <i class="fa fa-sort-amount-down-alt"></i></a>
+        <a href="#" onclick="sortResult('total_usage_desc')" class="btn sort-btn @if($sortBy=='total_usage_desc') btn-dark @endif" id="sort_total_usage_desc">Usage <i class="fa fa-sort-amount-down"></i></a>
       </div>
     </div>
   </div>

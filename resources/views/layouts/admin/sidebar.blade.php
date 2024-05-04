@@ -80,6 +80,10 @@
                     <i class="fas fa-fw fa-tools"></i>
                     <span>Peers Actions</span>
                 </a>
+                <a class="collapse-item" href="{{route('wiregaurd.peers.limited.removedPeers')}}">
+                    <i class="fas fa-fw fa-database"></i>
+                    <span>Limited Database</span>
+                </a>
             </div>
         </div>
     </li>

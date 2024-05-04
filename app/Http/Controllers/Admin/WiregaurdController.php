@@ -509,6 +509,7 @@ class WiregaurdController extends Controller
                     'client_address' => $peer->client_address,
                     'comment' => $peer->comment,
                     'note' => $peer->note,
+                    'expire_days' => $peer->expire_days,
                     'activate_date_time' => $peer->activate_date_time,
                     'remove_reason' => $removeReason,
                     'removed_at' => $now,

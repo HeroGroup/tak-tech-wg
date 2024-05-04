@@ -60,6 +60,7 @@ Route::middleware(['auth', 'active'])->group(function() {
 
     Route::prefix('wiregaurd/peers/limited')->group(function () {
       Route::get('/list', [LimitedPeerController::class, 'index'])->name('limited.list');
+      Route::get('/removedPeers', [LimitedPeerController::class, 'removedPeersUsages'])->name('limited.removedPeers');
       Route::get('/usageStatistics/{peerId}', [LimitedPeerController::class, 'usageStatistics'])->name('limited.usageStatistics');
     });
   });

@@ -233,10 +233,17 @@ class LimitedPeerController extends Controller
     {
         $peer = DB::table('peers')->find($peerId);
         if (! $peer) {
-            return back()->with('message', 'invalid peer')->with('type', 'danger');
+            $peer = DB::table('removed_peers')->find($peerId);
+            if (! $peer) {
+                return back()->with('message', 'invalid peer')->with('type', 'danger');
+            }
         }
 
         $server_peers = DB::table('server_peers')->where('peer_id', $peer->id)->get();
+        if (count($server_peers) == 0) {
+            $server_peers = DB::table('removed_server_peers')->where('peer_id', $peer->id)->get();
+        }
+
         $result = [];
         $days = [];
         foreach($server_peers as $server_peer) {
@@ -269,5 +276,103 @@ class LimitedPeerController extends Controller
         $peer_usages = json_encode($peer_usages);
 
         return view('admin.limited.usageStatistics', compact('peer', 'peer_usages'));
+    }
+
+    public function removedPeersUsages(Request $request)
+    {
+        $limitedInterfaces = DB::table('interfaces')
+            ->where('iType', 'limited')
+            ->join('user_interfaces', 'user_interfaces.interface_id', '=', 'interfaces.id')
+            ->where('user_interfaces.user_id', auth()->user()->id)
+            ->pluck('name', 'interfaces.id')
+            ->toArray();
+            
+        $interface = $request->query('interface');
+        if ($interface && $interface != 'all') {
+            $limitedPeers = DB::table('removed_peers')
+                ->where('interface_id', $interface)
+                ->join('interfaces', 'interfaces.id', '=', 'removed_peers.interface_id')
+                ->select(['removed_peers.*', 'interfaces.name', 'interfaces.allowed_traffic_GB']);
+        } else {
+            $limitedInterfacesKeys = array_keys($limitedInterfaces);
+            $limitedPeers = DB::table('removed_peers')
+                ->whereIn('interface_id', $limitedInterfacesKeys)
+                ->join('interfaces', 'interfaces.id', '=', 'removed_peers.interface_id')
+                ->select(['removed_peers.*', 'interfaces.name', 'interfaces.allowed_traffic_GB']);
+        }
+
+        $comment = $request->query('comment');
+        if ($comment && $limitedPeers && $limitedPeers->count() > 0) {
+            $limitedPeers = $limitedPeers->where(function (Builder $query) use ($comment) {
+                $query->where('comment', 'like', '%'.$comment.'%')
+                    ->orWhere('client_address', 'like', '%'.$comment.'%')
+                    ->orWhere('note', 'like', '%'.$comment.'%');
+            });
+        }
+
+        // $limitedPeers = $limitedPeers->get();
+        $page = $request->query('page', 1);
+        $take = $request->query('take', 50);
+        if ($take == 'all') {
+            $limitedPeers = $limitedPeers->get();
+            $isLastPage = true;
+        } else {
+            $skip = ($page - 1) * $take;
+            $limitedPeers = $limitedPeers->skip($skip)->take($take)->get();
+            $isLastPage = (count($limitedPeers) < $take) ? true : false;
+        }
+        
+        $servers = DB::table('servers')->get();
+        $now = time();
+        foreach($limitedPeers as $peer) {
+            $pId = $peer->id;
+            $sum_tx = 0;
+            $sum_rx = 0;
+            foreach ($servers as $server) {
+                $sId = $server->id;
+                $server_peer = DB::table('removed_server_peers')
+                    ->where('server_id', $sId)
+                    ->where('peer_id', $pId)
+                    ->first();
+                if ($server_peer) {
+                    $record = DB::table('server_peer_usages')
+                        ->where('server_id', $sId)
+                        ->where('server_peer_id', $server_peer->server_peer_id)
+                        ->orderBy('id', 'desc')
+                        ->first();
+                    $sum_tx += $record->tx ?? 0;
+                    $sum_rx += $record->rx ?? 0;
+                }
+                
+            }
+            
+            $peer->tx = round(($sum_tx / 1073741824), 2);
+            $peer->rx = round(($sum_rx / 1073741824), 2);
+            $peer->total_usage = $peer->tx + $peer->rx;
+
+            $peer->expires_in = '-1';
+
+            if($peer->expire_days && $peer->activate_date_time) {
+                $expire = $peer->expire_days;
+                $diff = strtotime($peer->activate_date_time. " + $expire days") - $now;
+                $peer->expires_in = $diff; // int
+            }
+        }
+
+        $sortBy = $request->query('sortBy');
+        if ($sortBy && $limitedPeers && $limitedPeers->count() > 0) {
+            $by = substr($sortBy, 0, strrpos($sortBy, '_'));
+            $type = substr($sortBy, strrpos($sortBy, '_')+1);
+
+            $limitedPeers = $limitedPeers->sortBy($by, SORT_NATURAL);
+            
+            if ($type == "desc") {
+                $limitedPeers = $limitedPeers->reverse();
+            }
+        } else {
+            $sortBy = "client_address_asc";
+        }
+
+        return view('admin.limited.removedPeers', compact('limitedInterfaces', 'interface', 'limitedPeers', 'comment', 'sortBy', 'isLastPage'));
     }
 }

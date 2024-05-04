@@ -35,6 +35,7 @@
             <th>Note</th>
             <th>Total Usage (GB)</th>
             <th>Enabled</th>
+            <th></th>
           </thead>
           <tbody>
             <?php $row=0; ?>
@@ -53,6 +54,11 @@
                     <span class="slider round"></span>
                 </label>
                 @endif
+              </td>
+              <td>
+                <a href="{{route('wiregaurd.peers.limited.usageStatistics', $peer->id)}}" target="_blank" class="text-success">
+                  <i class="fa fa-fw fa-chart-line"></i> Usage Statistics
+                </a>
               </td>
             </tr>
             @endforeach
