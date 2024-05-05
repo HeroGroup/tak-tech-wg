@@ -202,56 +202,22 @@
 
 <script>
     $(document).ready(function() {
-        var scrollPosition = localStorage.getItem('scrollPosition');
-        if (scrollPosition) {
-            window.scrollTo(0, scrollPosition);
-            localStorage.removeItem('scrollPosition');
-        }
+        checkScrollPosition();
+        
         $('.chk-row:checkbox').click(function() {
             var x = $('.chk-row:checkbox:checked');
             document.getElementById('number-of-selected-items').innerHTML = x.length;
         });
 
-        var queryString = window.location.search;
-        var urlParams = new URLSearchParams(queryString);
-        var page = urlParams.get('page');
-        var take = urlParams.get('take');
-
-        if (page) {
-            document.getElementById("page-number").innerHTML = page;
-            
-            if (page === '1') {
-                document.getElementById('previous-page-btn').classList.add('disabled');
-            } else {
-                document.getElementById('previous-page-btn').classList.remove('disabled');
-            }
-        }
-
-        if (take) {
-            document.getElementById('take-btn-50').classList.remove('active');
-            document.getElementById(`take-btn-${take}`).classList.add('active');
-        }
-
+        checkPageUrlParameters();
+        
         var isLastPage = "{{isset($isLastPage) ? $isLastPage : 'undefined'}}";
-        if (isLastPage != 'undefined') {
-            if (isLastPage==='1') {
-                document.getElementById('next-page-btn').classList.add('disabled');
-            } else {
-                document.getElementById('next-page-btn').classList.remove('disabled');
-            }
-        }
+        checkIsLastPage(isLastPage);
 
         var showType = document.getElementById('show-type');
-        if (showType) {
-            var monitoring = "{{isset($monitoring) ? $monitoring : 'false'}}";
-            if (monitoring === 'true') {
-                showType.innerHTML = 'show all';
-            } else {
-                showType.innerHTML = 'show only monitoring';
-            }
-        }
+        checkMonitoringPage(showType);
         
-        document.getElementById("current-year").innerHTML = getYear();
+        getYear();
 
         if("{{\Illuminate\Support\Facades\Session::has('message')}}" === "1") {
             const Toast = Swal.mixin({
@@ -314,7 +280,7 @@
 
     function getYear() {
         var now = new Date();
-        return now.getFullYear();
+        document.getElementById("current-year").innerHTML = now.getFullYear();
     }
 
     function createFormData(inputs) {
@@ -395,6 +361,57 @@
         }
 
         return ids;
+    }
+
+    function checkScrollPosition() {
+        var scrollPosition = localStorage.getItem('scrollPosition');
+        if (scrollPosition) {
+            window.scrollTo(0, scrollPosition);
+            localStorage.removeItem('scrollPosition');
+        }
+    }
+
+    function checkPageUrlParameters() {
+        var queryString = window.location.search;
+        var urlParams = new URLSearchParams(queryString);
+        var page = urlParams.get('page');
+        var take = urlParams.get('take');
+
+        if (page) {
+            document.getElementById("page-number").innerHTML = page;
+            
+            if (page === '1') {
+                document.getElementById('previous-page-btn').classList.add('disabled');
+            } else {
+                document.getElementById('previous-page-btn').classList.remove('disabled');
+            }
+        }
+
+        if (take) {
+            document.getElementById('take-btn-50').classList.remove('active');
+            document.getElementById(`take-btn-${take}`).classList.add('active');
+        }
+    }
+
+    function checkIsLastPage(isLastPage) {
+        if (isLastPage != 'undefined') {
+            if (isLastPage==='1') {
+                document.getElementById('next-page-btn').classList.add('disabled');
+            } else {
+                document.getElementById('next-page-btn').classList.remove('disabled');
+            }
+        }
+    }
+
+    function checkMonitoringPage(showType) {
+        if (showType) {
+            var monitoring = "{{isset($monitoring) ? $monitoring : 'false'}}";
+            if (monitoring === 'true') {
+                showType.innerHTML = 'show all';
+            } else {
+                showType.innerHTML = 'show only monitoring';
+            }
+        }
     }
 </script>
 </body>
