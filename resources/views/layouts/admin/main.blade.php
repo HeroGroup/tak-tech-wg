@@ -202,6 +202,11 @@
 
 <script>
     $(document).ready(function() {
+        var scrollPosition = localStorage.getItem('scrollPosition');
+        if (scrollPosition) {
+            window.scrollTo(0, scrollPosition);
+            localStorage.removeItem('scrollPosition');
+        }
         $('.chk-row:checkbox').click(function() {
             var x = $('.chk-row:checkbox:checked');
             document.getElementById('number-of-selected-items').innerHTML = x.length;

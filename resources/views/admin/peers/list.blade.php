@@ -458,6 +458,7 @@
   }
   function regenerateSingle(id) {
     turnOnLoader();
+    maintainScrollPosition();
     var formData = createFormData({
       '_token': '{{csrf_token()}}',
       'id': id
@@ -532,6 +533,10 @@
       location.reload();
     }, 
     2000);
+  }
+  function maintainScrollPosition() {
+    // maintain scroll position
+    localStorage.setItem('scrollPosition', window.scrollY);
   }
 </script>
 @endsection
