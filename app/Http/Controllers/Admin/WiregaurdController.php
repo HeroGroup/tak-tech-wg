@@ -1417,6 +1417,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // This is temporary function to fill database with empty allowed addresses restrictions
     public function fill()
     {
         try {
@@ -1442,6 +1443,9 @@ class WiregaurdController extends Controller
             return $exception->getMessage();
         }
     }
+
+    // This function returns all möglich(possible) peers of each interface,
+    // with associated restrictions
     public function restrictions(Request $request)
     {
         try {
@@ -1488,6 +1492,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // updates restrictions of one peer only (maximum number of creation of each allowed address)
     public  function updateRestrictions(Request $request)
     {
         try {
@@ -1503,6 +1508,7 @@ class WiregaurdController extends Controller
         }
     }
 
+    // updates restrictions of peers (maximum number of creation of each allowed address)
     public  function updateRestrictionsMass(Request $request)
     {
         try {

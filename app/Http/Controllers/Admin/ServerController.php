@@ -84,14 +84,6 @@ class ServerController extends Controller
     {
         try {
             $servers = DB::table('servers')->get();
-
-            // $infos = [];
-            // foreach ($servers as $server) {
-            //     $sId = $server->id;
-            //     $sAddress = $server->server_address;
-            //     $infos[$sId]['address'] = $sAddress;
-            //     $infos[$sId]['router_os_version'] = $server->router_os_version;
-            // }
         
             return view('admin.servers.list', compact('servers'));
         } catch (\Exception $exception) {
@@ -204,6 +196,7 @@ class ServerController extends Controller
         }
     }
 
+    // with use of this method, we remove duplicate addresses on remote servers
     public function removeDuplicate(Request $request)
     {
         try {

@@ -71,6 +71,20 @@ class InterfaceController extends Controller
                 ]);
             }
 
+            // if new interface is limited, create restrictions
+            if ($request->iType == 'limited') {
+                $ip_range = $request->ip_range;
+                $insert_data = [];
+                for ($i=1; $i<=254; $i++) {
+                    $address = $ip_range.$i;
+                    array_push($insert_data, [
+                        'allowed_address' => $address,
+                        'used_count' => 0,
+                        'maximum_allowed' => 3,
+                    ]);
+                }
+            }
+
             foreach ($servers as $server) {
                 $sAddress = $server->server_address;
                 $sId = $server->id;
@@ -195,6 +209,7 @@ class InterfaceController extends Controller
         }
     }
 
+    // This method runs periodically and stores usages of interfaces from remote routers
     public function storeInterfacesUsages($request_token)
     {
         try {
@@ -277,6 +292,7 @@ class InterfaceController extends Controller
         
     }
 
+    // returns the amount of traffic used by interfaces to be shown on chart
     public function usages()
     {
         // $interfaces = DB::table('interfaces')->select(['id', 'name'])->get();
@@ -323,6 +339,7 @@ class InterfaceController extends Controller
         return view('admin.interfaces.usages', compact('interfaces', 'interfaces_json'));
     }
 
+    // returns the amount of traffic each interface has used on each route seperately
     public function usageDetails($id)
     {
         $interface = DB::table('interfaces')->find($id);
@@ -364,6 +381,8 @@ class InterfaceController extends Controller
         }
     }
 
+    // this method returns list of peers of interface,
+    // and which is selected to be monitored for usage
     public function monitor(Request $request, $id)
     {
         $interface = DB::table('interfaces')->find($id);
@@ -463,6 +482,7 @@ class InterfaceController extends Controller
         }
     }
 
+    // this function returns only the peers that are already being monitored
     public function monitorOnly(Request $request)
     {
         $servers = DB::table('servers')->get();
@@ -565,6 +585,7 @@ class InterfaceController extends Controller
         return view('admin.interfaces.monitorOnly', compact('interfaces', 'interface', 'peers', 'search', 'sortBy', 'isLastPage', 'lastUpdate'));
     }
 
+    // with this function we can add peers to monitor list
     public function saveMonitor(Request $request)
     {
         try {

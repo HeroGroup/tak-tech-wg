@@ -142,6 +142,7 @@ class UserController extends Controller
         }
     }
 
+    // returns the list of user privileges
     public function privileges($id)
     {
         $user = User::find($id);
@@ -160,6 +161,7 @@ class UserController extends Controller
         return view('admin.users.privileges', compact('user', 'privileges', 'user_privileges', 'peers', 'user_peers'));
     }
 
+    // update user privileges
     public function updatePrivileges(Request $request)
     {
         try {
@@ -181,6 +183,7 @@ class UserController extends Controller
         }
     }
 
+    // update use accessed peers
     public function updatePeers(Request $request)
     {
         try {

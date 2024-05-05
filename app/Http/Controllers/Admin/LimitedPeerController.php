@@ -278,6 +278,7 @@ class LimitedPeerController extends Controller
         return view('admin.limited.usageStatistics', compact('peer', 'peer_usages'));
     }
 
+    // This function returns the amount of traffic used by selected removed peer
     public function removedPeersUsages(Request $request)
     {
         $limitedInterfaces = DB::table('interfaces')
