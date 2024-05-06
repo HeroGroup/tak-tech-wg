@@ -531,10 +531,11 @@ class ServerController extends Controller
                                 'server_id' => $sId,
                                 'peer_id' => $localPeer->id,
                                 'server_peer_id' => $remotePeerId,
-                                'created_at' => $now
+                                'created_at' => $now,
+                                'updated_at' => $now
                             ],
                             ['server_id', 'peer_id'],
-                            ['server_peer_id']
+                            ['server_peer_id', 'updated_at']
                         );
                         // check id is correct
                         // $server_peer = DB::table('server_peers')
