@@ -537,32 +537,6 @@ class ServerController extends Controller
                             ['server_id', 'peer_id'],
                             ['server_peer_id', 'updated_at']
                         );
-                        // check id is correct
-                        // $server_peer = DB::table('server_peers')
-                        //                 ->where('server_id', $sId)
-                        //                 ->where('peer_id', $localPeer->id)
-                        //                 ->first();
-
-                        // if ($server_peer) { // server_peer exists
-                        //     if ($server_peer->server_peer_id != $remotePeerId) {
-                        //         // .id is wrong in local DB
-                        //         DB::table('server_peers')
-                        //             ->where('server_id', $sId)
-                        //             ->where('peer_id', $localPeer->id)
-                        //             ->update([
-                        //                 'server_peer_id' => $remotePeerId, 
-                        //                 'updated_at' => $now
-                        //             ]);
-                        //     }
-                        // } else {
-                        //     // create new server_peer
-                        //     DB::table('server_peers')->insert([
-                        //         'server_id' => $sId,
-                        //         'peer_id' => $localPeer->id,
-                        //         'server_peer_id' => $remotePeerId,
-                        //         'created_at' => $now
-                        //     ]);
-                        // }
 
                         // check enabled
                         $remotePeerDisabledStatus = $remotePeers[$key]['disabled'];
