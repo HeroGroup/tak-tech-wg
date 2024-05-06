@@ -538,16 +538,29 @@ class ServerController extends Controller
                                 DB::table('server_peers')
                                     ->where('server_id', $sId)
                                     ->where('peer_id', $localPeer->id)
-                                    ->update(['server_peer_id' => $remotePeerId, 'updated_at' => $now]);
+                                    ->update([
+                                        'server_peer_id' => $remotePeerId, 
+                                        'updated_at' => $now
+                                    ]);
                             }
                         } else {
                             // create new server_peer
-                            DB::table('server_peers')->insert([
-                                'server_id' => $sId,
-                                'peer_id' => $localPeer->id,
-                                'server_peer_id' => $remotePeerId,
-                                'created_at' => $now
-                            ]);
+                            // DB::table('server_peers')->insert([
+                            //     'server_id' => $sId,
+                            //     'peer_id' => $localPeer->id,
+                            //     'server_peer_id' => $remotePeerId,
+                            //     'created_at' => $now
+                            // ]);
+                            DB::table('server_peers')->upsert(
+                                [
+                                    'server_id' => $sId,
+                                    'peer_id' => $localPeer->id,
+                                    'server_peer_id' => $remotePeerId,
+                                    'created_at' => $now
+                                ],
+                                ['server_id', 'peer_id'],
+                                ['server_peer_id']
+                            );
                         }
 
                         // check enabled
@@ -634,7 +647,7 @@ class ServerController extends Controller
         }
     }
 
-    // sync peers on all servers
+    // sync peers on all servers via a cron job
     public function syncAll($request_token)
     {
         try {
