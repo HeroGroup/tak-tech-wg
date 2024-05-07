@@ -122,6 +122,14 @@ class WiregaurdController extends Controller
     // This function adds peer to local database
     public function addLocalPeer($caddress, $interfaceId, $interfacePublicKey, $interfaceListenPort, $cdns, $wgserveraddress, $commentApply, $time, $oldId=0)
     {
+        // check address is valid
+        if (! filter_var($caddress, FILTER_VALIDATE_IP)) {
+            return [
+                'id' => 0,
+                'message' => "IP $caddress is invalid."
+            ];
+        }
+        
         // check not repetetive
         $caddress32 = "$caddress/32";
         $existingPeer = DB::table('peers')->where('client_address', $caddress32)->count();
