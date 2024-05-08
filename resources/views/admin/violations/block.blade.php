@@ -7,7 +7,7 @@
 <x-sort :route="route('violations.block.list')" :sorts="['comment' => 'Comment', 'client_address' => 'Client Address']" :sortBy="$sortBy" />
 <div>
   <a href="#" onclick="massDelete()" class="text-danger" style="text-decoration:none;">
-    <i class="fa fa-times"></i> Remove From list
+    <i class="fa fa-times"></i> unblock
   </a>
 </div>
 
@@ -61,7 +61,7 @@
         </td>
         <td>
             <a href="#" onclick="destroy('{{route('violations.block.remove')}}','{{$item->peer_id}}','{{$item->peer_id}}')" class="text-danger">
-                <i class="fa fa-times"></i> Remove From list
+                <i class="fa fa-times"></i> unblock
             </a>
         </td>
       </tr>
