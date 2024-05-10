@@ -419,29 +419,10 @@ class InterfaceController extends Controller
             
             foreach($peers as $peer) {
                 if($peer->monitor) {
-                    $pId = $peer->id;
-                    $sum_tx = 0;
-                    $sum_rx = 0;
-                    foreach ($servers as $server) {
-                        $sId = $server->id;
-                        $server_peer = DB::table('server_peers')
-                            ->where('server_id', $sId)
-                            ->where('peer_id', $pId)
-                            ->first();
-                        if ($server_peer) {
-                            $record = DB::table('server_peer_usages')
-                                ->where('server_id', $sId)
-                                ->where('server_peer_id', $server_peer->server_peer_id)
-                                ->orderBy('id', 'desc')
-                                ->first();
-                            $sum_tx += $record->tx ?? 0;
-                            $sum_rx += $record->rx ?? 0;
-                        }
-                    }
-                    
-                    $peer->tx = round(($sum_tx / 1073741824), 2);
-                    $peer->rx = round(($sum_rx / 1073741824), 2);
-                    $peer->total_usage = $peer->tx + $peer->rx;
+                    $usages = getPeerUsage($peer->id);
+                    $peer->tx = $usages['tx'];
+                    $peer->rx = $usages['rx'];
+                    $peer->total_usage = $usages['total_usage'];
                 } else {
                     $peer->tx = 0;
                     $peer->rx = 0;
@@ -485,7 +466,6 @@ class InterfaceController extends Controller
     // this function returns only the peers that are already being monitored
     public function monitorOnly(Request $request)
     {
-        $servers = DB::table('servers')->get();
         $peers = DB::table('peers')
             ->where('monitor', 1)
             ->join('interfaces', 'interfaces.id', '=', 'peers.interface_id')
@@ -527,29 +507,10 @@ class InterfaceController extends Controller
             
         foreach($peers as $peer) {
             if($peer->monitor) {
-                $pId = $peer->id;
-                $sum_tx = 0;
-                $sum_rx = 0;
-                foreach ($servers as $server) {
-                    $sId = $server->id;
-                    $server_peer = DB::table('server_peers')
-                        ->where('server_id', $sId)
-                        ->where('peer_id', $pId)
-                        ->first();
-                    if ($server_peer) {
-                        $record = DB::table('server_peer_usages')
-                            ->where('server_id', $sId)
-                            ->where('server_peer_id', $server_peer->server_peer_id)
-                            ->orderBy('id', 'desc')
-                            ->first();
-                        $sum_tx += $record->tx ?? 0;
-                        $sum_rx += $record->rx ?? 0;
-                    }
-                }
-                    
-                $peer->tx = round(($sum_tx / 1073741824), 2);
-                $peer->rx = round(($sum_rx / 1073741824), 2);
-                $peer->total_usage = $peer->tx + $peer->rx;
+                $usages = getPeerUsage($peer->id);
+                $peer->tx = $usages['tx'];
+                $peer->rx = $usages['rx'];
+                $peer->total_usage = $usages['total_usage'];
             } else {
                 $peer->tx = 0;
                 $peer->rx = 0;

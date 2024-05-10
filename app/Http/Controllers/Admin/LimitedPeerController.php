@@ -63,34 +63,13 @@ class LimitedPeerController extends Controller
             $isLastPage = (count($limitedPeers) < $take) ? true : false;
         }
         
-        $servers = DB::table('servers')->get();
         $now = time();
         foreach($limitedPeers as $peer) {
-            $pId = $peer->id;
-            $sum_tx = 0;
-            $sum_rx = 0;
-            foreach ($servers as $server) {
-                $sId = $server->id;
-                $server_peer = DB::table('server_peers')
-                    ->where('server_id', $sId)
-                    ->where('peer_id', $pId)
-                    ->first();
-                if ($server_peer) {
-                    $record = DB::table('server_peer_usages')
-                        ->where('server_id', $sId)
-                        ->where('server_peer_id', $server_peer->server_peer_id)
-                        ->orderBy('id', 'desc')
-                        ->first();
-                    $sum_tx += $record->tx ?? 0;
-                    $sum_rx += $record->rx ?? 0;
-                }
-                
-            }
-            
-            $peer->tx = round(($sum_tx / 1073741824), 2);
-            $peer->rx = round(($sum_rx / 1073741824), 2);
-            $peer->total_usage = $peer->tx + $peer->rx;
+            $usages = getPeerUsage($peer->id);
 
+            $peer->tx = $usages['tx'];
+            $peer->rx = $usages['rx'];
+            $peer->total_usage = $usages['total_usage'];
             $peer->expires_in = '-1';
 
             if($peer->expire_days && $peer->activate_date_time) {
@@ -168,22 +147,22 @@ class LimitedPeerController extends Controller
                     
                     if (is_array($remotePeers) && count($remotePeers) > 0) {
                         // filter limited interfaces
-                        $limitedPeers = array_filter($remotePeers, function($elm) use ($limitedInterfaces, $peersToMonitor) {
+                        $peersToStore = array_filter($remotePeers, function($elm) use ($limitedInterfaces, $peersToMonitor) {
                             return in_array($elm['interface'], $limitedInterfaces) || in_array($elm['.id'], $peersToMonitor);
                         });
 
-                        foreach ($limitedPeers as $limitedPeer) {
+                        foreach ($peersToStore as $peer) {
                             $latest = DB::table('server_peer_usages')
                                 ->where('server_id', $sId)
-                                ->where('server_peer_id', $limitedPeer[".id"])
+                                ->where('server_peer_id', $peer[".id"])
                                 ->orderBy('id', 'desc')
                                 ->first();
                             
                             $latest_tx = $latest ? $latest->tx : 0;
                             $latest_rx = $latest ? $latest->rx : 0;
                             
-                            $limitedPeerTX = $limitedPeer["tx"];
-                            $limitedPeerRX = $limitedPeer["rx"];
+                            $limitedPeerTX = $peer["tx"];
+                            $limitedPeerRX = $peer["rx"];
 
                             if ($latest_tx > $limitedPeerTX) {
                                 $new_tx = $latest_tx + $limitedPeerTX;
@@ -199,10 +178,10 @@ class LimitedPeerController extends Controller
                             
                             DB::table('server_peer_usages')->insert([
                                 'server_id' => $sId,
-                                'server_peer_id' => $limitedPeer[".id"],
+                                'server_peer_id' => $peer[".id"],
                                 'tx' => $new_tx,
                                 'rx' => $new_rx,
-                                'last_handshake' => $limitedPeer["last-handshake"] ?? null,
+                                'last_handshake' => $peer["last-handshake"] ?? null,
                                 'created_at' => $now
                             ]);
                         }
@@ -323,33 +302,13 @@ class LimitedPeerController extends Controller
             $isLastPage = (count($limitedPeers) < $take) ? true : false;
         }
         
-        $servers = DB::table('servers')->get();
         $now = time();
         foreach($limitedPeers as $peer) {
-            $pId = $peer->peer_id;
-            $sum_tx = 0;
-            $sum_rx = 0;
-            foreach ($servers as $server) {
-                $sId = $server->id;
-                $server_peer = DB::table('removed_server_peers')
-                    ->where('server_id', $sId)
-                    ->where('peer_id', $pId)
-                    ->first();
-                if ($server_peer) {
-                    $record = DB::table('server_peer_usages')
-                        ->where('server_id', $sId)
-                        ->where('server_peer_id', $server_peer->server_peer_id)
-                        ->orderBy('id', 'desc')
-                        ->first();
-                    $sum_tx += $record->tx ?? 0;
-                    $sum_rx += $record->rx ?? 0;
-                }
-                
-            }
-            
-            $peer->tx = round(($sum_tx / 1073741824), 2);
-            $peer->rx = round(($sum_rx / 1073741824), 2);
-            $peer->total_usage = $peer->tx + $peer->rx;
+            $usages = getPeerUsage($peer->peer_id);
+
+            $peer->tx = $usages['tx'];
+            $peer->rx = $usages['rx'];
+            $peer->total_usage = $usages['total_usage'];
 
             $peer->expires_in = '-1';
 

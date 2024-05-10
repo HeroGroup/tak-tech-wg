@@ -42,6 +42,9 @@
         <td>
             <a href="#" onclick="destroy('{{route('violations.suspect.remove')}}','{{$item->peer_id}}','{{$item->peer_id}}')" class="text-danger">
                 <i class="fa fa-times"></i> Remove From list
+            </a>&nbsp;
+            <a href="{{route('violations.suspect.peer.details',$item->peer_id)}}" class="text-info">
+                <i class="fa fa-info-circle"></i> Details
             </a>
         </td>
       </tr>

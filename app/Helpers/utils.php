@@ -196,3 +196,36 @@ function convertLastHandshakeToSeconds($input)
 
   return ($weeks*7*24*60*60) + ($days*24*60*60) + ($hours*60*60) + ($minutes*60) + ($seconds);
 }
+
+function getPeerUsage($pId)
+{
+  $sum_tx = 0;
+  $sum_rx = 0;
+  $servers = DB::table('servers')->get();
+  foreach ($servers as $server) {
+      $sId = $server->id;
+      $server_peer = DB::table('server_peers')
+          ->where('server_id', $sId)
+          ->where('peer_id', $pId)
+          ->first();
+      if ($server_peer) {
+          $record = DB::table('server_peer_usages')
+              ->where('server_id', $sId)
+              ->where('server_peer_id', $server_peer->server_peer_id)
+              ->orderBy('id', 'desc')
+              ->first();
+          $sum_tx += $record->tx ?? 0;
+          $sum_rx += $record->rx ?? 0;
+      }
+    }
+    
+    $tx = round(($sum_tx / 1073741824), 2);
+    $rx = round(($sum_rx / 1073741824), 2);
+    $total_usage = $tx + $rx;
+
+    return [
+      'tx' => $tx,
+      'rx' => $rx,
+      'total_usage' => $total_usage
+    ];
+}

@@ -66,6 +66,7 @@ Route::middleware(['auth', 'active'])->group(function() {
   });
 
   Route::get('/violations/suspect/list', [WiregaurdController::class, 'suspectList'])->name('violations.suspect.list');
+  Route::get('/violations/suspect/{peerId}/details', [WiregaurdController::class, 'suspectDetails'])->name('violations.suspect.peer.details');
   Route::get('/violations/block/list', [WiregaurdController::class, 'blockList'])->name('violations.block.list');
   Route::get('/violations/block/history', [WiregaurdController::class, 'blockHistoryList'])->name('violations.block.history');
   Route::delete('/violations/suspect/remove', [WiregaurdController::class, 'removeFromSuspectList'])->name('violations.suspect.remove');

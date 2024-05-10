@@ -1526,4 +1526,20 @@ class WiregaurdController extends Controller
             return $this->fail($exception->getMessage());
         }
     }
+
+    public function suspectDetails(Request $request, $peerId)
+    {
+        try {
+            $details = DB::table('server_peers')
+                ->where('peer_id', $peerId)
+                ->join('servers', 'servers.id', '=', 'server_peers.server_id')
+                ->select(['server_peers.*', 'servers.server_address', 'servers.alias'])
+                ->orderBy('server_id', 'asc')
+                ->get();
+
+            return view('admin.violations.details', compact('details'));
+        } catch (\Exception $exception) {
+            return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
+    }
 }
