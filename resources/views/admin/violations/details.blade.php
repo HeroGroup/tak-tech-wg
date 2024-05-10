@@ -5,7 +5,7 @@
     <thead>
       <th>server</th>
       <th>last handshake</th>
-      <th>time</th>
+      <th>checked time</th>
     </thead>
     <tbody>
       @foreach($details as $item)
