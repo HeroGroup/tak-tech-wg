@@ -1,4 +1,4 @@
-@extends('layouts.admin.main', ['pageTitle' => 'Details', 'active' => 'violations'])
+@extends('layouts.admin.main', ['pageTitle' => $comment.' Details', 'active' => 'violations'])
 @section('content')
 <div class="table-responsive">
   <table class="table table-striped">

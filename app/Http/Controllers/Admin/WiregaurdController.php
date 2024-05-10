@@ -1533,7 +1533,8 @@ class WiregaurdController extends Controller
             $details = DB::table('server_peers')
                 ->where('peer_id', $peerId)
                 ->join('servers', 'servers.id', '=', 'server_peers.server_id')
-                ->select(['server_peers.*', 'servers.server_address', 'servers.alias'])
+                ->join('peers', 'peers.id', '=', 'server_peers.peer_id')
+                ->select(['server_peers.*', 'peers.comment', 'servers.server_address', 'servers.alias'])
                 ->orderBy('server_id', 'asc')
                 ->get();
 
