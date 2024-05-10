@@ -60,6 +60,9 @@
           {{$time_passed}}
         </td>
         <td>
+            <a href="{{route('violations.suspect.peer.details',$item->peer_id)}}" class="text-info">
+                <i class="fa fa-info-circle"></i> Details
+            </a>&nbsp;
             <a href="#" onclick="destroy('{{route('violations.block.remove')}}','{{$item->peer_id}}','{{$item->peer_id}}')" class="text-danger">
                 <i class="fa fa-times"></i> unblock
             </a>
