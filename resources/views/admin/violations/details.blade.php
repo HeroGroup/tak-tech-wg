@@ -11,7 +11,7 @@
       @foreach($details as $item)
       <tr>
         <td>{{$item->server_address}} ({{$item->alias}})</td>
-        <td>{{$item->last_handshake}}</td>
+        <td>{{$item->last_handshake ?? 'wait for update'}}</td>
         <td>{{$item->last_handshake_updated_at}}</td>
       </tr>
       @endforeach
