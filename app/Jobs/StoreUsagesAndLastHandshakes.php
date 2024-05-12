@@ -66,7 +66,7 @@ class StoreUsagesAndLastHandshakes implements ShouldQueue
             });
 
             foreach ($peersToStore as $peer) {
-                storeUsage($sId, $peer[".id"], $peer["tx"], $peer["rx"], $peer["last-handshake"], $now);
+                storeUsage($sId, $peer[".id"], $peer["tx"], $peer["rx"], $peer["last-handshake"] ?? null, $now);
             }
 
             // filter unlimited interfaces
