@@ -257,14 +257,16 @@ function getPeerUsage($pId)
 
 function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
 {
-  $latest = DB::table('server_peer_usages')
-    ->where('server_id', $sId)
-    ->where('server_peer_id', $pId)
-    ->orderBy('id', 'desc')
-    ->first();
+  $usage = getPeerUsage($pId);
+
+  // $latest = DB::table('server_peer_usages')
+  //   ->where('server_id', $sId)
+  //   ->where('server_peer_id', $pId)
+  //   ->orderBy('id', 'desc')
+  //   ->first();
                             
-  $latest_tx = $latest ? $latest->tx : 0;
-  $latest_rx = $latest ? $latest->rx : 0;
+  $latest_tx = $usage['tx']; // $latest ? $latest->tx : 0;
+  $latest_rx = $usage['rx']; // $latest ? $latest->rx : 0;
                             
   $limitedPeerTX = $tx;
   $limitedPeerRX = $rx;
