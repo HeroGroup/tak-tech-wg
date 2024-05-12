@@ -1051,6 +1051,7 @@ class WiregaurdController extends Controller
                         // remove from block_list
                         DB::table('block_list')
                             ->where('peer_id', $peerId)
+                            ->whereNull('unblocked_at')
                             ->update([
                                 'unblocked_at' => $unblocked_at
                             ]);
@@ -1209,7 +1210,8 @@ class WiregaurdController extends Controller
             })
             ->join('block_list', 'block_list.peer_id', '=', 'peers.id')
             ->whereNotNull('block_list.unblocked_at')
-            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'peers.note', 'interfaces.name']);
+            ->select(['block_list.*', 'peers.comment', 'peers.client_address', 'peers.note', 'interfaces.name'])
+            ->orderBy('id', 'asc');
         
         $search = $request->query('search');
         if ($search && $list && $list->count() > 0) {
