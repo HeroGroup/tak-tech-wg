@@ -13,7 +13,7 @@
         <td>{{$item->server_address}} ({{$item->alias}})</td>
         <td>
           @if($item->last_handshake)
-          {{$item->last_handshake}} {{($item->last_handshake_seconds)}}
+          {{$item->last_handshake}} -> ({{$item->last_handshake_seconds}}s)
           @else
           wait for update
           @endif

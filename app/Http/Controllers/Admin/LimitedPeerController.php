@@ -279,8 +279,8 @@ class LimitedPeerController extends Controller
                 ->groupBy('removed_peers.id')
                 ->get();
 
-            $peer->tx = round(($x[0] / 1073741824), 2);
-            $peer->rx = round(($x[0] / 1073741824), 2);
+            $peer->tx = $x[0] ? round(($x[0]['TX'] / 1073741824), 2) : 0;
+            $peer->rx = $x[0] ? round(($x[0]['RX'] / 1073741824), 2) : 0;
             $peer->total_usage = $peer->tx + $peer->rx;
 
             $peer->expires_in = '-1';
