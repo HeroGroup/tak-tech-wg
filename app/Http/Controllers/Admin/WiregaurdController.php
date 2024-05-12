@@ -879,24 +879,26 @@ class WiregaurdController extends Controller
                 foreach($limitedPeers as $limitedPeer) {
                     $peerId = $limitedPeer->id;
                     $limit = $limitedPeer->peer_allowed_traffic_GB ?? $limitedPeer->allowed_traffic_GB;
-                    $usage = 0;
-                    foreach ($servers as $server) {
-                        $sId = $server->id;
-                        $server_peer = DB::table('server_peers')
-                            ->where('server_id', $sId)
-                            ->where('peer_id', $peerId)
-                            ->first();
-                        if ($server_peer) {
-                            $record = DB::table('server_peer_usages')
-                                ->where('server_id', $sId)
-                                ->where('server_peer_id', $server_peer->server_peer_id)
-                                ->orderBy('id', 'desc')
-                                ->first();
+                    
+                    $usage = getPeerUsage($peerId)['total_usage'];
+                    
+                    // foreach ($servers as $server) {
+                    //     $sId = $server->id;
+                    //     $server_peer = DB::table('server_peers')
+                    //         ->where('server_id', $sId)
+                    //         ->where('peer_id', $peerId)
+                    //         ->first();
+                    //     if ($server_peer) {
+                    //         $record = DB::table('server_peer_usages')
+                    //             ->where('server_id', $sId)
+                    //             ->where('server_peer_id', $server_peer->server_peer_id)
+                    //             ->orderBy('id', 'desc')
+                    //             ->first();
 
-                            $usage += $record->tx ?? 0;
-                            $usage += $record->rx ?? 0;
-                        }
-                    }
+                    //         $usage += $record->tx ?? 0;
+                    //         $usage += $record->rx ?? 0;
+                    //     }
+                    // }
 
                     if (round(($usage / 1073741824), 2) > $limit) { // GB
                         // remove peer
