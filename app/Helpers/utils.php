@@ -251,7 +251,7 @@ function getPeerUsage($pId)
     return [
       'tx' => $tx,
       'rx' => $rx,
-      'total_usage' => $tx + $rx
+      'total_usage' => $total_usage
     ];
 }
 
