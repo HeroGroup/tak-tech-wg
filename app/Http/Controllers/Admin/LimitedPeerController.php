@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\StoreLastHandshakes;
+use App\Jobs\BlockPeers;
+use App\Jobs\StoreUsagesAndLastHandshakes;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -117,80 +119,17 @@ class LimitedPeerController extends Controller
             if ($request_token == env('STORE_PEERS_USAGES_TOKEN')) {
                 $message = [];
                 $now = date('Y-m-d H:i:s', time());
-                $limitedInterfaces = DB::table('interfaces')
-                    ->where('iType', 'limited')
-                    ->pluck('name', 'id')
-                    ->toArray();
-
-                $unlimitedInterfaces = DB::table('interfaces')
-                    ->where('iType', 'unlimited')
-                    ->pluck('name', 'id')
-                    ->toArray();
-
-                DB::table('server_peers')->update([
-                    'last_handshake' => null,
-                    'last_handshake_updated_at' => $now
-                ]);
                 
                 $servers = DB::table('servers')->get();
                 foreach($servers as $server) {
                     $sId = $server->id;
                     $sAddress = $server->server_address;
-                    StoreLastHandshakes::dispatch($sId, $sAddress, $unlimitedInterfaces);
-                    $remotePeers = curl_general('GET', "$sAddress/rest/interface/wireguard/peers", '', false, 30);
-                    $peersToMonitor = DB::table('peers')
-                        ->where('monitor', 1)
-                        ->join('server_peers', 'server_peers.peer_id', '=', 'peers.id')
-                        ->where('server_id', $sId)
-                        ->pluck('server_peer_id')
-                        ->toArray();
-                    
-                    if (is_array($remotePeers) && count($remotePeers) > 0) {
-                        // filter limited interfaces
-                        $peersToStore = array_filter($remotePeers, function($elm) use ($limitedInterfaces, $peersToMonitor) {
-                            return in_array($elm['interface'], $limitedInterfaces) || in_array($elm['.id'], $peersToMonitor);
-                        });
-
-                        foreach ($peersToStore as $peer) {
-                            $latest = DB::table('server_peer_usages')
-                                ->where('server_id', $sId)
-                                ->where('server_peer_id', $peer[".id"])
-                                ->orderBy('id', 'desc')
-                                ->first();
-                            
-                            $latest_tx = $latest ? $latest->tx : 0;
-                            $latest_rx = $latest ? $latest->rx : 0;
-                            
-                            $limitedPeerTX = $peer["tx"];
-                            $limitedPeerRX = $peer["rx"];
-
-                            if ($latest_tx > $limitedPeerTX) {
-                                $new_tx = $latest_tx + $limitedPeerTX;
-                            } else if ($latest_tx <= $limitedPeerTX) {
-                                $new_tx = $limitedPeerTX;
-                            }
-
-                            if ($latest_rx > $limitedPeerRX) {
-                                $new_rx = $latest_rx + $limitedPeerRX;
-                            } else if ($latest_rx <= $limitedPeerRX) {
-                                $new_rx = $limitedPeerRX;
-                            }
-                            
-                            DB::table('server_peer_usages')->insert([
-                                'server_id' => $sId,
-                                'server_peer_id' => $peer[".id"],
-                                'tx' => $new_tx,
-                                'rx' => $new_rx,
-                                'last_handshake' => $peer["last-handshake"] ?? null,
-                                'created_at' => $now
-                            ]);
-                        }
-
-                        array_push($message, "$sAddress: fetch successfull!");
-                    } else {
-                        array_push($message, "$sAddress: $remotePeers");
-                    }
+                    StoreUsagesAndLastHandshakes::dispatch($sId, $sAddress, $now);
+                    array_push($message, "$sAddress: Store Usage and Save Last Handshake Job was created successfully!");
                 }
+
+                BlockPeers::dispatch();
+                array_push($message, "Block Job was created successfully!");
 
                 $resultMessage = implode("\r\n", $message);
                 saveCronResult('store-peers-usages', $resultMessage);
@@ -229,7 +168,8 @@ class LimitedPeerController extends Controller
             $res = DB::table('server_peer_usages')
                 ->where('server_id', $server_peer->server_id)
                 ->where('server_peer_id', $server_peer->server_peer_id)
-                ->selectRaw('(MAX(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) - MIN(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) + MAX(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) - MIN(CAST(`server_peer_usages`.`rx` AS UNSIGNED))) / 1073741824 AS TOTAL_USAGE, SUBSTR(`server_peer_usages`.`created_at`, 1, 10) AS DAY')
+                // ->selectRaw('(MAX(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) - MIN(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) + MAX(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) - MIN(CAST(`server_peer_usages`.`rx` AS UNSIGNED))) / 1073741824 AS TOTAL_USAGE, SUBSTR(`server_peer_usages`.`created_at`, 1, 10) AS DAY')
+                ->selectRaw('SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)+CAST(`server_peer_usages`.`rx` AS UNSIGNED)) / 1073741824 AS TOTAL_USAGE, SUBSTR(`server_peer_usages`.`created_at`, 1, 10) AS DAY')
                 ->groupByRaw('DAY')
                 ->get();
 
@@ -304,11 +244,44 @@ class LimitedPeerController extends Controller
         
         $now = time();
         foreach($limitedPeers as $peer) {
-            $usages = getPeerUsage($peer->peer_id);
+            // $sum_tx = 0;
+            // $sum_rx = 0;
+            // $servers = DB::table('servers')->get();
+            // foreach ($servers as $server) {
+            //     $sId = $server->id;
+            //     $server_peer = DB::table('removed_server_peers')
+            //         ->where('server_id', $sId)
+            //         ->where('peer_id', $pId)
+            //         ->first();
+            //     if ($server_peer) {
+            //         $record = DB::table('server_peer_usages')
+            //             ->where('server_id', $sId)
+            //             ->where('server_peer_id', $server_peer->server_peer_id)
+            //             ->orderBy('id', 'desc')
+            //             ->first();
+            //         $sum_tx += $record->tx ?? 0;
+            //         $sum_rx += $record->rx ?? 0;
+            //     }
+            // }
+                
+            // $peer->tx = round(($sum_tx / 1073741824), 2);
+            // $peer->rx = round(($sum_rx / 1073741824), 2);
+            // $peer->total_usage = $peer->tx + $peer->rx;
 
-            $peer->tx = $usages['tx'];
-            $peer->rx = $usages['rx'];
-            $peer->total_usage = $usages['total_usage'];
+            $x = DB::table('removed_peers')
+                ->where('removed_peers.id', $peer->id)
+                ->join('removed_server_peers', 'removed_server_peers.peer_id', '=', 'removed_peers.id')
+                ->join('server_peer_usages', function(JoinClause $join) {
+                $join->on('server_peer_usages.server_id', '=', 'removed_server_peers.server_id')
+                    ->on('server_peer_usages.server_peer_id', '=', 'removed_server_peers.server_peer_id');
+                })
+                ->selectRaw('`removed_peers`.`id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS TX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS RX')
+                ->groupBy('removed_peers.id')
+                ->get();
+
+            $peer->tx = round(($x[0] / 1073741824), 2);
+            $peer->rx = round(($x[0] / 1073741824), 2);
+            $peer->total_usage = $peer->tx + $peer->rx;
 
             $peer->expires_in = '-1';
 

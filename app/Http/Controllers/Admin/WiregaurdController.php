@@ -1538,9 +1538,34 @@ class WiregaurdController extends Controller
                 ->orderBy('server_id', 'asc')
                 ->get();
 
+            foreach ($details as $item) {
+                $item->last_handshake_seconds = convertLastHandshakeToSeconds($item->last_handshake);
+            }
+
             return view('admin.violations.details', compact('details'));
         } catch (\Exception $exception) {
             return back()->with('message', $exception->getMessage())->with('type', 'danger');
+        }
+    }
+
+    public function clearSuspectList($request_token)
+    {
+        try {
+            if ($request_token == env('CLEAR_SUSPECT_LIST_TOKEN')) {
+                DB::table('suspect_list')->delete();
+
+                $message = 'suspect list cleared successfully!';
+                saveCronResult('clear-suspect-list', $message);
+                return $message;
+            } else {
+                $message = 'token mismatch!';
+                saveCronResult('clear-suspect-list', $message);
+                return $message;
+            }
+        } catch (\Exception $exception) {
+            $message = $exception->getMessage();
+            saveCronResult('clear-suspect-list', $message);
+            return $message;
         }
     }
 }

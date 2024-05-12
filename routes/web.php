@@ -26,6 +26,7 @@ Route::get('/wiregaurd/peers/limited/getUsages/{token}', [LimitedPeerController:
 Route::get('/wiregaurd/interfaces/getUsages/{token}', [InterfaceController::class, 'storeInterfacesUsages'])->name('wiregaurd.interfaces.storeUsages');
 Route::get('/wiregaurd/interfaces/peers/block/{token}', [WiregaurdController::class, 'blockPeers'])->name('wiregaurd.interfaces.peers.block');
 Route::get('/wiregaurd/interfaces/peers/unblock/{token}', [WiregaurdController::class, 'unblockViolatedPeers'])->name('wiregaurd.interfaces.peers.unblock');
+Route::get('/wiregaurd/interfaces/peers/suspectList/clear/{token}', [WiregaurdController::class, 'clearSuspectList'])->name('wiregaurd.interfaces.peers.suspectList.clear');
 // ===================================================== //
 
 Route::middleware(['auth', 'active'])->group(function() {

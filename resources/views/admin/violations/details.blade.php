@@ -11,7 +11,13 @@
       @foreach($details as $item)
       <tr>
         <td>{{$item->server_address}} ({{$item->alias}})</td>
-        <td>{{$item->last_handshake ?? 'wait for update'}}</td>
+        <td>
+          @if($item->last_handshake)
+          {{$item->last_handshake ($item->last_handshake_seconds)}}
+          @else
+          wait for update
+          @endif
+        </td>
         <td>{{$item->last_handshake_updated_at}}</td>
       </tr>
       @endforeach

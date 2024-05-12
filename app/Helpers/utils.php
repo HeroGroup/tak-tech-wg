@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 
 require_once app_path('Helpers/phpqrcode/qrlib.php');
@@ -17,7 +18,7 @@ function createKeys()
   return [
     'public_key' => ltrim($publicKey), 
     'private_key' => ltrim($privateKey)
-];
+  ];
 }
 
 function curl_general($method, $url, $data=null, $withHeader=false, $timeout=3)
@@ -199,33 +200,93 @@ function convertLastHandshakeToSeconds($input)
 
 function getPeerUsage($pId)
 {
-  $sum_tx = 0;
-  $sum_rx = 0;
-  $servers = DB::table('servers')->get();
-  foreach ($servers as $server) {
-      $sId = $server->id;
-      $server_peer = DB::table('server_peers')
-          ->where('server_id', $sId)
-          ->where('peer_id', $pId)
-          ->first();
-      if ($server_peer) {
-          $record = DB::table('server_peer_usages')
-              ->where('server_id', $sId)
-              ->where('server_peer_id', $server_peer->server_peer_id)
-              ->orderBy('id', 'desc')
-              ->first();
-          $sum_tx += $record->tx ?? 0;
-          $sum_rx += $record->rx ?? 0;
-      }
-    }
+  // in order to prevent sql injection, first fetch the peer with eloquent
+  $peer = DB::table('peers')->find($pId);
+
+  $x = DB::table('peers')
+    ->where('peers.id', $peer->id)
+    ->join('server_peers', 'server_peers.peer_id', '=', 'peers.id')
+    ->join('server_peer_usages', function(JoinClause $join) {
+      $join->on('server_peer_usages.server_id', '=', 'server_peers.server_id')
+        ->on('server_peer_usages.server_peer_id', '=', 'server_peers.server_peer_id');
+    })
+    ->selectRaw('`peers`.`id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS TX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS RX')
+    ->groupBy('peers.id')
+    ->get();
+
+  // $x = DB::raw(
+  //     'SELECT `peers`.`id`, SUM(`server_peer_usages`.`tx`) AS TX, SUM(`server_peer_usages`.`rx`) AS RX 
+  //      FROM `peers`, `server_peers`, `server_peer_usages` 
+  //      WHERE `peers`.`id` = `server_peers`.`peer_id` 
+  //      AND (`server_peers`.`server_id` = `server_peer_usages`.`server_id` AND 
+  //           `server_peers`.`server_peer_id` = `server_peer_usages`.`server_peer_id`)
+  //      AND `peers`.`id`=? 
+  //      GROUP BY `peers`.`id`', [$peer->id]);
+
+  
+  // $sum_tx = 0;
+  // $sum_rx = 0;
+  // $servers = DB::table('servers')->get();
+  // foreach ($servers as $server) {
+  //     $sId = $server->id;
+  //     $server_peer = DB::table('server_peers')
+  //         ->where('server_id', $sId)
+  //         ->where('peer_id', $pId)
+  //         ->first();
+  //     if ($server_peer) {
+  //         $record = DB::table('server_peer_usages')
+  //             ->where('server_id', $sId)
+  //             ->where('server_peer_id', $server_peer->server_peer_id)
+  //             ->orderBy('id', 'desc')
+  //             ->first();
+  //         $sum_tx += $record->tx ?? 0;
+  //         $sum_rx += $record->rx ?? 0;
+  //     }
+  //   }
     
-    $tx = round(($sum_tx / 1073741824), 2);
-    $rx = round(($sum_rx / 1073741824), 2);
+    $tx = round(($x[0]->tx ?? 0 / 1073741824), 2);
+    $rx = round(($x[0]->rx ?? 0 / 1073741824), 2);
     $total_usage = $tx + $rx;
 
     return [
       'tx' => $tx,
       'rx' => $rx,
-      'total_usage' => $total_usage
+      'total_usage' => $tx + $rx
     ];
+}
+
+function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
+{
+  $latest = DB::table('server_peer_usages')
+    ->where('server_id', $sId)
+    ->where('server_peer_id', $pId)
+    ->orderBy('id', 'desc')
+    ->first();
+                            
+  $latest_tx = $latest ? $latest->tx : 0;
+  $latest_rx = $latest ? $latest->rx : 0;
+                            
+  $limitedPeerTX = $tx;
+  $limitedPeerRX = $rx;
+
+  if ($latest_tx > $limitedPeerTX) {
+      $new_tx = $limitedPeerTX;
+  } else if ($latest_tx <= $limitedPeerTX) {
+      $new_tx = $limitedPeerTX - $latest_tx;
+  }
+
+  if ($latest_rx > $limitedPeerRX) {
+      $new_rx = $limitedPeerRX;
+  } else if ($latest_rx <= $limitedPeerRX) {
+      $new_rx = $limitedPeerRX - $latest_rx;
+  }
+                            
+  DB::table('server_peer_usages')->insert([
+      'server_id' => $sId,
+      'server_peer_id' => $pId,
+      'tx' => $new_tx,
+      'rx' => $new_rx,
+      'last_handshake' => $last_handshake ?? null,
+      'created_at' => $now
+  ]);
 }
