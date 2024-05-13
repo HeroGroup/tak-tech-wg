@@ -284,6 +284,7 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
       'server_peer_id' => $pId,
       'raw_tx' => $tx,
       'tx' => $new_tx,
+      'sum_tx' => $sum_tx,
       'raw_rx' => $rx,
       'rx' => $new_rx,
       'last_handshake' => $last_handshake ?? null,
