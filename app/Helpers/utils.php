@@ -248,10 +248,13 @@ function getPeerUsage($pId)
     // $rx = isset($x[0]) ? round((($x[0]->RX ?? 0) / 1073741824), 2) : 0;
     // $total_usage = $tx + $rx;
 
+    $tx = round(($sum_tx / 1073741824), 2);
+    $tx = round(($sum_rx / 1073741824), 2);
+
     return [
-      'tx' => $sum_tx,
-      'rx' => $sum_rx,
-      'total_usage' => ($sum_tx + $sum_rx)
+      'tx' => $tx,
+      'rx' => $rx,
+      'total_usage' => ($tx + $rx)
     ];
 }
 
@@ -269,9 +272,6 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
     ->where('server_peer_id', $pId)
     ->orderBy('id', 'desc')
     ->first();
-
-  // $sum_tx = (int) (isset($x[0]) ? ($x[0]->STX ?? 0) : 0);
-  // $sum_rx = (int) (isset($x[0]) ? ($x[0]->SRX ?? 0) : 0);
     
   $latest_tx = $latest ? $latest->tx : 0;
   $latest_rx = $latest ? $latest->rx : 0;
@@ -293,13 +293,13 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
         'total_rx' => $latest_rx,
       ]);
   }
-  
+
   DB::table('server_peer_usages')->insert([
-      'server_id' => $sId,
-      'server_peer_id' => $pId,
-      'tx' => $tx,
-      'rx' => $rx,
-      'last_handshake' => $last_handshake ?? null,
-      'created_at' => $now
+    'server_id' => $sId,
+    'server_peer_id' => $pId,
+    'tx' => $tx,
+    'rx' => $rx,
+    'last_handshake' => $last_handshake ?? null,
+    'created_at' => $now
   ]);
 }
