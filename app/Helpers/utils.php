@@ -270,25 +270,21 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
   //   ->orderBy('id', 'desc')
   //   ->first();
 
-  $sum_tx = isset($x[0]) ? ($x[0]->TX ?? 0) : 0; // $latest ? $latest->tx : 0;
-  $sum_rx = isset($x[0]) ? ($x[0]->RX ?? 0) : 0; // $latest ? $latest->rx : 0;
+  $sum_tx = (int) (isset($x[0]) ? ($x[0]->TX ?? 0) : 0); // $latest ? $latest->tx : 0;
+  $sum_rx = (int) (isset($x[0]) ? ($x[0]->RX ?? 0) : 0); // $latest ? $latest->rx : 0;
 
-  if ($sum_tx > $tx) {
-      $new_tx = $tx;
-  } else if ($sum_tx <= $tx) {
-      $new_tx = $tx - $sum_tx;
-  }
+  $tx = (int) $tx;
+  $rx = (int) $rx;
+  
+  $new_tx = ($sum_tx > $tx) ? $tx : $tx - $sum_tx;
+  $new_rx = ($sum_rx > $rx) ? $rx : $rx - $sum_rx;
 
-  if ($sum_rx > $rx) {
-      $new_rx = $rx;
-  } else if ($sum_rx <= $rx) {
-      $new_rx = $rx - $sum_rx;
-  }
-                            
   DB::table('server_peer_usages')->insert([
       'server_id' => $sId,
       'server_peer_id' => $pId,
+      'raw_tx' => $tx,
       'tx' => $new_tx,
+      'raw_rx' => $rx,
       'rx' => $new_rx,
       'last_handshake' => $last_handshake ?? null,
       'created_at' => $now
