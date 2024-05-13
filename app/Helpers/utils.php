@@ -260,7 +260,7 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
   $x = DB::table('server_peer_usages')
     ->where('server_id', $sId)
     ->where('server_peer_id', $pId)
-    ->selectRaw('`server_peer_usages`.`server_peer_id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS TX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS RX')
+    ->selectRaw('`server_peer_usages`.`server_peer_id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS STX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS SRX')
     ->groupBy('server_peer_usages.server_peer_id')
     ->get();
 
@@ -270,8 +270,8 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
   //   ->orderBy('id', 'desc')
   //   ->first();
 
-  $sum_tx = (int) (isset($x[0]) ? ($x[0]->TX ?? 0) : 0); // $latest ? $latest->tx : 0;
-  $sum_rx = (int) (isset($x[0]) ? ($x[0]->RX ?? 0) : 0); // $latest ? $latest->rx : 0;
+  $sum_tx = (int) (isset($x[0]) ? ($x[0]->STX ?? 0) : 0); // $latest ? $latest->tx : 0;
+  $sum_rx = (int) (isset($x[0]) ? ($x[0]->SRX ?? 0) : 0); // $latest ? $latest->rx : 0;
 
   $tx = (int) $tx;
   $rx = (int) $rx;
