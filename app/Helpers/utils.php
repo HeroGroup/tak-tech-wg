@@ -203,16 +203,16 @@ function getPeerUsage($pId)
   // in order to prevent sql injection, first fetch the peer with eloquent
   $peer = DB::table('peers')->find($pId);
 
-  $x = DB::table('peers')
-    ->where('peers.id', $peer->id)
-    ->join('server_peers', 'server_peers.peer_id', '=', 'peers.id')
-    ->join('server_peer_usages', function(JoinClause $join) {
-      $join->on('server_peer_usages.server_id', '=', 'server_peers.server_id')
-        ->on('server_peer_usages.server_peer_id', '=', 'server_peers.server_peer_id');
-    })
-    ->selectRaw('`peers`.`id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS TX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS RX')
-    ->groupBy('peers.id')
-    ->get();
+  // $x = DB::table('peers')
+  //   ->where('peers.id', $peer->id)
+  //   ->join('server_peers', 'server_peers.peer_id', '=', 'peers.id')
+  //   ->join('server_peer_usages', function(JoinClause $join) {
+  //     $join->on('server_peer_usages.server_id', '=', 'server_peers.server_id')
+  //       ->on('server_peer_usages.server_peer_id', '=', 'server_peers.server_peer_id');
+  //   })
+  //   ->selectRaw('`peers`.`id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS TX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS RX')
+  //   ->groupBy('peers.id')
+  //   ->get();
 
   // $x = DB::raw(
   //     'SELECT `peers`.`id`, SUM(`server_peer_usages`.`tx`) AS TX, SUM(`server_peer_usages`.`rx`) AS RX 
@@ -224,69 +224,81 @@ function getPeerUsage($pId)
   //      GROUP BY `peers`.`id`', [$peer->id]);
 
   
-  // $sum_tx = 0;
-  // $sum_rx = 0;
-  // $servers = DB::table('servers')->get();
-  // foreach ($servers as $server) {
-  //     $sId = $server->id;
-  //     $server_peer = DB::table('server_peers')
-  //         ->where('server_id', $sId)
-  //         ->where('peer_id', $pId)
-  //         ->first();
-  //     if ($server_peer) {
-  //         $record = DB::table('server_peer_usages')
-  //             ->where('server_id', $sId)
-  //             ->where('server_peer_id', $server_peer->server_peer_id)
-  //             ->orderBy('id', 'desc')
-  //             ->first();
-  //         $sum_tx += $record->tx ?? 0;
-  //         $sum_rx += $record->rx ?? 0;
-  //     }
-  //   }
+  $sum_tx = 0;
+  $sum_rx = 0;
+  $servers = DB::table('servers')->get();
+  foreach ($servers as $server) {
+      $sId = $server->id;
+      $server_peer = DB::table('server_peers')
+          ->where('server_id', $sId)
+          ->where('peer_id', $pId)
+          ->first();
+      if ($server_peer) {
+          $record = DB::table('server_peer_usages')
+              ->where('server_id', $sId)
+              ->where('server_peer_id', $server_peer->server_peer_id)
+              ->orderBy('id', 'desc')
+              ->first();
+          $sum_tx += ($record->tx ?? 0) + ($server_peer->total_tx ?? 0);
+          $sum_rx += ($record->rx ?? 0) + ($server_peer->total_rx ?? 0);
+      }
+    }
     
-    $tx = isset($x[0]) ? round((($x[0]->TX ?? 0) / 1073741824), 2) : 0;
-    $rx = isset($x[0]) ? round((($x[0]->RX ?? 0) / 1073741824), 2) : 0;
-    $total_usage = $tx + $rx;
+    // $tx = isset($x[0]) ? round((($x[0]->TX ?? 0) / 1073741824), 2) : 0;
+    // $rx = isset($x[0]) ? round((($x[0]->RX ?? 0) / 1073741824), 2) : 0;
+    // $total_usage = $tx + $rx;
 
     return [
-      'tx' => $tx,
-      'rx' => $rx,
-      'total_usage' => $total_usage
+      'tx' => $sum_tx,
+      'rx' => $sum_rx,
+      'total_usage' => ($sum_tx + $sum_rx)
     ];
 }
 
 function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
 {
-  $x = DB::table('server_peer_usages')
-    ->where('server_id', $sId)
-    ->where('server_peer_id', $pId)
-    ->selectRaw('`server_peer_usages`.`server_peer_id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS STX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS SRX')
-    ->groupBy('server_peer_usages.server_peer_id')
-    ->get();
-
-  // $latest = DB::table('server_peer_usages')
+  // $x = DB::table('server_peer_usages')
   //   ->where('server_id', $sId)
   //   ->where('server_peer_id', $pId)
-  //   ->orderBy('id', 'desc')
-  //   ->first();
+  //   ->selectRaw('`server_peer_usages`.`server_peer_id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS STX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS SRX')
+  //   ->groupBy('server_peer_usages.server_peer_id')
+  //   ->get();
 
-  $sum_tx = (int) (isset($x[0]) ? ($x[0]->STX ?? 0) : 0); // $latest ? $latest->tx : 0;
-  $sum_rx = (int) (isset($x[0]) ? ($x[0]->SRX ?? 0) : 0); // $latest ? $latest->rx : 0;
+  $latest = DB::table('server_peer_usages')
+    ->where('server_id', $sId)
+    ->where('server_peer_id', $pId)
+    ->orderBy('id', 'desc')
+    ->first();
 
-  $tx = (int) $tx;
-  $rx = (int) $rx;
+  // $sum_tx = (int) (isset($x[0]) ? ($x[0]->STX ?? 0) : 0);
+  // $sum_rx = (int) (isset($x[0]) ? ($x[0]->SRX ?? 0) : 0);
+    
+  $latest_tx = $latest ? $latest->tx : 0;
+  $latest_rx = $latest ? $latest->rx : 0;
+
+  if ($tx < $latest_tx) { // reset by router
+    DB::table('server_peers')
+      ->where('server_id', $sId)
+      ->where('server_peer_id', $pId)
+      ->update([
+        'total_tx' => $latest_tx,
+      ]);
+  }
+
+  if ($rx < $latest_rx) { // reset by router
+    DB::table('server_peers')
+      ->where('server_id', $sId)
+      ->where('server_peer_id', $pId)
+      ->update([
+        'total_rx' => $latest_rx,
+      ]);
+  }
   
-  $new_tx = ($sum_tx > $tx) ? $tx : $tx - $sum_tx;
-  $new_rx = ($sum_rx > $rx) ? $rx : $rx - $sum_rx;
-
   DB::table('server_peer_usages')->insert([
       'server_id' => $sId,
       'server_peer_id' => $pId,
-      'raw_tx' => $tx,
-      'tx' => $new_tx,
-      'sum_tx' => $sum_tx,
-      'raw_rx' => $rx,
-      'rx' => $new_rx,
+      'tx' => $tx,
+      'rx' => $rx,
       'last_handshake' => $last_handshake ?? null,
       'created_at' => $now
   ]);
