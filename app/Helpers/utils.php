@@ -23,12 +23,12 @@ function createKeys()
 
 function curl_general($method, $url, $data=null, $withHeader=false, $timeout=3)
 {
-  $server_api_username = DB::table('settings')->where('setting_key', 'SERVERS_API_USERNAME')->first()->setting_value;
-  $server_api_password = DB::table('settings')->where('setting_key', 'SERVERS_API_PASSWORD')->first()->setting_value;
+  $api_username = DB::table('settings')->where('setting_key', 'SERVERS_API_USERNAME')->first()->setting_value;
+  $api_password = DB::table('settings')->where('setting_key', 'SERVERS_API_PASSWORD')->first()->setting_value;
   
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, 'http://' . $url);
-  curl_setopt($ch, CURLOPT_USERPWD, $server_api_username . ":" . $server_api_password);
+  curl_setopt($ch, CURLOPT_USERPWD, $api_username . ":" . $api_password);
   if ($data) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
   }
@@ -277,20 +277,30 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
   $latest_rx = $latest ? $latest->rx : 0;
 
   if ($tx < $latest_tx) { // reset by router
+    $x = DB::table('server_peers')
+      ->where('server_id', $sId)
+      ->where('server_peer_id', $pId)
+      ->first();
+    
     DB::table('server_peers')
       ->where('server_id', $sId)
       ->where('server_peer_id', $pId)
       ->update([
-        'total_tx' => $latest_tx,
+        'total_tx' => $latest_tx + $x->latest_tx,
       ]);
   }
 
   if ($rx < $latest_rx) { // reset by router
+    $x = DB::table('server_peers')
+      ->where('server_id', $sId)
+      ->where('server_peer_id', $pId)
+      ->first();
+    
     DB::table('server_peers')
       ->where('server_id', $sId)
       ->where('server_peer_id', $pId)
       ->update([
-        'total_rx' => $latest_rx,
+        'total_rx' => $latest_rx + $x->total_rx,
       ]);
   }
 
