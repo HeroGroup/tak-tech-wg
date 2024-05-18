@@ -286,7 +286,7 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
       ->where('server_id', $sId)
       ->where('server_peer_id', $pId)
       ->update([
-        'total_tx' => $latest_tx + $x->latest_tx,
+        'total_tx' => $latest_tx + $x->total_tx,
       ]);
   }
 
