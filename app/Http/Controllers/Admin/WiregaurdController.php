@@ -540,6 +540,8 @@ class WiregaurdController extends Controller
                         'server_id' => $server_peer->server_id,
                         'peer_id' => $server_peer->peer_id,
                         'server_peer_id' => $server_peer->server_peer_id,
+                        'total_tx' => $server_peer->total_tx,
+                        'total_rx' => $server_peer->total_rx,
                         'removed_at' => $now,
                         'removed_by' => $user
                     ]);

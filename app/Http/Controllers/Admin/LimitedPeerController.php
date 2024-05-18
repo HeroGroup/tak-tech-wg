@@ -244,44 +244,44 @@ class LimitedPeerController extends Controller
         
         $now = time();
         foreach($limitedPeers as $peer) {
-            // $sum_tx = 0;
-            // $sum_rx = 0;
-            // $servers = DB::table('servers')->get();
-            // foreach ($servers as $server) {
-            //     $sId = $server->id;
-            //     $server_peer = DB::table('removed_server_peers')
-            //         ->where('server_id', $sId)
-            //         ->where('peer_id', $pId)
-            //         ->first();
-            //     if ($server_peer) {
-            //         $record = DB::table('server_peer_usages')
-            //             ->where('server_id', $sId)
-            //             ->where('server_peer_id', $server_peer->server_peer_id)
-            //             ->orderBy('id', 'desc')
-            //             ->first();
-            //         $sum_tx += $record->tx ?? 0;
-            //         $sum_rx += $record->rx ?? 0;
-            //     }
-            // }
+            $sum_tx = 0;
+            $sum_rx = 0;
+            $servers = DB::table('servers')->get();
+            foreach ($servers as $server) {
+                $sId = $server->id;
+                $server_peer = DB::table('removed_server_peers')
+                    ->where('server_id', $sId)
+                    ->where('peer_id', $pId)
+                    ->first();
+                if ($server_peer) {
+                    $record = DB::table('server_peer_usages')
+                        ->where('server_id', $sId)
+                        ->where('server_peer_id', $server_peer->server_peer_id)
+                        ->orderBy('id', 'desc')
+                        ->first();
+                    $sum_tx += ($record->tx ?? 0) + ($server_peer->total_tx ?? 0);
+                    $sum_rx += ($record->rx ?? 0) + ($server_peer->total_rx ?? 0);
+                }
+            }
                 
-            // $peer->tx = round(($sum_tx / 1073741824), 2);
-            // $peer->rx = round(($sum_rx / 1073741824), 2);
-            // $peer->total_usage = $peer->tx + $peer->rx;
-
-            $x = DB::table('removed_peers')
-                ->where('removed_peers.id', $peer->id)
-                ->join('removed_server_peers', 'removed_server_peers.peer_id', '=', 'removed_peers.id')
-                ->join('server_peer_usages', function(JoinClause $join) {
-                $join->on('server_peer_usages.server_id', '=', 'removed_server_peers.server_id')
-                    ->on('server_peer_usages.server_peer_id', '=', 'removed_server_peers.server_peer_id');
-                })
-                ->selectRaw('`removed_peers`.`id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS TX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS RX')
-                ->groupBy('removed_peers.id')
-                ->get();
-
-            $peer->tx = isset($x[0]) ? round((($x[0]->TX ?? 0) / 1073741824), 2) : 0;
-            $peer->rx = isset($x[0]) ? round((($x[0]->RX ?? 0) / 1073741824), 2) : 0;
+            $peer->tx = round(($sum_tx / 1073741824), 2);
+            $peer->rx = round(($sum_rx / 1073741824), 2);
             $peer->total_usage = $peer->tx + $peer->rx;
+
+            // $x = DB::table('removed_peers')
+            //     ->where('removed_peers.id', $peer->id)
+            //     ->join('removed_server_peers', 'removed_server_peers.peer_id', '=', 'removed_peers.id')
+            //     ->join('server_peer_usages', function(JoinClause $join) {
+            //     $join->on('server_peer_usages.server_id', '=', 'removed_server_peers.server_id')
+            //         ->on('server_peer_usages.server_peer_id', '=', 'removed_server_peers.server_peer_id');
+            //     })
+            //     ->selectRaw('`removed_peers`.`id`, SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) AS TX, SUM(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) AS RX')
+            //     ->groupBy('removed_peers.id')
+            //     ->get();
+
+            // $peer->tx = isset($x[0]) ? round((($x[0]->TX ?? 0) / 1073741824), 2) : 0;
+            // $peer->rx = isset($x[0]) ? round((($x[0]->RX ?? 0) / 1073741824), 2) : 0;
+            // $peer->total_usage = $peer->tx + $peer->rx;
 
             $peer->expires_in = '-1';
 
