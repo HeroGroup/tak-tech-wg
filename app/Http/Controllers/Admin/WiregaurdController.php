@@ -1475,7 +1475,7 @@ class WiregaurdController extends Controller
 
             $search = $request->query('search');
             if ($search && $addresses && $addresses->count() > 0) {
-                $addresses = $addresses->where('allowed_address', '%'.$search.'%');
+                $addresses = $addresses->where('allowed_address', 'like', '%'.$search.'%');
             }
 
             $addresses = $addresses->get();
