@@ -251,7 +251,7 @@ class LimitedPeerController extends Controller
                 $sId = $server->id;
                 $server_peer = DB::table('removed_server_peers')
                     ->where('server_id', $sId)
-                    ->where('peer_id', $pId)
+                    ->where('peer_id', $peer->peer_id)
                     ->first();
                 if ($server_peer) {
                     $record = DB::table('server_peer_usages')
