@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\InterfaceController;
 use App\Http\Controllers\Admin\LimitedPeerController;
 use App\Http\Controllers\Admin\LogController;
@@ -103,6 +104,12 @@ Route::prefix('admin')->group(function () {
       Route::put('/wiregaurd/peers/restrictions', [WiregaurdController::class, 'updateRestrictions'])->name('wiregaurd.peers.restrictions.update');
       Route::put('/wiregaurd/peers/restrictions/mass', [WiregaurdController::class, 'updateRestrictionsMass'])->name('wiregaurd.peers.restrictions.update.mass');
       
+      Route::get('/wiregaurd/peers/export', [ExportController::class, 'export'])->name('wiregaurd.peers.export');
+      Route::post('/wiregaurd/peers/export', [ExportController::class, 'exportDataAndFiles'])->name('wiregaurd.peers.export.data');
+      Route::get('/wiregaurd/peers/export/getDownloadLinks/{time}', [ExportController::class, 'getDownloadLinks'])->name('wiregaurd.peers.export.getDownloadLinks');
+      Route::get('/wiregaurd/peers/export/download/data/{time}', [ExportController::class, 'downloadData'])->name('wiregaurd.peers.export.download.data');
+      Route::get('/wiregaurd/peers/export/download/files/{time}', [ExportController::class, 'downloadFiles'])->name('wiregaurd.peers.export.download.files');
+    
       Route::get('/settings', [SettingController::class, 'index'])->name('settings');
       Route::post('/settings/add', [SettingController::class, 'addSetting'])->name('settings.add');
       Route::put('/settings/update', [SettingController::class, 'updateSetting'])->name('settings.update');

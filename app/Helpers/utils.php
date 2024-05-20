@@ -133,6 +133,26 @@ function zipPeer($comment, $conf_file, $qrcode_file, $zipFileName)
   return $zip;
 }
 
+function zipFiles($files, $zipFile)
+{
+    try {
+        $zip = new ZipArchive();
+        if ($zip->open($zipFile, ZipArchive::CREATE) !== TRUE) {
+            return ['status' => -1, 'message' => "Unable to open file."];
+        }
+
+        foreach ($files as $file)
+        {
+            $zip->addFile($file, basename($file));
+        }
+
+        $zip->close();
+        return ['status' => 1, 'file' => $zipFile];
+    } catch (\Exception $e) {
+        return ['status' => '-1', 'message' => $e->getMessage()];
+    }
+}
+
 function saveCronResult($cronName, $cronResult)
 {
   if(env('SHOULD_SAVE_CRON_RESULT')) {
@@ -312,4 +332,15 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
     'last_handshake' => $last_handshake ?? null,
     'created_at' => $now
   ]);
+}
+
+function createCSV($header, $list, $file)
+{
+  $fp = fopen($file, 'w');
+  fputcsv($fp, $header);
+  foreach ($list as $fields) {
+      fputcsv($fp, array_values(json_decode(json_encode($fields), true)));
+  }
+
+  fclose($fp);
 }

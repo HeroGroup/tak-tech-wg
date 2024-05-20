@@ -89,6 +89,10 @@
                     <i class="fas fa-fw fa-ban"></i>
                     <span>Peers Restrictions</span>
                 </a>
+                <a class="collapse-item" href="{{route('admin.wiregaurd.peers.export')}}">
+                    <i class="fas fa-fw fa-file-export"></i>
+                    <span>Export</span>
+                </a>
                 @endif
             </div>
         </div>
