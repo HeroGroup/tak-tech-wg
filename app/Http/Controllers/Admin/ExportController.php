@@ -9,8 +9,10 @@ use Illuminate\Support\Facades\DB;
 
 require_once app_path('Helpers/utils.php');
 
+// This controller handles Epport peers actions
 class ExportController extends Controller
 {
+    // return a page to do export
     public function export(Request $request)
     {
         $interfaces = DB::table('interfaces')->pluck('name', 'id')->toArray();
@@ -44,6 +46,7 @@ class ExportController extends Controller
         return view('admin.peers.export', compact('interfaces', 'interface', 'search', 'isLastPage', 'peers'));
     }
 
+    // this method creates a csv for data, and a zip file for qrcodes and conf files
     public function exportDataAndFiles(Request $request)
     {
         try {
@@ -89,6 +92,7 @@ class ExportController extends Controller
         return view('admin.peers.downloadExports', compact('time'));
     }
 
+    // reutrn a view to show download links
     public function downloadData($file)
     {
         $target_file = resource_path("confs/$file.csv");
@@ -100,6 +104,7 @@ class ExportController extends Controller
         }
     }
 
+    // downlod corrsponding data (csv) and qrcode and conf files (zip)
     public function downloadFiles($file)
     {
         $target_file = resource_path("confs/$file.zip");

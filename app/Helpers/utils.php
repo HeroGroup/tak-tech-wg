@@ -337,7 +337,7 @@ function storeUsage($sId, $pId, $tx, $rx, $last_handshake, $now)
 function createCSV($header, $list, $file)
 {
   $fp = fopen($file, 'w');
-  fputcsv($fp, $header);
+  // fputcsv($fp, $header);
   foreach ($list as $fields) {
       fputcsv($fp, array_values(json_decode(json_encode($fields), true)));
   }
