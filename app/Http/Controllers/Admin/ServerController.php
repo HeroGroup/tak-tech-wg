@@ -34,20 +34,7 @@ class ServerController extends Controller
         $remotePeers = curl_general('GET', $sAddress . '/rest/interface/wireguard/peers', '', false, 30);
         $remoteCounts['peers'] = is_array($remotePeers) ? count($remotePeers) : '-';
 
-        $duplicates = [];
-        if ($remoteCounts['peers'] > 0) {
-            $remoteDuplicates = array_count_values(array_column($remotePeers, 'allowed-address'));
-            foreach ($remoteDuplicates as $key => $value) {
-                if ($value > 1) {
-                    array_push(
-                        $duplicates, 
-                        ...array_filter($remotePeers, function($elm) use($key) {
-                            return $key == $elm['allowed-address'];
-                        })
-                    );
-                }
-            }
-        }
+        $duplicates = $this->findDuplicates($remotePeers);
 
         $disabledArrayCounts = is_array($remotePeers) ? 
             array_count_values(array_column($remotePeers, 'disabled')) : 
@@ -196,18 +183,50 @@ class ServerController extends Controller
         }
     }
 
+    protected function findDuplicates($remotePeers)
+    {
+        if (!is_array($remotePeers))
+        {
+            return [];
+        }
+
+        $duplicates = [];
+        $remoteDuplicates = array_count_values(array_column($remotePeers, 'allowed-address'));
+        foreach ($remoteDuplicates as $key => $value) {
+            if ($value > 1) {
+                array_push(
+                    $duplicates, 
+                    ...array_filter($remotePeers, function($elm) use($key) {
+                        return $key == $elm['allowed-address'];
+                    })
+                );
+            }
+        }
+
+        return $duplicates;
+    }
+
+    protected function removeSingleDuplicate($sAddress, $id)
+    {
+        try {
+            return curl_general(
+                'POST',
+                $sAddress . '/rest/interface/wireguard/peers/remove',
+                json_encode([".id" => $id]),
+                true
+            );
+        } catch (\Exception $exception) {
+            //
+        }
+    }
+
     // with use of this method, we remove duplicate addresses on remote servers
     public function removeDuplicate(Request $request)
     {
         try {
             $sAddress = $request->sAddress;
             $id = $request->id;
-            $response = curl_general(
-                'POST',
-                $sAddress . '/rest/interface/wireguard/peers/remove',
-                json_encode([".id" => $id]),
-                true
-            );
+            $response = $this->removeSingleDuplicate($sAddress, $id);
             
             if($response == []) {
                 return $this->success('success');
@@ -486,6 +505,14 @@ class ServerController extends Controller
             );
 
             if(is_array($remotePeers)) {
+                // find duplicates
+                $duplicates = $this->findDuplicates($remotePeers);
+                
+                // remove duplicates
+                foreach ($duplicates as $duplicate) {
+                    $this->removeSingleDuplicate($saddress, $duplicate[".id"]);
+                }
+
                 // check if server is already synced by number of enabled and disabled peers
                 $remotePeersTotalCount = count($remotePeers);
                 $disabledArray = array_column($remotePeers, 'disabled');

@@ -214,7 +214,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form method="post" action="{{route('wiregaurd.peers.update')}}" onsubmit="turnOnLoader()">
+                        <form method="post" action="{{route('wiregaurd.peers.update')}}" onsubmit="updatePeerOnSubmit()">
                             @csrf
                             <input type="hidden" name="_method" value="PUT">
                             <input type="hidden" name="id" value="{{$peer->id}}">
@@ -439,6 +439,7 @@
     }
 
     turnOnLoader();
+    maintainScrollPosition();
 
     var formData = createFormData({
       '_token': '{{csrf_token()}}',
@@ -505,7 +506,8 @@
     }
 
     turnOnLoader();
-    
+    maintainScrollPosition();
+
     var formData = createFormData({
       '_token': '{{csrf_token()}}',
       '_method': 'PUT',
@@ -537,6 +539,10 @@
   function maintainScrollPosition() {
     // maintain scroll position
     localStorage.setItem('scrollPosition', window.scrollY);
+  }
+  function updatePeerOnSubmit() {
+    turnOnLoader();
+    maintainScrollPosition();
   }
 </script>
 @endsection
