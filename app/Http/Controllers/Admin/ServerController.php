@@ -183,6 +183,7 @@ class ServerController extends Controller
         }
     }
 
+    // general function to find all duplicates on remote
     protected function findDuplicates($remotePeers)
     {
         if (!is_array($remotePeers))
@@ -206,6 +207,7 @@ class ServerController extends Controller
         return $duplicates;
     }
 
+    // general function to remove single peer
     protected function removeSingleDuplicate($sAddress, $id)
     {
         try {
