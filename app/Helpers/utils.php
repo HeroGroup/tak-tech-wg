@@ -2,18 +2,23 @@
 
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Process;
+ 
 require_once app_path('Helpers/phpqrcode/qrlib.php');
 
 function createKeys()
 {
   $keyGeneratorPath = app_path('Js_Helpers/keyGenerator.js');
-  exec("node $keyGeneratorPath", $output); 
-  $privateKey = $output[1];
-  $publicKey = $output[2];
-  $privateKey = str_replace("'", "", $output[1]);
-  $privateKey = str_replace(",", "", $privateKey);
-  $publicKey = str_replace("'", "", $output[2]);
+  $process = Process::run("node $keyGeneratorPath");
+  $output = str_replace(["\n", "[", "]", "'"], "", $process->output());
+
+  $output = explode(',', $output);
+  $privateKey = $output[0];
+  $publicKey = $output[1];
+
+  // exec("node $keyGeneratorPath", $output); 
+  // $privateKey = str_replace(["'", ","], "", $output[1]);
+  // $publicKey = str_replace(["'", ","], "", $output[2]);
 
   return [
     'public_key' => ltrim($publicKey), 
