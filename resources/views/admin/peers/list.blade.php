@@ -130,13 +130,13 @@
             if ($diff > 0) {
               $total_left = explode('.', round($diff / (60 * 60 * 24), 2));
               $days_left = $total_left[0] ?? 0;
-              $hours_left = round(($total_left[1] ?? 0) / 100 * 24, 0);
+              $hours_left = floor(($total_left[1] ?? 0) / 100 * 24);
               $time_left_to_show = "";
               if ($days_left > 0) {
                 $time_left_to_show .= "$days_left days ";
               }
               if ($hours_left > 0) {
-                $time_left_to_show .= "$hours_left hours ";
+                $time_left_to_show .= "$hours_left hours";
               }
             }
           ?>
