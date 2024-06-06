@@ -60,7 +60,7 @@
       <th></th>
     </thead>
     <tbody>
-      <?php $row = 0; $nowTime = time(); $nowDateTime = new DateTime(); ?>
+      <?php $row = 0; ?>
       @foreach($limitedPeers as $peer)
       <tr id="{{$peer->id}}">
         <td>

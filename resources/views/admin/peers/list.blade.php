@@ -111,7 +111,7 @@
       <th>Actions</th>
     </thead>
     <tbody>
-      <?php $row = 0; $nowTime = time(); $nowDateTime = new DateTime(); ?>
+      <?php $row = 0; $nowTime = time(); ?>
     @foreach($peers as $peer)
       <tr id="{{$peer->id}}">
         <td>
@@ -128,22 +128,15 @@
             $expire = $peer->expire_days;
             $diff = strtotime($peer->activate_date_time. " + $expire days") - $nowTime; 
             if ($diff > 0) {
-              $expires_on = new DateTime($peer->activate_date_time);
-              $expires_on->add(new DateInterval("P$expire"."D"));
-              $time_left = $expires_on->diff($nowDateTime);
-              $days_left = $time_left->m*30 + $time_left->d;
-              $hours_left = $time_left->h;
-              $minutes_left = $time_left->i;
-              // $seconds_left = $time_left->s;
+              $total_left = explode('.', round($diff / (60 * 60 * 24), 2));
+              $days_left = $total_left[0] ?? 0;
+              $hours_left = round(($total_left[1] ?? 0) / 100 * 24, 0);
               $time_left_to_show = "";
               if ($days_left > 0) {
                 $time_left_to_show .= "$days_left days ";
               }
               if ($hours_left > 0) {
                 $time_left_to_show .= "$hours_left hours ";
-              }
-              if ($time_left_to_show == "" && $minutes_left > 0) {
-                $time_left_to_show .= "$minutes_left minutes ";
               }
             }
           ?>
