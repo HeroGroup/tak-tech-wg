@@ -164,12 +164,12 @@ class LimitedPeerController extends Controller
 
         $result = [];
         $days = [];
-        $seven_days_before = date('Y-m-d H:i:s', time() - 604800);
+        $ten_days_before = date('Y-m-d H:i:s', time() - 864000);
         foreach($server_peers as $server_peer) {
             $res = DB::table('server_peer_usages')
                 ->where('server_id', $server_peer->server_id)
                 ->where('server_peer_id', $server_peer->server_peer_id)
-                ->where('created_at', '>=', $seven_days_before)
+                ->where('created_at', '>=', substr($ten_days_before, 0, 10))
                 ->selectRaw('(MAX(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) - MIN(CAST(`server_peer_usages`.`tx` AS UNSIGNED)) + MAX(CAST(`server_peer_usages`.`rx` AS UNSIGNED)) - MIN(CAST(`server_peer_usages`.`rx` AS UNSIGNED))) / 1073741824 AS TOTAL_USAGE, SUBSTR(`server_peer_usages`.`created_at`, 1, 10) AS DAY')
                 // ->selectRaw('SUM(CAST(`server_peer_usages`.`tx` AS UNSIGNED)+CAST(`server_peer_usages`.`rx` AS UNSIGNED)) / 1073741824 AS TOTAL_USAGE, SUBSTR(`server_peer_usages`.`created_at`, 1, 10) AS DAY')
                 ->groupByRaw('DAY')

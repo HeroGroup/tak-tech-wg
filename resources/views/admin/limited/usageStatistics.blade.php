@@ -1,4 +1,4 @@
-@extends('layouts.admin.main', ['pageTitle' => 'Peer ' . $peer->comment . ' Statistics', 'active' => 'peers'])
+@extends('layouts.admin.main', ['pageTitle' => 'Peer ' . $peer->comment . ' Statistics (10 days)', 'active' => 'peers'])
 @section('content')
 <div class="row">
     <div class="col-lg-12">
