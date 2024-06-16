@@ -164,7 +164,7 @@ class LimitedPeerController extends Controller
 
         $result = [];
         $days = [];
-        $ten_days_before = date('Y-m-d H:i:s', time() - 864000);
+        $seven_days_before = date('Y-m-d H:i:s', time() - (7 * 86400));
         foreach($server_peers as $server_peer) {
             $res = DB::table('server_peer_usages')
                 ->where('server_id', $server_peer->server_id)
