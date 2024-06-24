@@ -273,8 +273,8 @@ function getPeerUsage($pId)
     // $rx = isset($x[0]) ? round((($x[0]->RX ?? 0) / 1073741824), 2) : 0;
     // $total_usage = $tx + $rx;
 
-    $tx = round(($sum_tx / 1073741824), 2);
-    $rx = round(($sum_rx / 1073741824), 2);
+    $tx = round(($sum_tx / 1073741824), 2); // GB
+    $rx = round(($sum_rx / 1073741824), 2); // GB
 
     return [
       'tx' => $tx,

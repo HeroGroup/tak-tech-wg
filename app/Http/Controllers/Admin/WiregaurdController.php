@@ -877,7 +877,7 @@ class WiregaurdController extends Controller
                     ->select(['peers.*', 'interfaces.allowed_traffic_GB'])
                     ->get();
                     
-                $servers = DB::table('servers')->get();
+                // $servers = DB::table('servers')->get();
                 foreach($limitedPeers as $limitedPeer) {
                     $peerId = $limitedPeer->id;
                     $limit = $limitedPeer->peer_allowed_traffic_GB ?? $limitedPeer->allowed_traffic_GB;
@@ -902,7 +902,7 @@ class WiregaurdController extends Controller
                     //     }
                     // }
 
-                    if (round(($usage / 1073741824), 2) > $limit) { // GB
+                    if ($usage > $limit) {
                         // remove peer
                         $this->removeRemote($peerId);
                         if (! $this->removeLocal($peerId, 'reach-limit')) {
