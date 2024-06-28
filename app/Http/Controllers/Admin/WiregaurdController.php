@@ -417,11 +417,14 @@ class WiregaurdController extends Controller
     }
 
     // This function changes the enablity status of the peer
-    private function toggleEnable($id, $status)
+    public function toggleEnable($id, $status)
     {
         try {
             // toggle on local DB
             $peer = DB::table('peers')->find($id);
+            if (!$peer) {
+                return $this->fail("invalid peer!");
+            }
             $update = ['is_enabled' => $status];
             if ($status == 1 && (! $peer->first_enabled)) {
                 $update['first_enabled'] = date('Y-m-d H:i:s');
