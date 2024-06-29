@@ -8,5 +8,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::post('/wiregaurd/peers/activate', [ApiController::class, 'activatePeer']);
 Route::post('/wiregaurd/peers/toggleEnable', [ApiController::class, 'toggleEnable']);
 Route::post('/wiregaurd/peers/renew', [ApiController::class, 'renewPeer']);

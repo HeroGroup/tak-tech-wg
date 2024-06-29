@@ -7,6 +7,38 @@ use Illuminate\Support\Facades\DB;
 
 class ApiController extends Controller
 {
+    public function activatePeer(Request $request)
+    {
+        try {
+            $token = $request->token;
+            $peer_id = $request->peer_id;
+
+            if ($token != env('SITE_TOKEN')) {
+                return $this->fail("invalid token!");
+            }
+
+            if (!$peer_id) {
+                return $this->fail("invalid peer id!");
+            }
+
+            $peer = DB::table('peers')->find($peer_id);
+
+            if (!$peer) {
+                return $this->fail("invalid peer!");
+            }
+
+            DB::table('peers')
+                ->where('id', $peer_id)
+                ->update([
+                    'activated_at' => date('Y-m-d H:i:s', time())
+                ]);
+
+            return $this->success("Ok");
+        } catch (\Exception $excption) {
+            return $this->fail($excption->getMessage());
+        }
+    }
+
     public function toggleEnable(Request $request)
     {
         try {
@@ -54,7 +86,7 @@ class ApiController extends Controller
 
             $peer = DB::table('peers')->find($peer_id);
 
-            if ($peer) {
+            if (!$peer) {
                 return $this->fail("invalid peer!");
             }
 
