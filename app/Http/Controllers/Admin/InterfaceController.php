@@ -45,16 +45,12 @@ class InterfaceController extends Controller
                 'listen_port' => $request->listen_port,
                 'iType' => $request->iType,
                 'allowed_traffic_GB' => $request->allowed_traffic_GB,
-                'exclude_from_block' => $request->exclude_from_block,
+                'exclude_from_block' => $request->exclude_from_block ? 1 : 0,
                 'public_key' => $publicKey,
                 'private_key' => $privateKey,
                 'created_at' => $now,
                 'updated_at' => $now
             ];
-
-            if ($request->exclude_from_block) {
-                $new['exclude_from_block'] = 1;
-            }
             
             $newInterfaceId = DB::table('interfaces')->insertGetId($new);
 
