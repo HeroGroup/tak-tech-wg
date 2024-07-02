@@ -184,7 +184,7 @@
                 </a>
                 @endif
                 @if(auth()->user()->can_remove)
-                <a href="#" class="dropdown-item text-danger" onclick="destroy('{{route('admin.wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
+                <a href="#" class="dropdown-item text-danger" onclick="destroy('{{route('wiregaurd.peers.remove')}}','{{$peer->id}}','{{$peer->id}}')">
                   <i class="fas fa-trash"></i> Remove
                 </a>
                 @endif
@@ -412,7 +412,7 @@
     
     var params = {
       method: 'POST',
-      route: "{{route('admin.wiregaurd.peers.remove.mass')}}",
+      route: "{{route('wiregaurd.peers.remove.mass')}}",
       formData,
       successCallback: function() {
         ids.forEach(element => {
