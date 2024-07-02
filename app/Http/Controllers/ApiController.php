@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Admin\WiregaurdController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -58,7 +59,7 @@ class ApiController extends Controller
                 return $this->fail("invalid status");
             }
 
-            $wg = new \Admin\WiregaurdController();
+            $wg = new WiregaurdController();
             return $wg->toggleEnable($peer_id, $status);
         } catch (\Exception $excption) {
             return $this->fail($excption->getMessage());
