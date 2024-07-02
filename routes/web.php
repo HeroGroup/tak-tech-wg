@@ -50,11 +50,13 @@ Route::middleware(['auth', 'active'])->group(function() {
     
     Route::put('/wiregaurd/peers/toggleEnable', [WiregaurdController::class, 'toggleEnableSingle'])->name('toggleEnable');
     Route::post('/wiregaurd/peers/regenerate', [WiregaurdController::class, 'regenerateSingle'])->name('regenerate');
+    Route::delete('/wiregaurd/peers/remove', [WiregaurdController::class, 'removeSingle'])->name('wiregaurd.peers.remove');
     
     Route::put('/wiregaurd/peers/enableMass', [WiregaurdController::class, 'enableMass'])->name('enable.mass');
     Route::put('/wiregaurd/peers/disableMass', [WiregaurdController::class, 'disableMass'])->name('disable.mass');
     Route::post('/wiregaurd/peers/regenerateMass', [WiregaurdController::class, 'regenerateMass'])->name('regenerate.mass');
     Route::put('/wiregaurd/peers/updateMass', [WiregaurdController::class, 'updatePeersMass'])->name('update.mass');
+    Route::delete('/wiregaurd/peers/removeMass', [WiregaurdController::class, 'removeMass'])->name('wiregaurd.peers.remove.mass');
 
     Route::get('/getDownloadLink/{date}/{file}', [WiregaurdController::class, 'getDownloadLink'])->name('getDownloadLink');
     Route::get('/wiregaurd/peers/download/{id}', [WiregaurdController::class, 'downloadPeer'])->name('download');
@@ -97,8 +99,6 @@ Route::prefix('admin')->group(function () {
       Route::delete('/wiregaurd/interfaces', [InterfaceController::class, 'deleteInterface'])->name('wiregaurd.interfaces.delete');
       Route::get('/wiregaurd/interfaces/usage/details/{interface}', [InterfaceController::class, 'usageDetails'])->name('wiregaurd.interfaces.usages.details');
       
-      Route::delete('/wiregaurd/peers/remove', [WiregaurdController::class, 'removeSingle'])->name('wiregaurd.peers.remove');
-      Route::delete('/wiregaurd/peers/removeMass', [WiregaurdController::class, 'removeMass'])->name('wiregaurd.peers.remove.mass');
       Route::get('/wiregaurd/peers/restrictions', [WiregaurdController::class, 'restrictions'])->name('wiregaurd.peers.restrictions');
       // Route::get('/wiregaurd/peers/restrictions/fill', [WiregaurdController::class, 'fill'])->name('wiregaurd.peers.restrictions.fill');
       Route::put('/wiregaurd/peers/restrictions', [WiregaurdController::class, 'updateRestrictions'])->name('wiregaurd.peers.restrictions.update');

@@ -577,6 +577,10 @@ class WiregaurdController extends Controller
     public function removeSingle(Request $request)
     {
         try {
+            if (!auth()->user()->can_remove) {
+                return $this->fail('You do not have access to remove peers!.');
+            }
+
             $peerId = $request->id;
             $message = $this->removeRemote($peerId)['message'] . "\r\n";
             $message .= $this->removeLocal($peerId, 'manual-single') ? "removed from local\r\n" : "failed to remove from local\r\n";
@@ -590,13 +594,21 @@ class WiregaurdController extends Controller
     // This function performs the action of remove to a number of selected peers
     public function removeMass(Request $request)
     {
-        $ids = json_decode($request->ids);
-        foreach ($ids as $peerId) {
-            $this->removeRemote($peerId);
-            $this->removeLocal($peerId, 'manual-mass');
-        }
+        try {
+            if (!auth()->user()->can_remove) {
+                return $this->fail('You do not have access to remove peers!.');
+            }
 
-        return $this->success('Selected items removed successfully.');
+            $ids = json_decode($request->ids);
+            foreach ($ids as $peerId) {
+                $this->removeRemote($peerId);
+                $this->removeLocal($peerId, 'manual-mass');
+            }
+
+            return $this->success('Selected items removed successfully.');
+        } catch (\Exception $exception) {
+            return $this->fail($exception->getLine() . ': ' . $exception->getMessage());
+        }
     }
 
     // This function updates the attributes of a peer
