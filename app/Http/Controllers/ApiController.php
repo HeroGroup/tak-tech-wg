@@ -58,7 +58,7 @@ class ApiController extends Controller
                 return $this->fail("invalid status");
             }
 
-            $wg = new WiregaurdController();
+            $wg = new \Admin\WiregaurdController();
             return $wg->toggleEnable($peer_id, $status);
         } catch (\Exception $excption) {
             return $this->fail($excption->getMessage());
